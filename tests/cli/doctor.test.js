@@ -31,10 +31,10 @@ describe('doctor (via setup)', () => {
     assert.strictEqual(typeof result.allOk, 'boolean');
   });
 
-  it('checks include all four IDs', () => {
+  it('checks include all five IDs', () => {
     const home = makeTempDir();
     const result = runChecks({ homedir: home, exec: () => null });
     const ids = result.checks.map(c => c.id);
-    assert.deepStrictEqual(ids, ['node', 'claude', 'teammate-mode', 'split-pane']);
+    assert.deepStrictEqual(ids, ['node', 'claude', 'teammate-mode', 'split-pane', 'playwright']);
   });
 });

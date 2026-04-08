@@ -209,6 +209,58 @@ describe('setup', () => {
   it('exports VALID_TEAMMATE_MODES', () => {
     assert.deepStrictEqual(VALID_TEAMMATE_MODES, ['tmux', 'in-process', 'auto']);
   });
+
+  it('reports playwright not needed when browser disabled', () => {
+    const home = makeTempDir();
+    const cwd = makeTempDir();
+    // No raid.json => browser not enabled
+    const result = runChecks({ homedir: home, exec: () => null, cwd });
+    const pw = result.checks.find(c => c.id === 'playwright');
+    assert.ok(pw, 'playwright check should be present');
+    assert.strictEqual(pw.ok, true);
+    assert.ok(pw.detail.includes('not needed'));
+  });
+
+  it('reports playwright status when browser enabled', () => {
+    const home = makeTempDir();
+    const cwd = makeTempDir();
+    // Write raid.json with browser.enabled = true
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir);
+    fs.writeFileSync(
+      path.join(claudeDir, 'raid.json'),
+      JSON.stringify({ browser: { enabled: true }, execCommand: 'npx' })
+    );
+    // Write a playwright config file
+    fs.writeFileSync(path.join(cwd, 'playwright.config.ts'), '');
+
+    const exec = (cmd) => {
+      if (cmd === 'npx playwright --version') return 'Version 1.42.0';
+      return null;
+    };
+    const result = runChecks({ homedir: home, exec, cwd });
+    const pw = result.checks.find(c => c.id === 'playwright');
+    assert.ok(pw, 'playwright check should be present');
+    assert.strictEqual(pw.ok, true);
+    assert.ok(pw.detail.includes('installed'));
+  });
+
+  it('reports playwright not installed when version check fails', () => {
+    const home = makeTempDir();
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir);
+    fs.writeFileSync(
+      path.join(claudeDir, 'raid.json'),
+      JSON.stringify({ browser: { enabled: true } })
+    );
+    // No playwright config file, exec returns null
+    const result = runChecks({ homedir: home, exec: () => null, cwd });
+    const pw = result.checks.find(c => c.id === 'playwright');
+    assert.ok(pw, 'playwright check should be present');
+    assert.strictEqual(pw.ok, false);
+    assert.ok(pw.hint);
+  });
 });
 
 // --- helpers for runSetup tests ---

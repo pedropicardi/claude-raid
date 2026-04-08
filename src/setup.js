@@ -142,6 +142,61 @@ function checkTeammateMode(homedir) {
   };
 }
 
+function checkPlaywright(exec, cwd) {
+  // Try to read raid.json
+  let raidConfig = null;
+  if (cwd) {
+    const raidJsonPath = path.join(cwd, '.claude', 'raid.json');
+    try {
+      raidConfig = JSON.parse(fs.readFileSync(raidJsonPath, 'utf8'));
+    } catch {
+      // No raid.json or invalid — treat as browser not enabled
+    }
+  }
+
+  const browserEnabled = raidConfig && raidConfig.browser && raidConfig.browser.enabled;
+
+  if (!browserEnabled) {
+    return {
+      id: 'playwright',
+      ok: true,
+      label: 'Playwright',
+      detail: 'not needed (browser testing disabled)',
+    };
+  }
+
+  // Determine exec command prefix (e.g. "npx" or "pnpm dlx")
+  const execCommand = raidConfig.execCommand || 'npx';
+
+  // Check if playwright config file exists
+  const configFile = (raidConfig.browser && raidConfig.browser.playwrightConfig) || 'playwright.config.ts';
+  const configExists = cwd && fs.existsSync(path.join(cwd, configFile));
+
+  // Check playwright version
+  const raw = exec(`${execCommand} playwright --version`);
+
+  if (!raw) {
+    return {
+      id: 'playwright',
+      ok: false,
+      label: 'Playwright',
+      detail: 'not installed',
+      hint: `Install: ${execCommand} playwright install`,
+    };
+  }
+
+  const ver = parseVersion(raw);
+  const tag = ver ? `v${ver.major}.${ver.minor}.${ver.patch}` : raw.trim();
+
+  return {
+    id: 'playwright',
+    ok: true,
+    label: 'Playwright',
+    detail: `installed (${tag})`,
+    hint: `Install: ${execCommand} playwright install`,
+  };
+}
+
 function checkSplitPane(exec) {
   const tmux = exec('command -v tmux');
   const it2 = exec('command -v it2');
@@ -214,6 +269,7 @@ function formatCheckLine(check) {
 function runChecks(opts = {}) {
   const homedir = opts.homedir || os.homedir();
   const exec = opts.exec || tryExec;
+  const cwd = opts.cwd || undefined;
 
   const nodeVersion = opts.nodeVersion || undefined;
 
@@ -222,6 +278,7 @@ function runChecks(opts = {}) {
     checkClaude(exec),
     checkTeammateMode(homedir),
     checkSplitPane(exec),
+    checkPlaywright(exec, cwd),
   ];
 
   return {
