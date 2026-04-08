@@ -84,6 +84,48 @@ export RAID_ACTIVE RAID_PHASE RAID_MODE RAID_CURRENT_AGENT RAID_IMPLEMENTER RAID
 export RAID_TEST_CMD RAID_NAMING RAID_MAX_DEPTH RAID_COMMIT_MIN_LENGTH RAID_SPECS_PATH RAID_PLANS_PATH
 export RAID_BROWSER_ENABLED RAID_BROWSER_PORT_START RAID_BROWSER_PORT_END RAID_BROWSER_EXEC_CMD RAID_BROWSER_PW_CONFIG
 
+# --- Lifecycle & Vault config ---
+RAID_VAULT_ENABLED=true
+RAID_VAULT_PATH=".claude/vault"
+RAID_LIFECYCLE_SESSION=true
+RAID_LIFECYCLE_NUDGE=true
+RAID_LIFECYCLE_TASK_VALIDATION=true
+RAID_LIFECYCLE_COMPLETION_GATE=true
+RAID_LIFECYCLE_PHASE_CONFIRM=true
+RAID_LIFECYCLE_COMPACT_BACKUP=true
+RAID_LIFECYCLE_TEST_WINDOW=10
+
+if [ -f ".claude/raid.json" ]; then
+  _lifecycle_json=$(jq -r '
+    (.raid.vault.enabled // true),
+    (.raid.vault.path // ".claude/vault"),
+    (.raid.lifecycle.autoSessionManagement // true),
+    (.raid.lifecycle.teammateNudge // true),
+    (.raid.lifecycle.taskValidation // true),
+    (.raid.lifecycle.completionGate // true),
+    (.raid.lifecycle.phaseTransitionConfirm // true),
+    (.raid.lifecycle.compactBackup // true),
+    (.raid.lifecycle.testWindowMinutes // 10)
+  ' ".claude/raid.json" 2>/dev/null)
+
+  if [ $? -eq 0 ] && [ -n "$_lifecycle_json" ]; then
+    RAID_VAULT_ENABLED=$(echo "$_lifecycle_json" | sed -n '1p')
+    RAID_VAULT_PATH=$(echo "$_lifecycle_json" | sed -n '2p')
+    RAID_LIFECYCLE_SESSION=$(echo "$_lifecycle_json" | sed -n '3p')
+    RAID_LIFECYCLE_NUDGE=$(echo "$_lifecycle_json" | sed -n '4p')
+    RAID_LIFECYCLE_TASK_VALIDATION=$(echo "$_lifecycle_json" | sed -n '5p')
+    RAID_LIFECYCLE_COMPLETION_GATE=$(echo "$_lifecycle_json" | sed -n '6p')
+    RAID_LIFECYCLE_PHASE_CONFIRM=$(echo "$_lifecycle_json" | sed -n '7p')
+    RAID_LIFECYCLE_COMPACT_BACKUP=$(echo "$_lifecycle_json" | sed -n '8p')
+    RAID_LIFECYCLE_TEST_WINDOW=$(echo "$_lifecycle_json" | sed -n '9p')
+  fi
+fi
+
+export RAID_VAULT_ENABLED RAID_VAULT_PATH
+export RAID_LIFECYCLE_SESSION RAID_LIFECYCLE_NUDGE RAID_LIFECYCLE_TASK_VALIDATION
+export RAID_LIFECYCLE_COMPLETION_GATE RAID_LIFECYCLE_PHASE_CONFIRM RAID_LIFECYCLE_COMPACT_BACKUP
+export RAID_LIFECYCLE_TEST_WINDOW
+
 # --- Utility functions ---
 
 # Read stdin JSON from Claude hook input. Sets RAID_FILE_PATH and RAID_COMMAND.
@@ -117,4 +159,21 @@ raid_block() {
 raid_warn() {
   printf "%s\n" "$*" >&2
   exit 0
+}
+
+# Read stdin JSON from Claude lifecycle hook input. Sets RAID_HOOK_INPUT as raw JSON.
+raid_read_lifecycle_input() {
+  RAID_HOOK_INPUT=$(cat)
+  export RAID_HOOK_INPUT
+}
+
+# Count Vault entries by counting table rows in index.md
+raid_vault_count() {
+  local index="$RAID_VAULT_PATH/index.md"
+  if [ ! -f "$index" ]; then
+    echo 0
+    return
+  fi
+  # Count lines that start with | and contain a date (YYYY-MM-DD), skip header
+  grep -cE '^\| [0-9]{4}-' "$index" 2>/dev/null || echo 0
 }
