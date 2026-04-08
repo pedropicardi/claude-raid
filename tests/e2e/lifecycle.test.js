@@ -43,7 +43,10 @@ describe('E2E: init -> update -> remove lifecycle', () => {
 
     // Verify files exist
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'agents', 'wizard.md')));
-    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-commit-message.sh')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-commit.sh')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'hooks', 'raid-lib.sh')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-write-gate.sh')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-dungeon.sh')));
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-protocol', 'SKILL.md')));
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid-rules.md')));
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid.json')));
@@ -84,7 +87,8 @@ describe('E2E: init -> update -> remove lifecycle', () => {
 
     // Raid files gone
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'agents', 'wizard.md')));
-    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-commit-message.sh')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-commit.sh')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'hooks', 'raid-lib.sh')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-protocol')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-rules.md')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid.json')));

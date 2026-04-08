@@ -39,6 +39,7 @@ function performRemove(cwd) {
     for (const hook of hooks) {
       rmSafe(path.join(hooksDir, hook));
     }
+    rmSafe(path.join(hooksDir, 'raid-lib.sh'));
   }
 
   for (const skill of RAID_SKILLS) {
