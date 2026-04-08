@@ -3,26 +3,30 @@
 'use strict';
 
 const command = process.argv[2];
+const { banner, colors, header } = require('../src/ui');
 
 const COMMANDS = {
-  init: () => require('../src/init').run(),
+  // Primary commands
+  summon: () => require('../src/init').run(),
   update: () => require('../src/update').run(),
+  dismantle: () => require('../src/remove').run(),
+  heal: () => require('../src/doctor').run(),
+  // Aliases (backward compat)
+  init: () => require('../src/init').run(),
   remove: () => require('../src/remove').run(),
   doctor: () => require('../src/doctor').run(),
 };
 
 if (!command || !COMMANDS[command]) {
-  console.log(`
-claude-raid — Adversarial multi-agent development for Claude Code
-
-Usage:
-  claude-raid init     Install The Raid into the current project
-  claude-raid update   Update to the latest version
-  claude-raid remove   Uninstall The Raid
-  claude-raid doctor   Check prerequisites and show quick start guide
-
-Learn more: https://github.com/pedropicardi/claude-raid
-`);
+  console.log('\n' + banner());
+  console.log(header('Commands') + '\n');
+  console.log('    ' + colors.bold('summon') + '      Summon the party into this realm');
+  console.log('    ' + colors.bold('update') + '      Reforge the party\'s arsenal');
+  console.log('    ' + colors.bold('dismantle') + '   Dismantle the camp and retreat');
+  console.log('    ' + colors.bold('heal') + '        Diagnose wounds and prepare for battle');
+  console.log(header('Begin the Raid') + '\n');
+  console.log('    claude --agent wizard\n');
+  console.log(colors.dim('  github.com/pedropicardi/claude-raid') + '\n');
   process.exit(command ? 1 : 0);
 }
 
