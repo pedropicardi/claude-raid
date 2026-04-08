@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { mergeSettings } = require('./merge-settings');
+const { banner, header, colors } = require('./ui');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
 
@@ -102,9 +103,20 @@ function performUpdate(cwd) {
 
 function run() {
   const cwd = process.cwd();
-  console.log('\nclaude-raid — Updating The Raid\n');
+  console.log('\n' + banner());
+  console.log(header('Reforging the Arsenal...') + '\n');
+
   const result = performUpdate(cwd);
-  console.log(result.message);
+
+  if (!result.success) {
+    console.log('  ' + colors.red('✖') + ' No party found. Run ' + colors.bold('claude-raid summon') + ' first.');
+    return;
+  }
+
+  console.log('  ' + colors.green('✔') + ' The party\'s arsenal has been reforged.');
+  if (result.skippedAgents.length > 0) {
+    console.log('  ' + colors.dim('Preserved customized warriors: ' + result.skippedAgents.join(', ')));
+  }
 }
 
 module.exports = { performUpdate, run };
