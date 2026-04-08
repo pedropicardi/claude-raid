@@ -1,11 +1,11 @@
 ---
 name: raid-implementation-plan
-description: "Phase 2 of Raid protocol. Agents create the plan together and test each other for full compliance with the design, test coverage, naming consistency, and file system patterns."
+description: "Phase 2 of Raid protocol. Wizard opens the Dungeon, agents decompose the design into tasks through direct debate, test each other for compliance, and pin agreed tasks. Wizard closes when plan is battle-tested."
 ---
 
 # Raid Implementation Plan — Phase 2
 
-Break the design into bite-sized, battle-tested tasks through collaborative adversarial decomposition.
+Break the design into bite-sized, battle-tested tasks through agent-driven adversarial decomposition.
 
 <HARD-GATE>
 Do NOT start implementation until the plan is approved by the Wizard and committed to git. All assigned agents participate in plan creation AND review. No subagents.
@@ -13,7 +13,7 @@ Do NOT start implementation until the plan is approved by the Wizard and committ
 
 ## Mode Behavior
 
-- **Full Raid**: All 3 agents decompose independently, then build the plan together. Full plan doc.
+- **Full Raid**: All 3 agents decompose independently, then fight over the plan directly. Full plan doc.
 - **Skirmish**: 2 agents. Plan is combined with the design doc into one lightweight document.
 - **Scout**: Skip this skill. Wizard creates inline tasks directly.
 
@@ -21,56 +21,84 @@ Do NOT start implementation until the plan is approved by the Wizard and committ
 
 ```dot
 digraph plan {
-  "Read approved design doc" -> "Dispatch decomposition (all agents)";
-  "Dispatch decomposition (all agents)" -> "Agents decompose independently";
-  "Agents decompose independently" -> "Compare decompositions";
-  "Compare decompositions" -> "Collaborative compliance testing";
-  "Collaborative compliance testing" -> "All requirements covered?" [shape=diamond];
-  "All requirements covered?" -> "Fix gaps" [label="no"];
-  "Fix gaps" -> "Collaborative compliance testing";
-  "All requirements covered?" -> "Wizard synthesizes" [label="yes"];
-  "Wizard synthesizes" -> "Write plan doc";
-  "Write plan doc" -> "Adversarial plan review (all agents attack)";
-  "Adversarial plan review (all agents attack)" -> "Self-review (6-point checklist)";
+  "Wizard reads design doc + Phase 1 Dungeon" -> "Wizard opens Dungeon + dispatches";
+  "Wizard opens Dungeon + dispatches" -> "Agents decompose independently";
+  "Agents decompose independently" -> "Agents compare and fight directly";
+  "Agents compare and fight directly" -> "Agents test compliance collaboratively";
+  "Agents test compliance collaboratively" -> "Agents pin agreed tasks to Dungeon";
+  "Agents pin agreed tasks to Dungeon" -> "All requirements covered?" [shape=diamond];
+  "All requirements covered?" -> "Agents identify and fix gaps" [label="no"];
+  "Agents identify and fix gaps" -> "Agents test compliance collaboratively";
+  "All requirements covered?" -> "Wizard closes: synthesizes plan from Dungeon" [label="yes"];
+  "Wizard closes: synthesizes plan from Dungeon" -> "Write plan doc";
+  "Write plan doc" -> "Adversarial plan review (agents attack directly)";
+  "Adversarial plan review (agents attack directly)" -> "Self-review (6-point checklist)";
   "Self-review (6-point checklist)" -> "Wizard ruling + commit";
-  "Wizard ruling + commit" -> "Invoke raid-implementation" [shape=doublecircle];
+  "Wizard ruling + commit" -> "Archive Dungeon + invoke raid-implementation" [shape=doublecircle];
 }
 ```
 
 ## Wizard Checklist
 
 1. **Read the approved design doc** — every requirement, every constraint
-2. **Dispatch decomposition** — all agents decompose independently
-3. **Observe the collaborative fight** — agents test each other's plans for compliance
-4. **Synthesize** — merge the best elements from all decompositions
-5. **Write the plan doc** — save to plans path from `.claude/raid.json`
-6. **Adversarial plan review** — all agents attack the written plan
-7. **Self-review** — 6-point checklist (see below)
-8. **Wizard ruling** — final plan approval
-9. **Commit** — `docs(plan): <feature> implementation plan`
-10. **Transition** — invoke `raid-implementation`
+2. **Read the Phase 1 archived Dungeon** — carry forward verified knowledge
+3. **Open the Dungeon** — create `.claude/raid-dungeon.md` with Phase 2 header
+4. **Dispatch decomposition** — all agents decompose independently with different angles, then interact directly
+5. **Observe the fight** — agents test each other's plans, argue ordering, coverage, naming. Intervene only on triggers.
+6. **Close the phase** — when Dungeon has complete, verified task list
+7. **Synthesize** — write plan doc from Dungeon evidence
+8. **Adversarial plan review** — agents attack the written plan directly
+9. **Self-review** — 6-point checklist (see below)
+10. **Wizard ruling** — final plan approval
+11. **Commit** — `docs(plan): <feature> implementation plan`
+12. **Archive Dungeon** — rename to `.claude/raid-dungeon-phase-2.md`
+13. **Transition** — invoke `raid-implementation`
+
+## Opening the Dungeon
+
+Create `.claude/raid-dungeon.md`:
+
+```markdown
+# Dungeon — Phase 2: Plan
+## Quest: Decompose <design topic> into implementation tasks
+## Mode: <Full Raid | Skirmish>
+
+### Discoveries
+
+### Active Battles
+
+### Resolved
+
+### Shared Knowledge
+
+### Escalations
+```
 
 ## Dispatch for Decomposition
 
 **📡 DISPATCH:**
 
-> **Warrior**: Decompose into tasks. Focus on structural ordering — what MUST be built first? Hard dependencies? Critical path? Include tests for every task.
+> **@Warrior**: Decompose into tasks. Focus on structural ordering — what MUST be built first? Hard dependencies? Critical path? Include tests for every task. Challenge @Archer and @Rogue's decompositions directly. Pin agreed tasks to Dungeon.
 >
-> **Archer**: Decompose into tasks. Focus on completeness and consistency — does every requirement have a task? Are interfaces well-defined across tasks? Are naming patterns and file structure consistent with the codebase?
+> **@Archer**: Decompose into tasks. Focus on completeness and consistency — does every requirement have a task? Are interfaces well-defined across tasks? Are naming patterns and file structure consistent with the codebase? Challenge @Warrior and @Rogue directly. Pin agreed tasks to Dungeon.
 >
-> **Rogue**: Decompose into tasks. Focus on hidden complexity — which tasks are deceptively hard? Where will the implementer guess wrong? Which tests miss the failure path?
+> **@Rogue**: Decompose into tasks. Focus on hidden complexity — which tasks are deceptively hard? Where will the implementer guess wrong? Which tests miss the failure path? Challenge @Warrior and @Archer directly. Pin agreed tasks to Dungeon.
+>
+> **All**: Read the Phase 1 archived Dungeon for design knowledge. Interact directly. Build on each other's decompositions. Pin agreed tasks with `📌 DUNGEON:`. Escalate to me with `🆘 WIZARD:` only when genuinely stuck.
 
-## Collaborative Compliance Testing
+## Collaborative Compliance Testing (Agent-Driven)
 
-After independent decomposition, agents build together:
+After independent decomposition, agents fight directly over the plan:
 
-1. **Compare decompositions** — where they agree (high confidence) and disagree (needs discussion)
-2. **Test compliance with design** — every requirement verified against the plan. Line by line. No gaps.
-3. **Test naming consistency** — all names consistent with each other, the codebase, and the design doc
+1. **Compare decompositions** — address each other by name, argue where they agree (high confidence) and disagree (needs resolution)
+2. **Test compliance with design** — every requirement verified against the plan. Line by line. No gaps. Agents cross-check each other.
+3. **Test naming consistency** — agents challenge each other's naming choices against codebase patterns
 4. **Test file system consistency** — file paths follow project structure, module organization clean
-5. **Test coverage** — every task has tests covering failure paths and edge cases
-6. **Test ordering** — dependencies correct, build won't break between commits
-7. **Learn from disagreements** — resolutions often reveal a better approach. Document why.
+5. **Test coverage** — agents challenge whether tests cover failure paths, not just happy paths
+6. **Test ordering** — agents argue dependency order, build-won't-break guarantees
+7. **Learn from disagreements** — resolutions often reveal a better approach. Pin lessons to Dungeon.
+
+**Agents do this DIRECTLY with each other. The Wizard observes and intervenes only on triggers.**
 
 ## Task Granularity
 
@@ -124,9 +152,9 @@ After writing the complete plan:
 
 1. **Spec coverage:** Skim each requirement in the design doc. Point to the task that implements it. List any gaps.
 2. **Placeholder scan:** Search for TBD, TODO, vague descriptions, missing code. Fix them.
-3. **Type/name consistency:** Do types, method signatures, property names match across ALL tasks? A function called `clearLayers()` in Task 3 but `clearFullLayers()` in Task 7 is a bug.
-4. **File structure consistency:** Do all file paths follow the project's conventions? Module organization clean?
-5. **Test quality:** Does every task have tests? Do tests cover failure paths, not just happy paths?
+3. **Type/name consistency:** Do types, method signatures, property names match across ALL tasks?
+4. **File structure consistency:** Do all file paths follow the project's conventions?
+5. **Test quality:** Does every task have tests? Do tests cover failure paths?
 6. **Ordering:** Can each task be built and committed independently without breaking the build?
 
 Fix issues inline. If a spec requirement has no task, add the task.
@@ -137,8 +165,9 @@ Fix issues inline. If a spec requirement has no task, add the task.
 |---------|---------|
 | "The plan is obvious from the design" | Plans expose complexity that specs hide. Decompose anyway. |
 | "We can figure out the details during implementation" | Details in implementation = placeholders in the plan. |
+| "I'll wait for the Wizard to synthesize" | You own the phase. Debate with teammates directly. |
 | "These tasks are similar enough to batch" | Each task must be independently buildable and testable. |
 | "Tests can be added later" | TDD means tests are in the plan. No test = no task. |
-| "The naming will be consistent enough" | Check it explicitly. Naming drift is the #1 source of bugs across tasks. |
+| "The naming will be consistent enough" | Check it explicitly. Naming drift is the #1 source of bugs. |
 
-**Terminal state:** ⚡ WIZARD RULING: Plan approved. Commit. Invoke `raid-implementation`.
+**Terminal state:** ⚡ WIZARD RULING: Plan approved. Commit. Archive Dungeon. Invoke `raid-implementation`.
