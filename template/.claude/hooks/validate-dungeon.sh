@@ -79,6 +79,16 @@ while IFS= read -r line; do
     if [ "$content_len" -lt 50 ]; then
       issues+=("Pinned entry too short. Include evidence.")
     fi
+
+    # Check that pinned entries reference at least two agents (survived challenge)
+    agent_count=0
+    echo "$content_after_prefix" | grep -qi "warrior" && agent_count=$((agent_count + 1))
+    echo "$content_after_prefix" | grep -qi "archer" && agent_count=$((agent_count + 1))
+    echo "$content_after_prefix" | grep -qi "rogue" && agent_count=$((agent_count + 1))
+    echo "$content_after_prefix" | grep -qi "wizard" && agent_count=$((agent_count + 1))
+    if [ "$agent_count" -lt 2 ]; then
+      issues+=("Pinned entry must reference at least 2 agents who verified it (e.g., 'verified by @Warrior and @Archer').")
+    fi
   fi
 
   # Layer 3: Phase consistency
