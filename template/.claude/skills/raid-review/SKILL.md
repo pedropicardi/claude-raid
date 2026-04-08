@@ -104,7 +104,7 @@ After independent reviews, agents fight DIRECTLY over findings AND missing findi
 - `CHALLENGE: @Archer, you gave the auth module a pass but didn't check the session rotation path — review it now.`
 - `BUILDING: @Warrior, your finding about the missing error handler — the impact is worse than you stated because...`
 - `CHALLENGE: @Rogue, your "Critical" severity on the naming inconsistency is overblown — here's why it's actually Minor...`
-- `📌 DUNGEON: [Critical] handler.js:23 — missing input validation allows injection. Verified by @Warrior and @Rogue.`
+- `DUNGEON: [Critical] handler.js:23 — missing input validation allows injection. Verified by @Warrior and @Rogue.`
 
 **Agents classify severity when pinning to Dungeon:**
 

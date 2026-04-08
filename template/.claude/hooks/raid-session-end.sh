@@ -41,7 +41,7 @@ EOF
 
 # Extract pinned findings from Dungeon
 if [ -f ".claude/raid-dungeon.md" ]; then
-  { grep -E '📌|DUNGEON:|FINDING:|DECISION:' ".claude/raid-dungeon.md" 2>/dev/null || true; } | while IFS= read -r line; do
+  { grep -E 'DUNGEON:|FINDING:|DECISION:' ".claude/raid-dungeon.md" 2>/dev/null || true; } | while IFS= read -r line; do
     echo "- $line" >> "$QUEST_FILE"
   done
 fi

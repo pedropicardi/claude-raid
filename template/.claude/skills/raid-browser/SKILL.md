@@ -24,7 +24,7 @@ Shared infrastructure for browser testing. Handles startup discovery, boot/clean
 Before ANY browser action, the agent MUST state exactly what they're testing:
 
 ```
-📋 BROWSER TEST SUBJECT:
+BROWSER TEST SUBJECT:
 - Feature: "<specific feature name>"
 - Scope: "<what interactions/flows are being tested>"
 - Success criteria: "<what 'working' looks like>"

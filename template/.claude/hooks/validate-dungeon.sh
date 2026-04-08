@@ -47,20 +47,20 @@ while IFS= read -r line; do
   content_after_prefix=""
 
   case "$line" in
-    "📌 DUNGEON:"*)
+    "DUNGEON:"*|"📌 DUNGEON:"*)
       has_prefix=true
       entry_type="DUNGEON"
-      content_after_prefix="${line#📌 DUNGEON:}"
+      content_after_prefix="${line#*DUNGEON:}"
       ;;
-    "⚠️ UNRESOLVED:"*)
+    "UNRESOLVED:"*|"⚠️ UNRESOLVED:"*)
       has_prefix=true
       entry_type="UNRESOLVED"
       ;;
-    "✅ RESOLVED:"*)
+    "RESOLVED:"*|"✅ RESOLVED:"*)
       has_prefix=true
       entry_type="RESOLVED"
       ;;
-    "📋 TASK:"*)
+    "TASK:"*|"📋 TASK:"*)
       has_prefix=true
       entry_type="TASK"
       ;;

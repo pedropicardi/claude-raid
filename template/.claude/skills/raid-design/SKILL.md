@@ -183,7 +183,7 @@ Save to: specs path from `.claude/raid.json` (default: `docs/raid/specs/YYYY-MM-
 ## Testing Strategy
 ## Edge Cases
 ## Future Considerations (NOT building now, designing to accommodate)
-## ⚡ WIZARD RULING
+## RULING
 ```
 
 ## Red Flags — Thoughts That Signal Violations
