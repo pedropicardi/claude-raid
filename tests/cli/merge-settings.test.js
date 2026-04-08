@@ -103,7 +103,7 @@ describe('mergeSettings', () => {
     const raidHooks = settings.hooks.PostToolUse.filter(h =>
       h.hooks && h.hooks.some(hh => hh.command && hh.command.includes('validate-'))
     );
-    assert.strictEqual(raidHooks.length, 1);
+    assert.strictEqual(raidHooks.length, 2);
   });
 
   it('throws on invalid JSON in existing settings.json', () => {
@@ -123,8 +123,9 @@ describe('mergeSettings', () => {
     const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
     const bashEntry = settings.hooks.PreToolUse.find(e => e.matcher === 'Bash');
     assert.ok(bashEntry, 'should have a Bash matcher in PreToolUse');
-    assert.strictEqual(bashEntry.hooks.length, 1, 'Bash matcher should have exactly 1 hook');
+    assert.strictEqual(bashEntry.hooks.length, 2, 'Bash matcher should have 2 hooks');
     assert.ok(bashEntry.hooks[0].command.includes('validate-commit.sh'));
+    assert.ok(bashEntry.hooks[1].command.includes('validate-browser-tests-exist.sh'));
   });
 
   it('wires validate-write-gate.sh as Write|Edit PreToolUse hook', () => {

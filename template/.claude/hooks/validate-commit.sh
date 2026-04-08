@@ -76,7 +76,18 @@ if [ "$RAID_ACTIVE" = "true" ] && [ -n "$RAID_TEST_CMD" ]; then
   if [ "$_test_rc" -ne 0 ]; then
     raid_block "TESTS: Tests failed. Fix before committing. Command: $RAID_TEST_CMD"
   fi
-  # Write timestamp on success
+  # Run browser tests if enabled and Playwright is installed
+  if [ "$RAID_BROWSER_ENABLED" = "true" ] && [ -n "$RAID_BROWSER_PW_CONFIG" ] && [ -f "$RAID_BROWSER_PW_CONFIG" ]; then
+    set +e
+    ($RAID_BROWSER_EXEC_CMD playwright test --reporter=list) > /dev/null 2>&1
+    _pw_rc=$?
+    set -e
+    if [ "$_pw_rc" -ne 0 ]; then
+      raid_block "BROWSER TESTS: Playwright tests failed. Fix before committing. Command: $RAID_BROWSER_EXEC_CMD playwright test"
+    fi
+  fi
+
+  # Write timestamp on success (only when ALL tests pass — unit AND browser)
   mkdir -p .claude
   date +%s > .claude/raid-last-test-run
 fi

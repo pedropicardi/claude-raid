@@ -21,12 +21,19 @@ const RAID_HOOKS = {
         { type: 'command', command: `bash .claude/hooks/validate-dungeon.sh ${RAID_HOOK_MARKER}` },
       ],
     },
+    {
+      matcher: 'Bash',
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/validate-browser-cleanup.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
   ],
   PreToolUse: [
     {
       matcher: 'Bash',
       hooks: [
         { type: 'command', command: `bash .claude/hooks/validate-commit.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-browser-tests-exist.sh ${RAID_HOOK_MARKER}` },
       ],
     },
     {
