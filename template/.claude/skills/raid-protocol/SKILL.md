@@ -1,6 +1,6 @@
 ---
 name: raid-protocol
-description: "MUST use at the start of any Raid session. Establishes the 4-phase adversarial workflow, team rules, modes, and reference tables. All phases involve all assigned agents in competitive cross-testing."
+description: "MUST use at the start of any Raid session. Establishes the 4-phase adversarial workflow, team rules, modes, session lifecycle, and reference tables. All phases involve all assigned agents in competitive cross-testing."
 ---
 
 # Raid Protocol — Adversarial Multi-Agent Development
@@ -10,6 +10,32 @@ The canonical workflow for all Raid operations. Every feature, bugfix, refactor 
 <HARD-GATE>
 Do NOT skip phases. Do NOT let a single agent work unchallenged (except in Scout mode). Do NOT proceed without a Wizard ruling. No subagents — agent teams only.
 </HARD-GATE>
+
+## Session Lifecycle
+
+```dot
+digraph session {
+  "Wizard starts" -> "Read raid-rules.md + raid.json";
+  "Read raid-rules.md + raid.json" -> "Create .claude/raid-session";
+  "Create .claude/raid-session" -> "Assess task complexity";
+  "Assess task complexity" -> "Recommend mode";
+  "Recommend mode" -> "Human confirms mode?";
+  "Human confirms mode?" -> "Begin Phase 1" [label="yes"];
+  "Human confirms mode?" -> "Recommend mode" [label="override"];
+  "Begin Phase 1" -> "Phase 1: Design (raid-design)";
+  "Phase 1: Design (raid-design)" -> "Phase 2: Plan (raid-implementation-plan)";
+  "Phase 2: Plan (raid-implementation-plan)" -> "Phase 3: Implementation (raid-implementation)";
+  "Phase 3: Implementation (raid-implementation)" -> "Phase 4: Review (raid-review)";
+  "Phase 4: Review (raid-review)" -> "Finishing (raid-finishing)";
+  "Finishing (raid-finishing)" -> "Remove .claude/raid-session";
+  "Remove .claude/raid-session" -> "Session complete" [shape=doublecircle];
+}
+```
+
+**On session start:** Create `.claude/raid-session` to activate workflow hooks.
+**On session end:** Remove `.claude/raid-session` to deactivate hooks.
+
+Hooks that enforce workflow discipline (phase-gate, test-pass, verification) only fire when `.claude/raid-session` exists. This prevents hooks from blocking normal coding outside of a Raid.
 
 ## Team
 
@@ -26,18 +52,19 @@ Read and follow `.claude/raid-rules.md`. Non-negotiable.
 
 ## Configuration
 
-Read `.claude/raid.json` for project-specific settings:
-- `project.testCommand` — the command to run tests
-- `project.lintCommand` — the command to run linting
-- `project.buildCommand` — the command to build
-- `paths.specs` — where design docs go (default: `docs/raid/specs`)
-- `paths.plans` — where plans go (default: `docs/raid/plans`)
-- `paths.worktrees` — where worktrees go (default: `.worktrees`)
-- `conventions.fileNaming` — naming convention (kebab-case, snake_case, camelCase, none)
-- `conventions.commits` — commit format (default: conventional)
-- `raid.defaultMode` — default mode (full, skirmish, scout)
+Read `.claude/raid.json` for project-specific settings. If absent, use sensible defaults:
 
-If `raid.json` is absent, use sensible defaults.
+| Key | Default | Purpose |
+|-----|---------|---------|
+| `project.testCommand` | (none) | Command to run tests |
+| `project.lintCommand` | (none) | Command to run linting |
+| `project.buildCommand` | (none) | Command to build |
+| `paths.specs` | `docs/raid/specs` | Where design docs go |
+| `paths.plans` | `docs/raid/plans` | Where plans go |
+| `paths.worktrees` | `.worktrees` | Where worktrees go |
+| `conventions.fileNaming` | `none` | Naming convention |
+| `conventions.commits` | `conventional` | Commit format |
+| `raid.defaultMode` | `full` | Default mode |
 
 ## Modes
 
@@ -58,28 +85,27 @@ Three modes that scale effort to task complexity.
 **Mode selection:** User specifies, or Wizard recommends based on task complexity.
 **Escalation:** Wizard may escalate (Scout->Skirmish->Full) with human approval.
 **De-escalation:** Only with human approval.
-**TDD is non-negotiable in ALL modes.**
 
-When to use each:
-- **Full Raid**: Complex features, architecture decisions, critical security reviews, major refactors, cross-layer changes
-- **Skirmish**: Medium features, non-trivial bugfixes, multi-file changes
-- **Scout**: Simple bugfixes, config changes, docs, single-file changes
+**TDD is non-negotiable in ALL modes.** This is an Iron Law, not a preference.
 
-## The Four Phases
+## The Phase Pattern
 
+Every phase follows the same adversarial loop:
+
+```dot
+digraph phase_pattern {
+  "Wizard comprehends" -> "Wizard dispatches (different angles)";
+  "Wizard dispatches (different angles)" -> "Agents explore independently";
+  "Agents explore independently" -> "Agents cross-test findings";
+  "Agents cross-test findings" -> "Productive friction?" [shape=diamond];
+  "Productive friction?" -> "Agents cross-test findings" [label="yes, continue"];
+  "Productive friction?" -> "Wizard intervenes" [label="no, diminishing returns"];
+  "Wizard intervenes" -> "Wizard synthesizes + ruling";
+  "Agents cross-test findings" -> "Wizard synthesizes + ruling" [label="converged"];
+  "Wizard synthesizes + ruling" -> "Commit phase output";
+  "Commit phase output" -> "Next phase";
+}
 ```
-Phase 1: DESIGN ──────────── raid-design       -> specs path
-Phase 2: IMPLEMENTATION PLAN  raid-implementation-plan -> plans path
-Phase 3: IMPLEMENTATION ───── raid-implementation
-Phase 4: REVIEW ──────────── raid-review
-```
-
-Each phase follows the same pattern:
-1. Wizard comprehends and dispatches with different angles
-2. Agents explore independently
-3. Agents cross-test, challenge, and learn from each other's findings
-4. Wizard synthesizes and delivers ruling
-5. Phase output is committed before proceeding
 
 ### Phase Transition Gates
 
@@ -92,31 +118,57 @@ Each phase follows the same pattern:
 
 **Violating the letter of these gates is violating the spirit of the process.**
 
+## When the Wizard Intervenes
+
+The Wizard observes 90%, acts 10%. Intervention triggers:
+
+| Signal | Action |
+|--------|--------|
+| Same arguments 3+ rounds, no new evidence | Break the loop. Rule or redirect. |
+| All agents converged | Synthesize and move on. |
+| Irreconcilable deadlock | Rule with rationale. Binding. |
+| Agents drifting from objective | Redirect with clarity. |
+| Agents wasting moves on trivial points | Call out and refocus. |
+| Agent rubber-stamping (lazy) | Call out and demand genuine challenge. |
+| Agent defending past evidence (ego) | Call out. Evidence or concede. |
+
+## Red Flags — Thoughts That Signal Violations
+
+| Thought | Reality |
+|---------|---------|
+| "This phase is obvious, let's skip it" | Obvious phases are where assumptions hide. |
+| "The agents agree, no need for cross-testing" | Agreement without challenge is groupthink. |
+| "Let's just fix this quickly, no need for design" | Quick fixes without design become tech debt. |
+| "TDD would slow us down on this one" | TDD is an Iron Law. No exceptions. |
+| "One agent can handle this alone" | Scout mode exists. Use it. Don't bypass modes. |
+| "We already know what to build" | Knowing and verifying are different things. |
+| "The human doesn't need to see intermediate results" | Wizard is the human interface. Always report. |
+
 ## Skills Reference
 
-| Skill | Purpose |
-|-------|---------|
-| `raid-protocol` | Master orchestration, modes, team rules, reference tables |
-| `raid-design` | Phase 1 — adversarial design with edge exploration |
-| `raid-implementation-plan` | Phase 2 — collaborative plan with compliance testing |
-| `raid-implementation` | Phase 3 — implement with cross-validation |
-| `raid-review` | Phase 4 — adversarial full review |
-| `raid-tdd` | TDD with adversarial test quality review |
-| `raid-debugging` | Competing hypothesis debugging |
-| `raid-verification` | Evidence before completion claims |
-| `raid-git-worktrees` | Isolated workspace setup |
-| `raid-finishing` | Completeness debate + branch workflow |
+| Skill | Phase | Purpose |
+|-------|-------|---------|
+| `raid-protocol` | Start | Session lifecycle, modes, rules, reference |
+| `raid-design` | 1 | Adversarial design with edge exploration |
+| `raid-implementation-plan` | 2 | Collaborative plan with compliance testing |
+| `raid-implementation` | 3 | Cross-validated implementation with rotation |
+| `raid-review` | 4 | Adversarial full review |
+| `raid-finishing` | End | Completeness debate + merge options |
+| `raid-tdd` | 3 | TDD with adversarial test quality review |
+| `raid-debugging` | Any | Competing hypothesis root cause analysis |
+| `raid-verification` | Any | Evidence before completion claims |
+| `raid-git-worktrees` | 3 | Isolated workspace setup |
 
 ## Hooks Reference
 
-| Hook | Event | Purpose |
-|------|-------|---------|
-| `validate-file-naming.sh` | PostToolUse (Write/Edit) | Enforce naming conventions |
-| `validate-commit-message.sh` | PreToolUse (Bash) | Conventional commits |
-| `validate-tests-pass.sh` | PreToolUse (Bash) | Tests before commits |
-| `validate-phase-gate.sh` | PreToolUse (Write) | Design doc before implementation |
-| `validate-no-placeholders.sh` | PostToolUse (Write/Edit) | No TBD/TODO in specs/plans |
-| `validate-verification.sh` | PreToolUse (Bash) | Test evidence before completion claims |
+| Hook | Event | Active | Purpose |
+|------|-------|--------|---------|
+| `validate-file-naming.sh` | PostToolUse (Write/Edit) | Always | Enforce naming conventions |
+| `validate-commit-message.sh` | PreToolUse (Bash) | Always | Conventional commits |
+| `validate-tests-pass.sh` | PreToolUse (Bash) | Raid session only | Tests before commits |
+| `validate-phase-gate.sh` | PreToolUse (Write) | Raid session only | Design doc before code |
+| `validate-no-placeholders.sh` | PostToolUse (Write/Edit) | Always | No TBD/TODO in specs/plans |
+| `validate-verification.sh` | PreToolUse (Bash) | Raid session only | Test evidence before completion |
 
 ## Commit Convention
 
@@ -124,18 +176,14 @@ All commits follow: `type(scope): description`
 
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
 
-Phase transitions get explicit commits:
-- Design approved: `docs(design): <topic> specification`
-- Plan approved: `docs(plan): <topic> implementation plan`
-- Task complete: `feat(scope): <what was built>`
-- Review fixes: `fix(scope): <what was fixed>`
+Phase transitions: `docs(design): <topic>`, `docs(plan): <topic>`, `feat(scope): <what>`, `fix(scope): <what>`
 
 ## Communication Prefixes
 
 | Prefix | Agent | Meaning |
 |--------|-------|---------|
 | 📡 DISPATCH: | Wizard | Assigning tasks |
-| ⚡ WIZARD RULING: | Wizard | Final decision, binding |
+| ⚡ WIZARD RULING: | Wizard | Final decision, binding, no appeals |
 | 🔍 FINDING: / ⚔️ CHALLENGE: | Warrior | Discovery / Challenge |
 | 🎯 FINDING: / 🏹 CHALLENGE: | Archer | Discovery / Challenge |
 | 💀 FINDING: / 🗡️ CHALLENGE: | Rogue | Discovery / Challenge |
