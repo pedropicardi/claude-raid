@@ -1,6 +1,6 @@
 ---
 name: raid-protocol
-description: "MUST use at the start of any Raid session. Establishes the 4-phase adversarial workflow, team rules, modes, session lifecycle, and reference tables. All phases involve all assigned agents in competitive cross-testing."
+description: "MUST use at the start of any Raid session. Establishes the 4-phase adversarial workflow, Dungeon lifecycle, team rules, modes, direct interaction protocols, and reference tables. Agents self-organize within phases. Wizard opens and closes."
 ---
 
 # Raid Protocol — Adversarial Multi-Agent Development
@@ -27,28 +27,29 @@ digraph session {
   "Phase 2: Plan (raid-implementation-plan)" -> "Phase 3: Implementation (raid-implementation)";
   "Phase 3: Implementation (raid-implementation)" -> "Phase 4: Review (raid-review)";
   "Phase 4: Review (raid-review)" -> "Finishing (raid-finishing)";
-  "Finishing (raid-finishing)" -> "Remove .claude/raid-session";
+  "Finishing (raid-finishing)" -> "Clean up Dungeon files";
+  "Clean up Dungeon files" -> "Remove .claude/raid-session";
   "Remove .claude/raid-session" -> "Session complete" [shape=doublecircle];
 }
 ```
 
 **On session start:** Create `.claude/raid-session` to activate workflow hooks.
-**On session end:** Remove `.claude/raid-session` to deactivate hooks.
+**On session end:** Remove `.claude/raid-session`, remove `.claude/raid-dungeon.md` and all `.claude/raid-dungeon-phase-*.md` files.
 
-Hooks that enforce workflow discipline (phase-gate, test-pass, verification) only fire when `.claude/raid-session` exists. This prevents hooks from blocking normal coding outside of a Raid.
+Hooks that enforce workflow discipline (phase-gate, test-pass, verification) only fire when `.claude/raid-session` exists.
 
 ## Team
 
 | Agent | Role | Color |
 |-------|------|-------|
-| **Wizard** (Lead) | Coordinator, analyzer, judge, final authority | Purple |
-| **Warrior** | Aggressive thorough explorer, stress-tests to destruction | Red |
-| **Archer** | Precise pattern-seeker, finds hidden connections and drift | Green |
-| **Rogue** | Adversarial assumption-destroyer, thinks like attacker | Orange |
+| **Wizard** (Dungeon Master) | Opens phases, observes, intervenes when necessary, closes with ruling | Purple |
+| **Warrior** | Aggressive explorer, stress-tests to destruction, builds on team findings | Red |
+| **Archer** | Precise pattern-seeker, finds hidden connections and drift, traces ripple effects | Green |
+| **Rogue** | Adversarial assumption-destroyer, constructs attack scenarios, weaponizes findings | Orange |
 
 ## Team Rules
 
-Read and follow `.claude/raid-rules.md`. Non-negotiable.
+Read and follow `.claude/raid-rules.md`. Non-negotiable. 17 rules including Dungeon discipline, direct engagement, wise escalation, and evidence-backed roasts.
 
 ## Configuration
 
@@ -81,6 +82,7 @@ Three modes that scale effort to task complexity.
 | Verification | Triple | Double | Single + Wizard |
 | Design doc | Required | Optional (brief) | Not required |
 | Plan doc | Required | Combined with design | Not required |
+| Dungeon | Full (all sections) | Lightweight | Wizard notes only |
 
 **Mode selection:** User specifies, or Wizard recommends based on task complexity.
 **Escalation:** Wizard may escalate (Scout->Skirmish->Full) with human approval.
@@ -88,22 +90,81 @@ Three modes that scale effort to task complexity.
 
 **TDD is non-negotiable in ALL modes.** This is an Iron Law, not a preference.
 
+## The Dungeon — Shared Knowledge Artifact
+
+The Dungeon (`.claude/raid-dungeon.md`) is the team's shared knowledge board. It persists within a phase and gets archived when the phase closes.
+
+### Dungeon Structure
+
+```markdown
+# Dungeon — Phase N: <Phase Name>
+## Quest: <task description>
+## Mode: <Full Raid | Skirmish | Scout>
+
+### Discoveries
+<!-- Verified findings that survived challenge, tagged with agent name -->
+
+### Active Battles
+<!-- Ongoing unresolved challenges between agents -->
+
+### Resolved
+<!-- Challenges that reached conclusion — conceded, proven, or Wizard-ruled -->
+
+### Shared Knowledge
+<!-- Facts established as true by 2+ agents agreeing or surviving challenge -->
+
+### Escalations
+<!-- Points where agents pulled the Wizard in -->
+```
+
+### Dungeon Lifecycle
+
+| Event | Action | Who |
+|-------|--------|-----|
+| Phase opens | Create `.claude/raid-dungeon.md` with header | Wizard |
+| During phase | Read and write via `📌 DUNGEON:` signal | Agents |
+| Phase closes | Rename to `.claude/raid-dungeon-phase-N.md` | Wizard |
+| Next phase opens | Create fresh `.claude/raid-dungeon.md` | Wizard |
+| Session ends | Remove all Dungeon files | Wizard |
+
+### Dungeon Curation Rules
+
+**What goes IN the Dungeon (via `📌 DUNGEON:` only):**
+- Findings that survived a challenge (verified truths)
+- Active unresolved battles (prevents re-litigation)
+- Shared knowledge promoted by 2+ agents agreeing
+- Key decisions and their reasoning
+- Escalation points and Wizard responses
+
+**What stays in conversation only:**
+- Back-and-forth of challenges and roasts
+- Exploratory thinking and hypotheses
+- Concessions and rebuttals
+- Anything that didn't produce a durable insight
+
+**The conversation is the sparring ring. The Dungeon is the scoreboard.**
+
+### Referencing Prior Phases
+
+Agents can read archived Dungeons from prior phases. Design knowledge carries into Plan. Plan knowledge carries into Implementation. This is how context survives phase transitions.
+
 ## The Phase Pattern
 
-Every phase follows the same adversarial loop:
+Every phase follows the open/close bookend model:
 
 ```dot
 digraph phase_pattern {
-  "Wizard comprehends" -> "Wizard dispatches (different angles)";
-  "Wizard dispatches (different angles)" -> "Agents explore independently";
-  "Agents explore independently" -> "Agents cross-test findings";
-  "Agents cross-test findings" -> "Productive friction?" [shape=diamond];
-  "Productive friction?" -> "Agents cross-test findings" [label="yes, continue"];
-  "Productive friction?" -> "Wizard intervenes" [label="no, diminishing returns"];
-  "Wizard intervenes" -> "Wizard synthesizes + ruling";
-  "Agents cross-test findings" -> "Wizard synthesizes + ruling" [label="converged"];
-  "Wizard synthesizes + ruling" -> "Commit phase output";
-  "Commit phase output" -> "Next phase";
+  "Wizard opens (quest + angles + Dungeon)" -> "Agents self-organize";
+  "Agents self-organize" -> "Agents explore, challenge, roast, build";
+  "Agents explore, challenge, roast, build" -> "Agents pin findings to Dungeon";
+  "Agents pin findings to Dungeon" -> "Intervention needed?" [shape=diamond];
+  "Intervention needed?" -> "Wizard intervenes (minimum force)" [label="yes"];
+  "Wizard intervenes (minimum force)" -> "Agents resume";
+  "Agents resume" -> "Agents explore, challenge, roast, build";
+  "Intervention needed?" -> "Phase objective met?" [label="no"];
+  "Phase objective met?" -> "Agents explore, challenge, roast, build" [label="no, continue"];
+  "Phase objective met?" -> "Wizard closes (ruling + archive Dungeon)" [label="yes"];
+  "Wizard closes (ruling + archive Dungeon)" -> "Next phase" [shape=doublecircle];
 }
 ```
 
@@ -111,12 +172,57 @@ digraph phase_pattern {
 
 | From | To | Gate |
 |------|-----|------|
-| Design | Plan | Design doc approved by Wizard, committed |
-| Plan | Implementation | Plan approved by Wizard, committed |
+| Design | Plan | Design doc approved by Wizard ruling, committed |
+| Plan | Implementation | Plan approved by Wizard ruling, committed |
 | Implementation | Review | All tasks complete, all tests passing, committed |
-| Review | Done | Wizard ruling: approved for merge |
+| Review | Finishing | Wizard ruling: approved for merge |
 
 **Violating the letter of these gates is violating the spirit of the process.**
+
+## Interaction Protocols
+
+### Communication Signals Reference
+
+| Signal | Who | Meaning | Goes to Dungeon? |
+|--------|-----|---------|------------------|
+| `📡 DISPATCH:` | Wizard | Opening a phase, assigning angles | No (phase opening) |
+| `⚡ WIZARD OBSERVES:` | Wizard | Brief course correction, hint, nudge | No |
+| `⚡ WIZARD INTERVENES:` | Wizard | Stops action, something wrong | No |
+| `⚡ WIZARD RULING:` | Wizard | Phase over, binding decision | Ruling archived with Dungeon |
+| `@Name, ...` | Any agent | Direct address to specific agent | No |
+| `🔍 FINDING:` | Warrior | Discovery with evidence | Only after surviving challenge |
+| `🎯 FINDING:` | Archer | Discovery with evidence | Only after surviving challenge |
+| `💀 FINDING:` | Rogue | Discovery with attack scenario | Only after surviving challenge |
+| `⚔️ CHALLENGE:` | Warrior | Direct challenge | No |
+| `🏹 CHALLENGE:` | Archer | Direct challenge | No |
+| `🗡️ CHALLENGE:` | Rogue | Direct challenge | No |
+| `🔥 ROAST:` | Any agent | Pointed critique with evidence | No |
+| `🔗 BUILDING ON @Name:` | Any agent | Extending another's work | Result goes to Dungeon if verified |
+| `📌 DUNGEON:` | Any agent | Pinning verified finding | Yes — this is the write gate |
+| `🆘 WIZARD:` | Any agent | Escalation — needs Wizard input | Yes (as escalation point) |
+| `✅ CONCEDE:` | Any agent | Admitting wrong, moving on | No |
+
+### Direct Interaction Rules
+
+- **Evidence required.** All challenges, roasts, and findings must carry proof — file paths, line numbers, concrete scenarios. "This is wrong" without evidence is laziness.
+- **Build explicitly.** `🔗 BUILDING ON @Name:` forces credit and continuity. Don't restart from scratch when someone found something useful.
+- **Concede instantly.** When proven wrong, concede. Then find a new angle. No ego.
+- **Pin deliberately.** `📌 DUNGEON:` is the quality gate. Only verified, challenged findings get pinned. Other agents can challenge whether a pin belongs.
+- **Escalate wisely.** `🆘 WIZARD:` when genuinely stuck, split on fundamentals, or need project-level context. Not when lazy.
+
+### When to Escalate to Wizard
+
+**Do escalate:**
+- 2+ agents stuck on same disagreement for 3+ exchanges with no new evidence
+- Uncertain about project-level context (user requirements, constraints, priorities)
+- Team needs a direction-setting decision that affects the quest
+- Found something that may require human input
+
+**Don't escalate:**
+- You can resolve it by reading the code
+- Another agent already answered your question
+- It's a matter of opinion that doesn't affect the outcome
+- You're stuck but haven't tried talking to the other agents first
 
 ## When the Wizard Intervenes
 
@@ -124,13 +230,14 @@ The Wizard observes 90%, acts 10%. Intervention triggers:
 
 | Signal | Action |
 |--------|--------|
-| Same arguments 3+ rounds, no new evidence | Break the loop. Rule or redirect. |
-| All agents converged | Synthesize and move on. |
-| Irreconcilable deadlock | Rule with rationale. Binding. |
-| Agents drifting from objective | Redirect with clarity. |
-| Agents wasting moves on trivial points | Call out and refocus. |
-| Agent rubber-stamping (lazy) | Call out and demand genuine challenge. |
-| Agent defending past evidence (ego) | Call out. Evidence or concede. |
+| Same arguments 3+ rounds, no new evidence | `⚡ WIZARD INTERVENES:` Break the loop. Rule or redirect. |
+| Agents drifting from objective | `⚡ WIZARD OBSERVES:` Redirect with clarity. |
+| Agents stuck, no progress (deadlock) | `⚡ WIZARD INTERVENES:` Rule with rationale. Binding. |
+| Shallow work, rubber-stamping (laziness) | `⚡ WIZARD INTERVENES:` Call out and demand genuine challenge. |
+| Defending past evidence (ego) | `⚡ WIZARD OBSERVES:` Evidence or concede. |
+| Wrong finding in Dungeon (misinformation) | `⚡ WIZARD INTERVENES:` Remove and correct. |
+| Agent escalation (`🆘 WIZARD:`) | Answer or redirect as appropriate. |
+| All agents converged | `⚡ WIZARD RULING:` Synthesize and close. |
 
 ## Red Flags — Thoughts That Signal Violations
 
@@ -142,20 +249,22 @@ The Wizard observes 90%, acts 10%. Intervention triggers:
 | "TDD would slow us down on this one" | TDD is an Iron Law. No exceptions. |
 | "One agent can handle this alone" | Scout mode exists. Use it. Don't bypass modes. |
 | "We already know what to build" | Knowing and verifying are different things. |
-| "The human doesn't need to see intermediate results" | Wizard is the human interface. Always report. |
+| "The Wizard should mediate this" | Agents resolve directly. Wizard observes. |
+| "Let me just post everything to the Dungeon" | Dungeon is a scoreboard, not a log. Pin only verified findings. |
+| "I'll wait for the Wizard to tell me what to do next" | You own the phase. Self-organize. |
 
 ## Skills Reference
 
 | Skill | Phase | Purpose |
 |-------|-------|---------|
-| `raid-protocol` | Start | Session lifecycle, modes, rules, reference |
-| `raid-design` | 1 | Adversarial design with edge exploration |
-| `raid-implementation-plan` | 2 | Collaborative plan with compliance testing |
-| `raid-implementation` | 3 | Cross-validated implementation with rotation |
-| `raid-review` | 4 | Adversarial full review |
+| `raid-protocol` | Start | Session lifecycle, Dungeon lifecycle, modes, rules, reference |
+| `raid-design` | 1 | Adversarial design with agent-driven exploration |
+| `raid-implementation-plan` | 2 | Collaborative plan with direct cross-testing |
+| `raid-implementation` | 3 | Agent-driven implementation with rotation |
+| `raid-review` | 4 | Adversarial full review with Dungeon-tracked issues |
 | `raid-finishing` | End | Completeness debate + merge options |
-| `raid-tdd` | 3 | TDD with adversarial test quality review |
-| `raid-debugging` | Any | Competing hypothesis root cause analysis |
+| `raid-tdd` | 3 | TDD with collaborative test quality review |
+| `raid-debugging` | Any | Competing hypothesis with direct debate |
 | `raid-verification` | Any | Evidence before completion claims |
 | `raid-git-worktrees` | 3 | Isolated workspace setup |
 
@@ -177,14 +286,3 @@ All commits follow: `type(scope): description`
 Types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `chore`, `revert`
 
 Phase transitions: `docs(design): <topic>`, `docs(plan): <topic>`, `feat(scope): <what>`, `fix(scope): <what>`
-
-## Communication Prefixes
-
-| Prefix | Agent | Meaning |
-|--------|-------|---------|
-| 📡 DISPATCH: | Wizard | Assigning tasks |
-| ⚡ WIZARD RULING: | Wizard | Final decision, binding, no appeals |
-| 🔍 FINDING: / ⚔️ CHALLENGE: | Warrior | Discovery / Challenge |
-| 🎯 FINDING: / 🏹 CHALLENGE: | Archer | Discovery / Challenge |
-| 💀 FINDING: / 🗡️ CHALLENGE: | Rogue | Discovery / Challenge |
-| ✅ CONCEDE: | Any | Conceding (brief, move on) |
