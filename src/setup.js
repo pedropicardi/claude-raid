@@ -5,7 +5,7 @@ const path = require('path');
 const os = require('os');
 const readline = require('readline');
 const { execSync } = require('child_process');
-const { colors } = require('./ui');
+const { colors, box, header } = require('./ui');
 
 // --- Helpers (private) ---
 
@@ -197,6 +197,17 @@ function writeTeammateMode(homedir, mode) {
   fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
 }
 
+// --- Formatting helper (private) ---
+
+function formatCheckLine(check) {
+  const icon = check.ok ? colors.green('✔') : colors.red('✖');
+  const line = `  ${icon} ${check.label}  ${check.detail}`;
+  if (check.hint) {
+    return line + '\n' + `    ${colors.dim('→')} ${colors.dim(check.hint)}`;
+  }
+  return line;
+}
+
 // --- Exports ---
 
 function runChecks(opts = {}) {
@@ -245,30 +256,31 @@ async function runSetup(opts = {}) {
 
   const isInteractive = !!stdin.isTTY;
 
-  // Print initial checks (node, claude, teammate-mode — NOT split-pane)
-  const initialChecks = checks.filter(c => c.id !== 'split-pane');
-  stdout.write(formatChecks(initialChecks) + '\n');
-
+  // Non-interactive: print all checks in a box and return
   if (!isInteractive) {
-    // Non-interactive: print split-pane check and return
-    const splitPane = checks.find(c => c.id === 'split-pane');
-    stdout.write(formatChecks([splitPane]) + '\n');
+    const allLines = checks.map(c => formatCheckLine(c));
+    stdout.write('\n' + box('Party Status', allLines) + '\n');
     return { checks, allOk, actions: [] };
   }
+
+  // Interactive: print initial checks (not split-pane yet)
+  const initialChecks = checks.filter(c => c.id !== 'split-pane');
+  const initialLines = initialChecks.map(c => formatCheckLine(c));
+  stdout.write('\n' + box('Party Status', initialLines) + '\n');
 
   // Handle teammate-mode fix
   const tmCheck = checks.find(c => c.id === 'teammate-mode');
   let selectedMode = null;
 
   if (!tmCheck.ok && tmCheck.fixable) {
-    stdout.write('\nChoose a teammate mode:\n');
+    stdout.write('\n  Choose your formation:\n\n');
     for (const item of MODE_MENU) {
-      stdout.write(`  ${item.key}) ${item.value} — ${item.desc}\n`);
+      stdout.write(`    ${colors.amber(item.key + ')')} ${colors.bold(item.value.padEnd(12))} ${colors.dim(item.desc)}\n`);
     }
-    const choice = await ask('\nPick [1/2/3]: ', stdin, stdout);
+    const choice = await ask('\n  Pick [1/2/3]: ', stdin, stdout);
     const picked = MODE_MENU.find(m => m.key === choice);
     if (picked) {
-      const confirm = await ask(`Write teammateMode: "${picked.value}" to ~/.claude.json? [Y/n] `, stdin, stdout);
+      const confirm = await ask(`  Write teammateMode: "${colors.bold(picked.value)}" to ~/.claude.json? [Y/n] `, stdin, stdout);
       if (confirm.toLowerCase() !== 'n') {
         writeTeammateMode(homedir, picked.value);
         tmCheck.ok = true;
@@ -277,6 +289,7 @@ async function runSetup(opts = {}) {
         delete tmCheck.fixable;
         actions.push('teammate-mode');
         selectedMode = picked.value;
+        stdout.write('  ' + colors.green('✔') + ' Updated ~/.claude.json\n');
       }
     }
   } else if (tmCheck.ok) {
@@ -291,14 +304,15 @@ async function runSetup(opts = {}) {
     delete splitPane.hint;
   }
 
-  stdout.write(formatChecks([splitPane]) + '\n');
+  stdout.write('\n  ' + formatCheckLine(splitPane) + '\n');
 
   // Recalculate allOk (required checks only: node + claude)
   const REQUIRED_IDS = ['node', 'claude'];
   allOk = checks.filter(c => REQUIRED_IDS.includes(c.id)).every(c => c.ok);
 
   if (checks.every(c => c.ok)) {
-    stdout.write('\nReady\n  Start a Raid: claude --agent wizard\n');
+    stdout.write('\n  ' + colors.green('The party is assembled.') + ' Your quest awaits.\n');
+    stdout.write('\n    claude --agent wizard\n');
   }
 
   return { checks, allOk, actions };
