@@ -97,14 +97,14 @@ RAID_LIFECYCLE_TEST_WINDOW=10
 
 if [ -f ".claude/raid.json" ]; then
   _lifecycle_json=$(jq -r '
-    (.raid.vault.enabled // true),
+    (if .raid.vault.enabled == null then true else .raid.vault.enabled end),
     (.raid.vault.path // ".claude/vault"),
-    (.raid.lifecycle.autoSessionManagement // true),
-    (.raid.lifecycle.teammateNudge // true),
-    (.raid.lifecycle.taskValidation // true),
-    (.raid.lifecycle.completionGate // true),
-    (.raid.lifecycle.phaseTransitionConfirm // true),
-    (.raid.lifecycle.compactBackup // true),
+    (if .raid.lifecycle.autoSessionManagement == null then true else .raid.lifecycle.autoSessionManagement end),
+    (if .raid.lifecycle.teammateNudge == null then true else .raid.lifecycle.teammateNudge end),
+    (if .raid.lifecycle.taskValidation == null then true else .raid.lifecycle.taskValidation end),
+    (if .raid.lifecycle.completionGate == null then true else .raid.lifecycle.completionGate end),
+    (if .raid.lifecycle.phaseTransitionConfirm == null then true else .raid.lifecycle.phaseTransitionConfirm end),
+    (if .raid.lifecycle.compactBackup == null then true else .raid.lifecycle.compactBackup end),
     (.raid.lifecycle.testWindowMinutes // 10)
   ' ".claude/raid.json" 2>/dev/null)
 
