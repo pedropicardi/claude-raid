@@ -4,6 +4,7 @@ const fs = require('fs');
 const path = require('path');
 const { detectProject } = require('./detect-project');
 const { mergeSettings } = require('./merge-settings');
+const { runSetup } = require('./setup');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
 
@@ -105,7 +106,7 @@ function install(cwd) {
   return result;
 }
 
-function run() {
+async function run() {
   const cwd = process.cwd();
   console.log('\nclaude-raid — Installing The Raid\n');
 
@@ -126,13 +127,10 @@ function run() {
   }
 
   console.log(`
-The Raid is installed.
+Configuration:  .claude/raid.json (edit to customize)
+Team rules:     .claude/raid-rules.md (editable)`);
 
-  Configuration:  .claude/raid.json (edit to customize)
-  Team rules:     .claude/raid-rules.md (editable)
-
-  Run 'claude-raid doctor' for setup guide and environment check.
-`);
+  await runSetup();
 }
 
 module.exports = { install, run };

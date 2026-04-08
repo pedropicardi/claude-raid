@@ -26,9 +26,7 @@ Learn more: https://github.com/pedropicardi/claude-raid
   process.exit(command ? 1 : 0);
 }
 
-try {
-  COMMANDS[command]();
-} catch (err) {
+Promise.resolve(COMMANDS[command]()).catch((err) => {
   console.error(`\nclaude-raid: ${err.message}\n`);
   process.exit(1);
-}
+});

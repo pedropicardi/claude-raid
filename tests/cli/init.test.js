@@ -109,6 +109,14 @@ describe('init', () => {
     assert.ok(gitignore.includes('.claude/raid-dungeon-phase-*'), 'Should include raid-dungeon-phase-*');
   });
 
+  it('install returns result without running setup (setup is async in run())', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const result = init.install(cwd);
+    assert.ok(result.detected);
+    assert.ok(!result.setupResult);
+  });
+
   it('does not overwrite existing raid.json on re-install', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
