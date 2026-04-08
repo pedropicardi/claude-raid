@@ -1,0 +1,104 @@
+'use strict';
+
+const fs = require('fs');
+const path = require('path');
+
+const RAID_ENV = {
+  CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1',
+};
+
+const RAID_PERMISSIONS = ['Read', 'Glob', 'Grep', 'Bash', 'Write', 'Edit'];
+
+const RAID_HOOKS = {
+  PostToolUse: [
+    {
+      matcher: 'Write|Edit',
+      hooks: [
+        { type: 'command', command: 'bash .claude/hooks/validate-file-naming.sh' },
+        { type: 'command', command: 'bash .claude/hooks/validate-no-placeholders.sh' },
+      ],
+    },
+  ],
+  PreToolUse: [
+    {
+      matcher: 'Bash',
+      hooks: [
+        { type: 'command', command: 'bash .claude/hooks/validate-commit-message.sh' },
+        { type: 'command', command: 'bash .claude/hooks/validate-tests-pass.sh' },
+        { type: 'command', command: 'bash .claude/hooks/validate-verification.sh' },
+      ],
+    },
+    {
+      matcher: 'Write',
+      hooks: [
+        { type: 'command', command: 'bash .claude/hooks/validate-phase-gate.sh' },
+      ],
+    },
+  ],
+};
+
+function isRaidHookEntry(entry) {
+  return entry.hooks && entry.hooks.some(h => h.command && h.command.includes('validate-'));
+}
+
+function mergeSettings(cwd) {
+  const settingsPath = path.join(cwd, '.claude', 'settings.json');
+  let existing = {};
+
+  if (fs.existsSync(settingsPath)) {
+    const backupPath = settingsPath + '.pre-raid-backup';
+    if (!fs.existsSync(backupPath)) {
+      fs.copyFileSync(settingsPath, backupPath);
+    }
+    existing = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+  }
+
+  existing.env = { ...(existing.env || {}), ...RAID_ENV };
+
+  const existingPerms = (existing.permissions && existing.permissions.allow) || [];
+  const merged = [...new Set([...existingPerms, ...RAID_PERMISSIONS])];
+  existing.permissions = { ...(existing.permissions || {}), allow: merged };
+
+  if (!existing.hooks) existing.hooks = {};
+
+  for (const [event, raidEntries] of Object.entries(RAID_HOOKS)) {
+    if (!existing.hooks[event]) {
+      existing.hooks[event] = [];
+    }
+    existing.hooks[event] = existing.hooks[event].filter(entry => !isRaidHookEntry(entry));
+    existing.hooks[event].push(...raidEntries);
+  }
+
+  fs.writeFileSync(settingsPath, JSON.stringify(existing, null, 2) + '\n');
+}
+
+function removeRaidSettings(cwd) {
+  const settingsPath = path.join(cwd, '.claude', 'settings.json');
+  const backupPath = settingsPath + '.pre-raid-backup';
+
+  if (fs.existsSync(backupPath)) {
+    fs.copyFileSync(backupPath, settingsPath);
+    fs.unlinkSync(backupPath);
+    return;
+  }
+
+  if (!fs.existsSync(settingsPath)) return;
+
+  const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+
+  if (settings.env) {
+    delete settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
+  }
+
+  if (settings.hooks) {
+    for (const event of Object.keys(settings.hooks)) {
+      settings.hooks[event] = settings.hooks[event].filter(entry => !isRaidHookEntry(entry));
+      if (settings.hooks[event].length === 0) delete settings.hooks[event];
+    }
+    if (Object.keys(settings.hooks).length === 0) delete settings.hooks;
+  }
+
+  fs.writeFileSync(settingsPath, JSON.stringify(settings, null, 2) + '\n');
+}
+
+module.exports = { mergeSettings, removeRaidSettings };
