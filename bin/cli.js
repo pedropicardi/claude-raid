@@ -4,6 +4,10 @@
 
 const command = process.argv[2];
 const { banner, colors, header } = require('../src/ui');
+const versionCheck = require('../src/version-check');
+
+// Start non-blocking version check immediately
+const showUpdateNotice = versionCheck.start();
 
 const COMMANDS = {
   // Primary commands
@@ -35,7 +39,9 @@ if (!command || !COMMANDS[command]) {
   process.exit(command ? 1 : 0);
 }
 
-Promise.resolve(COMMANDS[command]()).catch((err) => {
-  console.error(`\nclaude-raid: ${err.message}\n`);
-  process.exit(1);
-});
+Promise.resolve(COMMANDS[command]())
+  .then(() => showUpdateNotice(colors))
+  .catch((err) => {
+    console.error(`\nclaude-raid: ${err.message}\n`);
+    process.exit(1);
+  });
