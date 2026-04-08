@@ -86,6 +86,19 @@ function install(cwd) {
       },
       raid: {
         defaultMode: 'full',
+        vault: {
+          path: '.claude/vault',
+          enabled: true,
+        },
+        lifecycle: {
+          autoSessionManagement: true,
+          teammateNudge: true,
+          taskValidation: true,
+          completionGate: true,
+          phaseTransitionConfirm: true,
+          compactBackup: true,
+          testWindowMinutes: 10,
+        },
       },
     };
     Object.keys(raidConfig.project).forEach(key => {
@@ -114,7 +127,16 @@ function install(cwd) {
 
   // Add raid-last-test-run to .gitignore
   const gitignorePath = path.join(cwd, '.gitignore');
-  const ignoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session', '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*', '.env.raid'];
+  const ignoreEntries = [
+    '.claude/raid-last-test-run',
+    '.claude/raid-session',
+    '.claude/raid-dungeon.md',
+    '.claude/raid-dungeon-phase-*',
+    '.claude/raid-dungeon-backup.md',
+    '.claude/raid-dungeon-phase-*-backup.md',
+    '.claude/vault/.draft/',
+    '.env.raid',
+  ];
   if (fs.existsSync(gitignorePath)) {
     let content = fs.readFileSync(gitignorePath, 'utf8');
     const toAdd = ignoreEntries.filter(e => !content.includes(e));

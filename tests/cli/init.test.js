@@ -169,6 +169,19 @@ describe('init', () => {
     assert.strictEqual(config.browser, undefined);
   });
 
+  it('generates raid.json with vault and lifecycle config', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const config = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8'));
+    assert.ok(config.raid.vault, 'vault section should exist');
+    assert.strictEqual(config.raid.vault.enabled, true);
+    assert.strictEqual(config.raid.vault.path, '.claude/vault');
+    assert.ok(config.raid.lifecycle, 'lifecycle section should exist');
+    assert.strictEqual(config.raid.lifecycle.autoSessionManagement, true);
+    assert.strictEqual(config.raid.lifecycle.testWindowMinutes, 10);
+  });
+
   it('adds .env.raid to .gitignore', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
