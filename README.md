@@ -8,19 +8,41 @@ Adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vi
 
 ---
 
-## Quick Start
+## Getting Started
+
+### 1. Install
 
 ```bash
 npx claude-raid init
+```
+
+The installer auto-detects your project, copies agents/skills/hooks, and walks you through environment setup.
+
+### 2. Prerequisites
+
+The setup wizard checks these automatically:
+
+| Requirement | Why | Auto-configured? |
+|---|---|---|
+| **Claude Code** v2.1.32+ | Agent teams support | No — install/update manually |
+| **Node.js** 18+ | Runs the installer | No — install manually |
+| **teammateMode** in `~/.claude.json` | Display mode for agent sessions | Yes — wizard prompts you |
+| **tmux** or **iTerm2** | Split-pane mode (optional) | No — install manually |
+
+`jq` is required for hooks (pre-installed on macOS, `apt install jq` on Linux).
+
+The experimental agent teams flag (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`) is set automatically in your project's `.claude/settings.json` during install.
+
+### 3. Run
+
+```bash
 claude --agent wizard
 ```
 
-That's it. The installer auto-detects your project type, generates configuration, and merges with your existing Claude Code setup. Nothing is overwritten.
-
-For split-pane mode (recommended for watching agents interact):
+Re-check your environment anytime:
 
 ```bash
-claude --agent wizard --teammate-mode tmux
+npx claude-raid doctor
 ```
 
 ## How It Works
@@ -317,12 +339,6 @@ The Raid is a tool in your toolkit, not your project's operating system.
 - **Session-scoped hooks** -- workflow hooks only activate during Raid sessions (`.claude/raid-session`), never during normal coding
 - **Clean removal** restores your original `settings.json` from backup
 - **Zero npm dependencies** -- pure Node.js stdlib, fast `npx` cold-start
-
-## Requirements
-
-- [Claude Code](https://claude.ai/code) v2.1.32+
-- Node.js 18+ (for installation only -- the installed files are language-agnostic)
-- `jq` (for hooks -- pre-installed on macOS, available via `apt install jq` on Linux)
 
 ## Inherited from Superpowers
 
