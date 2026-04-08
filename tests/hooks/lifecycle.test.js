@@ -130,3 +130,157 @@ describe('raid-session-start.sh', () => {
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-session')));
   });
 });
+
+function writeSession(cwd, sessionData = {}) {
+  const data = { phase: 1, mode: 'full', currentAgent: 'wizard', ...sessionData };
+  fs.writeFileSync(path.join(cwd, '.claude', 'raid-session'), JSON.stringify(data));
+}
+
+describe('raid-teammate-idle.sh', () => {
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = null;
+  });
+
+  it('exits 2 with nudge when session active', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const result = runHook('raid-teammate-idle.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 2);
+    assert.ok(result.stderr.includes('Unclaimed tasks'));
+  });
+
+  it('exits 0 when no active session', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    const result = runHook('raid-teammate-idle.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+  });
+
+  it('exits 0 when nudge disabled', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd, { lifecycle: { teammateNudge: false } });
+    writeSession(cwd);
+    const result = runHook('raid-teammate-idle.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+  });
+});
+
+describe('raid-task-created.sh', () => {
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = null;
+  });
+
+  it('allows descriptive subjects', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const result = runHook('raid-task-created.sh', { task_subject: 'Implement user authentication flow' }, cwd);
+    assert.strictEqual(result.exitCode, 0);
+  });
+
+  it('blocks empty subjects', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const result = runHook('raid-task-created.sh', { task_subject: '' }, cwd);
+    assert.strictEqual(result.exitCode, 2);
+    assert.ok(result.stderr.includes('cannot be empty'));
+  });
+
+  it('blocks too-short subjects', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const result = runHook('raid-task-created.sh', { task_subject: 'Do stuff' }, cwd);
+    assert.strictEqual(result.exitCode, 2);
+    assert.ok(result.stderr.includes('too short'));
+  });
+
+  it('blocks single generic words like Fix', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    // "Fix" is 3 chars so it hits the too-short gate first
+    const result = runHook('raid-task-created.sh', { task_subject: 'Fix' }, cwd);
+    assert.strictEqual(result.exitCode, 2);
+    assert.ok(result.stderr.includes('too short'));
+  });
+
+
+  it('allows generic words with context', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const result = runHook('raid-task-created.sh', { task_subject: 'Fix the auth race condition' }, cwd);
+    assert.strictEqual(result.exitCode, 0);
+  });
+});
+
+describe('raid-task-completed.sh', () => {
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = null;
+  });
+
+  it('allows completion when test ran recently', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const now = Math.floor(Date.now() / 1000);
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-last-test-run'), String(now));
+    const result = runHook('raid-task-completed.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+  });
+
+  it('blocks when no test run file', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const result = runHook('raid-task-completed.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 2);
+    assert.ok(result.stderr.includes('No test run recorded'));
+  });
+
+  it('blocks when test run is too old', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const twentyMinsAgo = Math.floor(Date.now() / 1000) - (20 * 60);
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-last-test-run'), String(twentyMinsAgo));
+    const result = runHook('raid-task-completed.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 2);
+    assert.ok(result.stderr.includes('minutes ago'));
+  });
+});
+
+describe('raid-pre-compact.sh', () => {
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = null;
+  });
+
+  it('backs up Dungeon files and outputs additionalContext', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1.md'), '# Phase 1');
+    const result = runHook('raid-pre-compact.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon-backup.md')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1-backup.md')));
+    assert.ok(result.stdout.includes('additionalContext'));
+  });
+
+  it('does nothing when no Dungeon files exist', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    const result = runHook('raid-pre-compact.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.strictEqual(result.stdout.trim(), '');
+  });
+});
