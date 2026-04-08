@@ -80,13 +80,20 @@ Run: test command from `.claude/raid.json`
 
 ## Adversarial Test Review
 
-After TDD cycle, challengers attack the TESTS (not just the code):
+After TDD cycle, challengers attack the TESTS directly — and build on each other's critiques:
 
 1. **Does this test prove the behavior, or just confirm the implementation?** If you renamed an internal method, would the test break? It shouldn't.
 2. **What input would make this test pass even with a broken implementation?** (e.g., a test that only checks the happy path passes for any implementation that doesn't crash)
 3. **What edge cases are uncovered?** Empty input, null, boundary values, Unicode, concurrent access.
 4. **Is it testing real code or mock behavior?** Mocks that don't match real behavior = false confidence.
 5. **Would this catch a regression?** If someone changes the implementation next month, does this test catch the break?
+
+**Challengers interact directly:**
+- `⚔️ CHALLENGE: @Warrior, your test at line 15 only validates the happy path — here's an input that passes with a broken implementation: ...`
+- `🔗 BUILDING ON @Archer: Your edge case finding — the same gap exists in the error path test at line 32...`
+- `🔥 ROAST: @Rogue, you claimed the test is implementation-dependent but renaming the internal method doesn't break it — here's proof: ...`
+
+**Challengers don't just report to the Wizard — they fight each other over test quality.**
 
 ## Testing Anti-Patterns
 
