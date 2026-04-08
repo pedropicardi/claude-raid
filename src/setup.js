@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const os = require('os');
+const readline = require('readline');
 const { execSync } = require('child_process');
 
 // --- Helpers (private) ---
@@ -142,6 +143,38 @@ function checkSplitPane(exec) {
   };
 }
 
+// --- Interactive helpers (private) ---
+
+const MODE_MENU = [
+  { key: '1', value: 'tmux', desc: 'split panes, see all agents at once (requires tmux/iTerm2)' },
+  { key: '2', value: 'in-process', desc: 'all in one terminal, cycle with Shift+Down' },
+  { key: '3', value: 'auto', desc: 'split panes if available, otherwise in-process' },
+];
+
+function ask(question, stdin, stdout) {
+  return new Promise((resolve) => {
+    const rl = readline.createInterface({ input: stdin, output: stdout, terminal: false });
+    rl.question(question, (answer) => {
+      rl.close();
+      resolve((answer || '').trim());
+    });
+  });
+}
+
+function writeTeammateMode(homedir, mode) {
+  const configPath = path.join(homedir, '.claude.json');
+  let config = {};
+  if (fs.existsSync(configPath)) {
+    try {
+      config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    } catch {
+      config = {};
+    }
+  }
+  config.teammateMode = mode;
+  fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+}
+
 // --- Exports ---
 
 function runChecks(opts = {}) {
@@ -176,4 +209,73 @@ function formatChecks(checks) {
   return lines.join('\n');
 }
 
-module.exports = { runChecks, formatChecks, VALID_TEAMMATE_MODES };
+async function runSetup(opts = {}) {
+  const homedir = opts.homedir || os.homedir();
+  const exec = opts.exec || tryExec;
+  const stdin = opts.stdin || process.stdin;
+  const stdout = opts.stdout || process.stdout;
+  const actions = [];
+
+  let { checks, allOk } = runChecks({ homedir, exec });
+
+  const isInteractive = stdin.isTTY !== false;
+
+  // Print initial checks (node, claude, teammate-mode — NOT split-pane)
+  const initialChecks = checks.filter(c => c.id !== 'split-pane');
+  stdout.write(formatChecks(initialChecks) + '\n');
+
+  if (!isInteractive) {
+    // Non-interactive: print split-pane check and return
+    const splitPane = checks.find(c => c.id === 'split-pane');
+    stdout.write(formatChecks([splitPane]) + '\n');
+    return { checks, allOk, actions: [] };
+  }
+
+  // Handle teammate-mode fix
+  const tmCheck = checks.find(c => c.id === 'teammate-mode');
+  let selectedMode = null;
+
+  if (!tmCheck.ok && tmCheck.fixable) {
+    stdout.write('\nChoose a teammate mode:\n');
+    for (const item of MODE_MENU) {
+      stdout.write(`  ${item.key}) ${item.value} — ${item.desc}\n`);
+    }
+    const choice = await ask('\nPick [1/2/3]: ', stdin, stdout);
+    const picked = MODE_MENU.find(m => m.key === choice);
+    if (picked) {
+      const confirm = await ask(`Write teammateMode: "${picked.value}" to ~/.claude.json? [Y/n] `, stdin, stdout);
+      if (confirm.toLowerCase() !== 'n') {
+        writeTeammateMode(homedir, picked.value);
+        tmCheck.ok = true;
+        tmCheck.detail = picked.value;
+        delete tmCheck.hint;
+        delete tmCheck.fixable;
+        actions.push('teammate-mode');
+        selectedMode = picked.value;
+      }
+    }
+  } else if (tmCheck.ok) {
+    selectedMode = tmCheck.detail;
+  }
+
+  // Handle split-pane check
+  const splitPane = checks.find(c => c.id === 'split-pane');
+  if (selectedMode === 'in-process') {
+    splitPane.ok = true;
+    splitPane.detail = 'not needed (in-process mode)';
+    delete splitPane.hint;
+  }
+
+  stdout.write(formatChecks([splitPane]) + '\n');
+
+  // Recalculate allOk
+  allOk = checks.every(c => c.ok);
+
+  if (allOk) {
+    stdout.write('\nReady\n  Start a Raid: claude --agent wizard\n');
+  }
+
+  return { checks, allOk, actions };
+}
+
+module.exports = { runChecks, formatChecks, VALID_TEAMMATE_MODES, runSetup };

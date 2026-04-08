@@ -6,7 +6,8 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
-const { runChecks, formatChecks, VALID_TEAMMATE_MODES } = require('../../src/setup');
+const { Readable, Writable } = require('stream');
+const { runChecks, formatChecks, VALID_TEAMMATE_MODES, runSetup } = require('../../src/setup');
 
 let tmpDir;
 
@@ -183,5 +184,132 @@ describe('setup', () => {
 
   it('exports VALID_TEAMMATE_MODES', () => {
     assert.deepStrictEqual(VALID_TEAMMATE_MODES, ['tmux', 'in-process', 'auto']);
+  });
+});
+
+// --- helpers for runSetup tests ---
+
+function mockStdin(inputs) {
+  const lines = [...inputs];
+  const readable = new Readable({
+    read() {
+      if (lines.length > 0) {
+        setTimeout(() => this.push(lines.shift() + '\n'), 10);
+      } else {
+        setTimeout(() => this.push(null), 10);
+      }
+    },
+  });
+  readable.isTTY = true;
+  return readable;
+}
+
+function mockStdout() {
+  let output = '';
+  const writable = new Writable({
+    write(chunk, encoding, callback) {
+      output += chunk.toString();
+      callback();
+    },
+  });
+  writable.columns = 80;
+  writable.getOutput = () => output;
+  return writable;
+}
+
+function allPassExec(cmd) {
+  if (cmd === 'claude --version') return '2.3.1';
+  if (cmd === 'command -v tmux') return '/usr/local/bin/tmux';
+  return null;
+}
+
+describe('runSetup', () => {
+  afterEach(() => {
+    if (tmpDir) {
+      fs.rmSync(tmpDir, { recursive: true, force: true });
+      tmpDir = null;
+    }
+  });
+
+  it('prompts for teammateMode and writes to ~/.claude.json', async () => {
+    const home = makeTempDir();
+    const stdin = mockStdin(['2', 'y']);
+    const stdout = mockStdout();
+    const exec = allPassExec;
+
+    const result = await runSetup({ homedir: home, exec, stdin, stdout });
+
+    const config = JSON.parse(fs.readFileSync(path.join(home, '.claude.json'), 'utf8'));
+    assert.strictEqual(config.teammateMode, 'in-process');
+    assert.ok(result.actions.includes('teammate-mode'));
+  });
+
+  it('preserves existing ~/.claude.json content', async () => {
+    const home = makeTempDir();
+    fs.writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ existingKey: 'value' }));
+    const stdin = mockStdin(['1', 'y']);
+    const stdout = mockStdout();
+    // Make teammate-mode fail by writing invalid value first
+    // Actually the existing file has no teammateMode, so it will fail with fixable
+    // Wait - existingKey: 'value' has no teammateMode, so it will be fixable
+    // But let's make sure: checkTeammateMode reads the file, finds no valid teammateMode
+    // Actually it does have a config but teammateMode is undefined, so it goes to the last return
+    // which sets fixable: true. But wait, we need to remove the existing file's teammateMode
+    // to trigger the prompt. The file has { existingKey: 'value' } with no teammateMode, good.
+
+    const result = await runSetup({ homedir: home, exec: allPassExec, stdin, stdout });
+
+    const config = JSON.parse(fs.readFileSync(path.join(home, '.claude.json'), 'utf8'));
+    assert.strictEqual(config.existingKey, 'value');
+    assert.strictEqual(config.teammateMode, 'tmux');
+  });
+
+  it('skips prompts when not interactive', async () => {
+    const home = makeTempDir();
+    const stdin = mockStdin([]);
+    stdin.isTTY = false;
+    const stdout = mockStdout();
+
+    const result = await runSetup({ homedir: home, exec: allPassExec, stdin, stdout });
+
+    assert.deepStrictEqual(result.actions, []);
+  });
+
+  it('does not write config when user declines', async () => {
+    const home = makeTempDir();
+    const stdin = mockStdin(['1', 'n']);
+    const stdout = mockStdout();
+
+    const result = await runSetup({ homedir: home, exec: allPassExec, stdin, stdout });
+
+    assert.strictEqual(fs.existsSync(path.join(home, '.claude.json')), false);
+  });
+
+  it('skips split-pane check when in-process selected', async () => {
+    const home = makeTempDir();
+    const stdin = mockStdin(['2', 'y']);
+    const stdout = mockStdout();
+    // exec that has NO tmux/it2 so split-pane would normally fail
+    const exec = (cmd) => {
+      if (cmd === 'claude --version') return '2.3.1';
+      return null;
+    };
+
+    const result = await runSetup({ homedir: home, exec, stdin, stdout });
+
+    const sp = result.checks.find(c => c.id === 'split-pane');
+    assert.strictEqual(sp.ok, true);
+    assert.ok(sp.detail.includes('not needed'));
+  });
+
+  it('skips prompts when all checks pass', async () => {
+    const home = makeTempDir();
+    fs.writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ teammateMode: 'tmux' }));
+    const stdin = mockStdin([]);
+    const stdout = mockStdout();
+
+    const result = await runSetup({ homedir: home, exec: allPassExec, stdin, stdout });
+
+    assert.deepStrictEqual(result.actions, []);
   });
 });
