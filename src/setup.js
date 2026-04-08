@@ -201,11 +201,11 @@ function writeTeammateMode(homedir, mode) {
 
 function formatCheckLine(check) {
   const icon = check.ok ? colors.green('✔') : colors.red('✖');
-  const line = `  ${icon} ${check.label}  ${check.detail}`;
+  const lines = [`  ${icon} ${check.label}  ${check.detail}`];
   if (check.hint) {
-    return line + '\n' + `    ${colors.dim('→')} ${colors.dim(check.hint)}`;
+    lines.push(`    ${colors.dim('→')} ${colors.dim(check.hint)}`);
   }
-  return line;
+  return lines;
 }
 
 // --- Exports ---
@@ -258,14 +258,14 @@ async function runSetup(opts = {}) {
 
   // Non-interactive: print all checks in a box and return
   if (!isInteractive) {
-    const allLines = checks.map(c => formatCheckLine(c));
+    const allLines = checks.flatMap(c => formatCheckLine(c));
     stdout.write('\n' + box('Party Status', allLines) + '\n');
     return { checks, allOk, actions: [] };
   }
 
   // Interactive: print initial checks (not split-pane yet)
   const initialChecks = checks.filter(c => c.id !== 'split-pane');
-  const initialLines = initialChecks.map(c => formatCheckLine(c));
+  const initialLines = initialChecks.flatMap(c => formatCheckLine(c));
   stdout.write('\n' + box('Party Status', initialLines) + '\n');
 
   // Handle teammate-mode fix
@@ -304,7 +304,7 @@ async function runSetup(opts = {}) {
     delete splitPane.hint;
   }
 
-  stdout.write('\n  ' + formatCheckLine(splitPane) + '\n');
+  stdout.write('\n  ' + formatCheckLine(splitPane).join('\n  ') + '\n');
 
   // Recalculate allOk (required checks only: node + claude)
   const REQUIRED_IDS = ['node', 'claude'];
