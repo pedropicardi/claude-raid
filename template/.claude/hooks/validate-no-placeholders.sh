@@ -33,9 +33,9 @@ if [ "$IS_RAID_DOC" = false ]; then
   exit 0
 fi
 
-# Read the file content (from tool output if available, otherwise read the file)
-CONTENT=$(echo "$INPUT" | jq -r '.tool_output // empty')
-if [ -z "$CONTENT" ] && [ -f "$FILE_PATH" ]; then
+# Read the actual file content (tool_output is the tool's response message, not file content)
+CONTENT=""
+if [ -f "$FILE_PATH" ]; then
   CONTENT=$(cat "$FILE_PATH")
 fi
 

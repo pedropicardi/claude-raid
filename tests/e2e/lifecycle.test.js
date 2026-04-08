@@ -6,12 +6,19 @@ const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
+let tmpDir;
+
 function makeTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'raid-e2e-'));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'raid-e2e-'));
+  return tmpDir;
 }
 
 describe('E2E: init -> update -> remove lifecycle', () => {
-  it('completes the full lifecycle', async () => {
+  const { afterEach } = require('node:test');
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+  it('completes the full lifecycle', () => {
     const init = require('../../src/init');
     const update = require('../../src/update');
     const remove = require('../../src/remove');
@@ -30,7 +37,7 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     }));
 
     // INIT
-    const initResult = await init.install(cwd);
+    const initResult = init.install(cwd);
     assert.ok(!initResult.alreadyInstalled);
     assert.strictEqual(initResult.detected.language, 'javascript');
 
@@ -55,7 +62,7 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     fs.writeFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'modified by user');
     fs.writeFileSync(path.join(cwd, '.claude', 'raid.json'), '{"custom": "config"}');
 
-    const updateResult = await update.performUpdate(cwd);
+    const updateResult = update.performUpdate(cwd);
     assert.ok(updateResult.success);
 
     // raid-rules.md should be overwritten (template file)
@@ -67,7 +74,7 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     assert.ok(config.includes('"custom"'));
 
     // REMOVE
-    await remove.performRemove(cwd);
+    remove.performRemove(cwd);
 
     // Raid files gone
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'agents', 'wizard.md')));

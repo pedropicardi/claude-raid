@@ -18,6 +18,12 @@ if [ ! -f "$RAID_CONFIG" ]; then
   exit 0
 fi
 
+# Skip if no active Raid session — don't block normal work
+# The Wizard creates .claude/raid-session when a Raid starts
+if [ ! -f ".claude/raid-session" ]; then
+  exit 0
+fi
+
 # Read mode and specs path
 MODE=$(jq -r '.raid.defaultMode // "full"' "$RAID_CONFIG")
 SPECS_PATH=$(jq -r '.paths.specs // "docs/raid/specs"' "$RAID_CONFIG")

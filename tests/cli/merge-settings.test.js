@@ -1,18 +1,23 @@
 'use strict';
 
-const { describe, it } = require('node:test');
+const { describe, it, afterEach } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
 let mergeSettings;
+let tmpDir;
 
 function makeTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'raid-merge-'));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'raid-merge-'));
+  return tmpDir;
 }
 
 describe('mergeSettings', () => {
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
   it('creates new settings.json when none exists', () => {
     mergeSettings = require('../../src/merge-settings').mergeSettings;
     const cwd = makeTempDir();

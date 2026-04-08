@@ -9,13 +9,15 @@ const RAID_ENV = {
 
 const RAID_PERMISSIONS = ['Read', 'Glob', 'Grep', 'Bash', 'Write', 'Edit'];
 
+const RAID_HOOK_MARKER = '#claude-raid';
+
 const RAID_HOOKS = {
   PostToolUse: [
     {
       matcher: 'Write|Edit',
       hooks: [
-        { type: 'command', command: 'bash .claude/hooks/validate-file-naming.sh' },
-        { type: 'command', command: 'bash .claude/hooks/validate-no-placeholders.sh' },
+        { type: 'command', command: `bash .claude/hooks/validate-file-naming.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-no-placeholders.sh ${RAID_HOOK_MARKER}` },
       ],
     },
   ],
@@ -23,22 +25,22 @@ const RAID_HOOKS = {
     {
       matcher: 'Bash',
       hooks: [
-        { type: 'command', command: 'bash .claude/hooks/validate-commit-message.sh' },
-        { type: 'command', command: 'bash .claude/hooks/validate-tests-pass.sh' },
-        { type: 'command', command: 'bash .claude/hooks/validate-verification.sh' },
+        { type: 'command', command: `bash .claude/hooks/validate-commit-message.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-tests-pass.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-verification.sh ${RAID_HOOK_MARKER}` },
       ],
     },
     {
       matcher: 'Write',
       hooks: [
-        { type: 'command', command: 'bash .claude/hooks/validate-phase-gate.sh' },
+        { type: 'command', command: `bash .claude/hooks/validate-phase-gate.sh ${RAID_HOOK_MARKER}` },
       ],
     },
   ],
 };
 
 function isRaidHookEntry(entry) {
-  return entry.hooks && entry.hooks.some(h => h.command && h.command.includes('validate-'));
+  return entry.hooks && entry.hooks.some(h => h.command && h.command.includes(RAID_HOOK_MARKER));
 }
 
 function mergeSettings(cwd) {

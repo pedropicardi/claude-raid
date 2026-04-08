@@ -29,7 +29,7 @@ function copyRecursive(src, dest, skipped) {
   }
 }
 
-async function install(cwd) {
+function install(cwd) {
   const claudeDir = path.join(cwd, '.claude');
   const result = { skipped: [], alreadyInstalled: false, detected: null };
 
@@ -90,24 +90,25 @@ async function install(cwd) {
 
   // Add raid-last-test-run to .gitignore
   const gitignorePath = path.join(cwd, '.gitignore');
-  const ignoreEntry = '.claude/raid-last-test-run';
+  const ignoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session'];
   if (fs.existsSync(gitignorePath)) {
-    const content = fs.readFileSync(gitignorePath, 'utf8');
-    if (!content.includes(ignoreEntry)) {
-      fs.appendFileSync(gitignorePath, '\n' + ignoreEntry + '\n');
+    let content = fs.readFileSync(gitignorePath, 'utf8');
+    const toAdd = ignoreEntries.filter(e => !content.includes(e));
+    if (toAdd.length > 0) {
+      fs.appendFileSync(gitignorePath, '\n' + toAdd.join('\n') + '\n');
     }
   } else {
-    fs.writeFileSync(gitignorePath, ignoreEntry + '\n');
+    fs.writeFileSync(gitignorePath, ignoreEntries.join('\n') + '\n');
   }
 
   return result;
 }
 
-async function run() {
+function run() {
   const cwd = process.cwd();
   console.log('\nclaude-raid — Installing The Raid\n');
 
-  const result = await install(cwd);
+  const result = install(cwd);
 
   if (result.alreadyInstalled) {
     console.log('The Raid is already installed. Use `claude-raid update` to update.');

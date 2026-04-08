@@ -14,6 +14,11 @@ fi
 
 RAID_CONFIG=".claude/raid.json"
 
+# Skip if no active Raid session
+if [ ! -f ".claude/raid-session" ]; then
+  exit 0
+fi
+
 # Read test command from config
 TEST_CMD=""
 if [ -f "$RAID_CONFIG" ]; then

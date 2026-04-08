@@ -19,7 +19,7 @@ function rmDirSafe(dirPath) {
   try { fs.rmSync(dirPath, { recursive: true }); } catch {}
 }
 
-async function performRemove(cwd) {
+function performRemove(cwd) {
   const claudeDir = path.join(cwd, '.claude');
 
   for (const agent of RAID_AGENTS) {
@@ -47,10 +47,10 @@ async function performRemove(cwd) {
   return { success: true };
 }
 
-async function run() {
+function run() {
   const cwd = process.cwd();
   console.log('\nclaude-raid — Removing The Raid\n');
-  await performRemove(cwd);
+  performRemove(cwd);
   console.log('The Raid has been removed. Your project settings have been restored.');
 }
 

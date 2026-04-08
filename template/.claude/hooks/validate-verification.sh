@@ -12,6 +12,11 @@ if ! echo "$COMMAND" | grep -qE 'git commit'; then
   exit 0
 fi
 
+# Skip if no active Raid session
+if [ ! -f ".claude/raid-session" ]; then
+  exit 0
+fi
+
 # Extract commit message
 MSG=""
 if echo "$COMMAND" | grep -qE -- '-m '; then

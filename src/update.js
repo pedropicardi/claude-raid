@@ -6,7 +6,15 @@ const { mergeSettings } = require('./merge-settings');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
 
-function copyForceRecursive(src, dest) {
+function filesAreEqual(pathA, pathB) {
+  try {
+    return fs.readFileSync(pathA, 'utf8') === fs.readFileSync(pathB, 'utf8');
+  } catch {
+    return false;
+  }
+}
+
+function copyForceRecursive(src, dest, skipped) {
   if (!fs.existsSync(src)) return;
   const entries = fs.readdirSync(src, { withFileTypes: true });
   for (const entry of entries) {
@@ -14,26 +22,45 @@ function copyForceRecursive(src, dest) {
     const destPath = path.join(dest, entry.name);
     if (entry.isDirectory()) {
       fs.mkdirSync(destPath, { recursive: true });
-      copyForceRecursive(srcPath, destPath);
+      copyForceRecursive(srcPath, destPath, skipped);
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
   }
 }
 
-async function performUpdate(cwd) {
+function performUpdate(cwd) {
   const claudeDir = path.join(cwd, '.claude');
+  const skippedAgents = [];
 
   if (!fs.existsSync(path.join(claudeDir, 'raid-rules.md'))) {
-    return { success: false, message: 'The Raid is not installed. Run `claude-raid init` first.' };
+    return { success: false, message: 'The Raid is not installed. Run `claude-raid init` first.', skippedAgents };
   }
 
-  for (const subdir of ['agents', 'hooks', 'skills']) {
+  // Update agents — skip if user has customized them
+  const agentsSrc = path.join(TEMPLATE_DIR, 'agents');
+  const agentsDest = path.join(claudeDir, 'agents');
+  if (fs.existsSync(agentsSrc)) {
+    fs.mkdirSync(agentsDest, { recursive: true });
+    const agents = fs.readdirSync(agentsSrc).filter(f => f.endsWith('.md'));
+    for (const agent of agents) {
+      const srcPath = path.join(agentsSrc, agent);
+      const destPath = path.join(agentsDest, agent);
+      if (fs.existsSync(destPath) && !filesAreEqual(srcPath, destPath)) {
+        skippedAgents.push(agent);
+      } else {
+        fs.copyFileSync(srcPath, destPath);
+      }
+    }
+  }
+
+  // Update hooks and skills — always overwrite (these are framework code, not user content)
+  for (const subdir of ['hooks', 'skills']) {
     const src = path.join(TEMPLATE_DIR, subdir);
     const dest = path.join(claudeDir, subdir);
     if (fs.existsSync(src)) {
       fs.mkdirSync(dest, { recursive: true });
-      copyForceRecursive(src, dest);
+      copyForceRecursive(src, dest, []);
     }
   }
 
@@ -52,13 +79,19 @@ async function performUpdate(cwd) {
 
   mergeSettings(cwd);
 
-  return { success: true, message: 'The Raid has been updated to the latest version.' };
+  let message = 'The Raid has been updated to the latest version.';
+  if (skippedAgents.length > 0) {
+    message += `\nSkipped customized agents: ${skippedAgents.join(', ')}`;
+    message += '\nUse `claude-raid remove` then `claude-raid init` to reset agents.';
+  }
+
+  return { success: true, message, skippedAgents };
 }
 
-async function run() {
+function run() {
   const cwd = process.cwd();
   console.log('\nclaude-raid — Updating The Raid\n');
-  const result = await performUpdate(cwd);
+  const result = performUpdate(cwd);
   console.log(result.message);
 }
 

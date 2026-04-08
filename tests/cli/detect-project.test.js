@@ -1,20 +1,26 @@
 'use strict';
 
-const { describe, it, beforeEach } = require('node:test');
+const { describe, it, beforeEach, afterEach } = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
 const os = require('os');
 const path = require('path');
 
 let detectProject;
+let tmpDir;
 
 function makeTempDir() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), 'raid-detect-'));
+  tmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'raid-detect-'));
+  return tmpDir;
 }
 
 describe('detectProject', () => {
   beforeEach(() => {
     detectProject = require('../../src/detect-project').detectProject;
+  });
+
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
   });
 
   it('detects Node.js project from package.json', () => {
