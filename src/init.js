@@ -5,6 +5,7 @@ const path = require('path');
 const { detectProject } = require('./detect-project');
 const { mergeSettings } = require('./merge-settings');
 const { runSetup } = require('./setup');
+const { banner, header, colors } = require('./ui');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
 
@@ -108,27 +109,24 @@ function install(cwd) {
 
 async function run() {
   const cwd = process.cwd();
-  console.log('\nclaude-raid — Installing The Raid\n');
+  console.log('\n' + banner());
+  console.log(header('Summoning the Party...') + '\n');
 
   const result = install(cwd);
 
   if (result.alreadyInstalled) {
-    console.log('The Raid is already installed. Use `claude-raid update` to update.');
-    console.log('Proceeding with re-install...\n');
+    console.log('  The party is already here. Use ' + colors.bold('claude-raid update') + ' to reforge.');
+    console.log('  Proceeding with re-summon...\n');
   }
 
-  console.log(`Detected: ${result.detected.language}`);
+  console.log('  Realm detected: ' + colors.bold(result.detected.language));
   if (result.detected.testCommand) {
-    console.log(`Test command: ${result.detected.testCommand}`);
+    console.log('  Battle cry:     ' + colors.bold(result.detected.testCommand));
   }
   if (result.skipped.length > 0) {
-    console.log(`\nSkipped (existing files):`);
-    result.skipped.forEach(f => console.log(`  - ${path.relative(cwd, f)}`));
+    console.log('\n  ' + colors.dim('Preserved existing scrolls:'));
+    result.skipped.forEach(f => console.log('    ' + colors.dim('→ ' + path.relative(cwd, f))));
   }
-
-  console.log(`
-Configuration:  .claude/raid.json (edit to customize)
-Team rules:     .claude/raid-rules.md (editable)`);
 
   await runSetup();
 }
