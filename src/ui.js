@@ -117,4 +117,52 @@ function header(text) {
   return `  ${amber(bold(`\u2694 ${text}`))}`;
 }
 
-module.exports = { colors, banner, box, header, stripAnsi };
+function referenceCard() {
+  const howItWorks = box('How It Works', [
+    '  You describe a task. The Wizard assesses complexity and',
+    '  recommends a mode:',
+    '',
+    '  ' + colors.bold('Full Raid') + '    3 agents attack from competing angles',
+    '  ' + colors.bold('Skirmish') + '     2 agents, lighter process',
+    '  ' + colors.bold('Scout') + '        1 agent + Wizard review',
+    '',
+    '  Every task flows through 4 phases:',
+    '',
+    '  1. ' + colors.bold('Design') + '     Agents explore and challenge the approach',
+    '  2. ' + colors.bold('Plan') + '       Agents decompose into testable tasks',
+    '  3. ' + colors.bold('Implement') + '  One builds (TDD), others attack',
+    '  4. ' + colors.bold('Review') + '     Independent reviews, fight over findings',
+    '',
+    '  Hooks enforce discipline automatically:',
+    '  ' + colors.dim('\u2022') + ' No implementation without a design doc',
+    '  ' + colors.dim('\u2022') + ' No commits without passing tests',
+    '  ' + colors.dim('\u2022') + ' No completion claims without fresh test evidence',
+    '  ' + colors.dim('\u2022') + ' Conventional commit messages required',
+    '',
+    '  ' + colors.dim('Hooks only activate during Raid sessions \u2014 they won\'t'),
+    '  ' + colors.dim('interfere with normal coding outside of a Raid.'),
+    '',
+    '  Config:  ' + colors.bold('.claude/raid.json') + '       ' + colors.dim('project settings'),
+    '  Rules:   ' + colors.bold('.claude/raid-rules.md') + '   ' + colors.dim('editable team rules'),
+  ]);
+
+  const nextStep = box('Next Step', [
+    '  ' + colors.bold('claude --agent wizard'),
+    '',
+    '  Describe your task and the Wizard takes over.',
+    '  ' + colors.dim('Tip: start with a small task (bugfix, config change) to'),
+    '  ' + colors.dim('see the workflow before tackling something complex.'),
+    '',
+    '  ' + colors.bold('Controls'),
+    '  ' + colors.bold('Shift+Down') + '    Cycle through teammates',
+    '  ' + colors.bold('Enter') + '         View a teammate\'s session',
+    '  ' + colors.bold('Escape') + '        Interrupt a teammate\'s turn',
+    '  ' + colors.bold('Ctrl+T') + '        Toggle the shared task list',
+    '',
+    '  Review this anytime:  ' + colors.bold('claude-raid heal'),
+  ]);
+
+  return howItWorks + '\n' + nextStep;
+}
+
+module.exports = { colors, banner, box, header, stripAnsi, referenceCard };

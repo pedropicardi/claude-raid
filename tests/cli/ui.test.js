@@ -146,4 +146,56 @@ describe('ui', () => {
       assert.ok(output.includes('Battle Plan'), 'should contain text');
     });
   });
+
+  describe('referenceCard', () => {
+    it('returns a string with How It Works and Next Step sections', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('How It Works'), 'should contain How It Works');
+      assert.ok(output.includes('Next Step'), 'should contain Next Step');
+    });
+
+    it('contains mode descriptions', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('Full Raid'), 'should contain Full Raid');
+      assert.ok(output.includes('Skirmish'), 'should contain Skirmish');
+      assert.ok(output.includes('Scout'), 'should contain Scout');
+    });
+
+    it('contains phase descriptions', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('Design'), 'should contain Design');
+      assert.ok(output.includes('Plan'), 'should contain Plan');
+      assert.ok(output.includes('Implement'), 'should contain Implement');
+      assert.ok(output.includes('Review'), 'should contain Review');
+    });
+
+    it('contains hook enforcement summary', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('design doc'), 'should mention design doc gate');
+      assert.ok(output.includes('passing tests'), 'should mention test gate');
+    });
+
+    it('contains next step command', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('claude --agent wizard'), 'should contain entry command');
+    });
+
+    it('contains controls section', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('Shift+Down'), 'should contain Shift+Down');
+      assert.ok(output.includes('Ctrl+T'), 'should contain Ctrl+T');
+    });
+
+    it('contains heal command hint', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('claude-raid heal'), 'should mention heal command');
+    });
+  });
 });
