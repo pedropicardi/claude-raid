@@ -85,16 +85,23 @@ digraph debugging {
 
 ## Raid-Specific: Competing Hypotheses
 
-The Wizard dispatches all agents with different hypotheses:
+The Wizard dispatches all agents with different hypotheses. After dispatch, agents debate directly:
 
 **📡 DISPATCH:**
-> **Warrior**: Investigate [structural/data cause]. Reproduce. Trace data flow. Gather evidence at boundaries.
-> **Archer**: Investigate [integration/contract cause]. Check interfaces, type mismatches, implicit contracts, dependency versions.
-> **Rogue**: Investigate [timing/state/adversarial cause]. Race conditions, stale state, environment assumptions, concurrent access.
+> **@Warrior**: Investigate [structural/data cause]. Reproduce. Trace data flow. Gather evidence at boundaries.
+> **@Archer**: Investigate [integration/contract cause]. Check interfaces, type mismatches, implicit contracts, dependency versions.
+> **@Rogue**: Investigate [timing/state/adversarial cause]. Race conditions, stale state, environment assumptions, concurrent access.
+>
+> **All**: Investigate independently, then debate directly. Challenge each other's hypotheses with evidence. Build on each other's findings. Pin verified evidence to the Dungeon. The hypothesis that survives cross-testing wins. Escalate to me with `🆘 WIZARD:` only if stuck.
 
-Agents present evidence and fight. The hypothesis that survives cross-testing wins.
+**How agents debate root cause:**
+- `⚔️ CHALLENGE: @Rogue, your race condition hypothesis doesn't explain why it fails on single-threaded test runs — evidence: [test output]`
+- `🔗 BUILDING ON @Warrior: Your data flow trace reveals the value originates from the config loader, not the API call — here's the upstream path: ...`
+- `📌 DUNGEON: Root cause evidence — config loader at config.js:47 returns stale cache when called concurrently [verified by @Archer and @Warrior]`
 
-⚡ WIZARD RULING: Root cause is [X] because [evidence].
+The hypothesis that survives direct cross-testing gets the Wizard's ruling:
+
+⚡ WIZARD RULING: Root cause is [X] because [evidence from Dungeon].
 
 ## Root Cause Tracing
 
