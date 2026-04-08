@@ -1,11 +1,11 @@
 ---
 name: raid-implementation
-description: "Phase 3 of Raid protocol. Execute the plan task by task with adversarial cross-validation. One agent implements, two attack. Rotate. TDD enforced. No subagents."
+description: "Phase 3 of Raid protocol. Wizard assigns implementer and opens task Dungeon. Implementer builds with TDD. Challengers attack directly, building on each other's critiques. Wizard rotates and closes each task."
 ---
 
 # Raid Implementation — Phase 3
 
-One builds, two attack. Rotate. Every implementation earns its approval through two-stage review.
+One builds, two attack — and the attackers attack each other's reviews too. Every implementation earns its approval through direct adversarial pressure.
 
 <HARD-GATE>
 Do NOT implement without an approved plan (except Scout mode). Do NOT skip TDD. Do NOT let any implementation pass unchallenged. Do NOT use subagents. Use `raid-tdd` skill for all test-driven development. Use `raid-verification` before any completion claims.
@@ -13,7 +13,7 @@ Do NOT implement without an approved plan (except Scout mode). Do NOT skip TDD. 
 
 ## Mode Behavior
 
-- **Full Raid**: 1 implements, 2 challenge. Rotate implementer across tasks.
+- **Full Raid**: 1 implements, 2 challenge (and challenge each other's reviews). Rotate implementer.
 - **Skirmish**: 1 implements, 1 challenges. Swap roles each task.
 - **Scout**: 1 agent implements. Wizard reviews. Self-challenge ruthlessly.
 
@@ -23,47 +23,47 @@ TDD is enforced in ALL modes. This is an Iron Law.
 
 ```dot
 digraph implementation {
-  "Read plan, extract all tasks" -> "Create task tracking (TaskCreate)";
-  "Create task tracking (TaskCreate)" -> "Assign task N (rotate implementer)";
-  "Assign task N (rotate implementer)" -> "Implementer executes (TDD)";
+  "Wizard reads plan + Phase 2 Dungeon" -> "Create task tracking (TaskCreate)";
+  "Create task tracking (TaskCreate)" -> "Wizard assigns task N (rotate implementer)";
+  "Wizard assigns task N (rotate implementer)" -> "Wizard opens task Dungeon";
+  "Wizard opens task Dungeon" -> "Implementer executes (TDD)";
   "Implementer executes (TDD)" -> "Implementer reports status";
   "Implementer reports status" -> "Status?" [shape=diamond];
-  "Status?" -> "Stage 1: Spec compliance review" [label="DONE"];
+  "Status?" -> "Challengers attack directly" [label="DONE"];
   "Status?" -> "Read concerns, decide" [label="DONE_WITH_CONCERNS"];
   "Status?" -> "Provide context, re-dispatch" [label="NEEDS_CONTEXT"];
   "Status?" -> "Assess blocker" [label="BLOCKED"];
-  "Read concerns, decide" -> "Stage 1: Spec compliance review";
+  "Read concerns, decide" -> "Challengers attack directly";
   "Provide context, re-dispatch" -> "Implementer executes (TDD)";
   "Assess blocker" -> "Break down task / escalate";
-  "Stage 1: Spec compliance review" -> "Spec compliant?" [shape=diamond];
-  "Spec compliant?" -> "Implementer fixes gaps" [label="no"];
-  "Implementer fixes gaps" -> "Stage 1: Spec compliance review";
-  "Spec compliant?" -> "Stage 2: Code quality review" [label="yes"];
-  "Stage 2: Code quality review" -> "Quality approved?" [shape=diamond];
-  "Quality approved?" -> "Implementer fixes issues" [label="no"];
-  "Implementer fixes issues" -> "Stage 2: Code quality review";
-  "Quality approved?" -> "Wizard ruling: Task N approved" [label="yes"];
-  "Wizard ruling: Task N approved" -> "More tasks?" [shape=diamond];
-  "More tasks?" -> "Assign task N (rotate implementer)" [label="yes"];
-  "More tasks?" -> "Invoke raid-review" [label="no", shape=doublecircle];
+  "Challengers attack directly" -> "Challengers build on each other's critiques";
+  "Challengers build on each other's critiques" -> "Implementer defends against both";
+  "Implementer defends against both" -> "All issues resolved?" [shape=diamond];
+  "All issues resolved?" -> "Challengers attack directly" [label="no, continue"];
+  "All issues resolved?" -> "Wizard closes task: ruling" [label="yes"];
+  "Wizard closes task: ruling" -> "More tasks?" [shape=diamond];
+  "More tasks?" -> "Wizard assigns task N (rotate implementer)" [label="yes"];
+  "More tasks?" -> "Archive Dungeon + invoke raid-review" [label="no", shape=doublecircle];
 }
 ```
 
 ## Wizard Checklist
 
 1. **Read the plan** — extract all tasks, dependencies, ordering
-2. **Set up worktree** — use `raid-git-worktrees` for isolation (optional)
-3. **Create task tracking** — use TaskCreate for every plan task
-4. **Assign first task** — one implementer, challengers based on mode. **Rotate the implementer.**
-5. **Run the gauntlet** — implement -> two-stage review -> fix -> approve per task
+2. **Read Phase 2 archived Dungeon** — carry forward context
+3. **Set up worktree** — use `raid-git-worktrees` for isolation (optional)
+4. **Create task tracking** — use TaskCreate for every plan task
+5. **Per task:** Assign implementer (rotate), open Dungeon, observe attack, close with ruling
 6. **Track progress** — mark complete only after Wizard ruling per task
-7. **After all tasks** — invoke `raid-review`
+7. **After all tasks** — archive Dungeon, invoke `raid-review`
 
 ## The Implementation Gauntlet (per task)
 
-### Step 1: Wizard Assigns
+### Step 1: Wizard Assigns + Opens Dungeon
 
-One agent implements. Others prepare to attack. **Rotate the implementer** across tasks — track assignments with TaskCreate to ensure no agent implements twice in a row.
+One agent implements. Others prepare to attack. **Rotate the implementer** across tasks.
+
+The Wizard doesn't open a new Dungeon for every task — the Phase 3 Dungeon is continuous across all tasks. But the Wizard announces each task assignment clearly.
 
 ### Step 2: Implementer Executes (TDD)
 
@@ -78,41 +78,46 @@ Following `raid-tdd` strictly:
 
 Report status: **DONE** | **DONE_WITH_CONCERNS** | **NEEDS_CONTEXT** | **BLOCKED**
 
-### Step 3: Two-Stage Review
+### Step 3: Challengers Attack Directly
 
-**Stage 1 — Spec Compliance (did they build the right thing?)**
+This is where the new model shines. Challengers don't just report to the Wizard — they:
 
-Each challenger independently:
-1. Read ACTUAL CODE (not the implementer's report — reports lie)
-2. Verify against task spec line by line
-3. Check against design doc requirements
-4. Check: missing requirements? Extra features not requested? Misinterpretations?
+1. **Read ACTUAL CODE** (not the implementer's report — reports lie)
+2. **Challenge the implementer directly:** `⚔️ CHALLENGE: @Warrior, your implementation at handler.js:23 doesn't validate...`
+3. **Build on each other's critiques:** `🔗 BUILDING ON @Archer: Your naming drift finding — the inconsistency also affects the test at...`
+4. **Roast weak implementations:** `🔥 ROAST: @Rogue, you claimed this handles concurrent access but there's no lock at...`
+5. **Pin verified issues to Dungeon:** `📌 DUNGEON: Confirmed issue — handler.js:23 missing validation [verified by @Archer and @Rogue]`
 
-**Stage 2 — Code Quality (did they build it right?)**
+**Challengers check:**
+- Spec compliance — does it match the task spec line by line?
+- Design doc compliance — does it match the design requirements?
+- Edge cases — what inputs break it?
+- Test quality — do tests prove correctness or just confirm happy path?
+- Naming consistency — do new names follow established patterns?
+- File structure — does new code follow project conventions?
 
-Each challenger independently:
-1. Try to break it — edge cases, failure scenarios, adversarial inputs
-2. Check test quality — do tests prove correctness or just confirm happy path?
-3. Check naming consistency — do new names follow established patterns?
-4. Check file structure — does new code follow project conventions?
-5. Present findings with evidence: file paths, line numbers, concrete scenarios
+### Step 4: Implementer Defends
 
-### Step 4: Implementer Responds
+The implementer defends against BOTH challengers simultaneously:
+- Respond to each challenge with evidence or concede immediately
+- Fix conceded issues
+- Re-run all tests
+- Pin resolved issues to Dungeon: `📌 DUNGEON: Resolved — added validation at handler.js:23 [tests pass]`
 
-Defend with evidence or concede immediately. Fix conceded issues. Re-run all tests.
-
-### Step 5: Wizard Rules
+### Step 5: Wizard Closes Task
 
 ⚡ WIZARD RULING: Task N [approved | needs fixes]
+
+The Wizard closes when the Dungeon shows all issues resolved and challengers have no remaining critiques.
 
 ## Handling Implementer Status
 
 | Status | Action |
 |--------|--------|
-| **DONE** | Proceed to Stage 1 review |
-| **DONE_WITH_CONCERNS** | Read concerns. If about correctness: address before review. If observations: note and proceed. |
+| **DONE** | Challengers attack directly |
+| **DONE_WITH_CONCERNS** | Read concerns. If correctness: address before attack. If observations: note and proceed. |
 | **NEEDS_CONTEXT** | Provide missing information. Re-dispatch. |
-| **BLOCKED** | 1) Context problem → provide more context. 2) Task too complex → break into subtasks. 3) Plan wrong → fix plan, re-assign. |
+| **BLOCKED** | 1) Context → provide more. 2) Too complex → break into subtasks. 3) Plan wrong → fix plan. |
 
 **Never ignore an escalation.** If the implementer says it's stuck, something needs to change.
 
@@ -122,11 +127,12 @@ Defend with evidence or concede immediately. Fix conceded issues. Re-run all tes
 - [ ] Tests fail for the right reason
 - [ ] Tests pass after implementation
 - [ ] Full test suite passes (no regressions)
-- [ ] Stage 1: Spec compliance verified by challengers
-- [ ] Stage 2: Code quality verified by challengers
+- [ ] Challengers attacked ACTUAL CODE directly
+- [ ] Challengers built on each other's critiques
 - [ ] All challenges addressed (fixed or defended with evidence)
 - [ ] Implementation matches task spec (nothing more, nothing less)
 - [ ] Naming follows established patterns
+- [ ] Verified issues pinned to Dungeon
 - [ ] Code committed with descriptive message
 
 ## Red Flags
@@ -134,16 +140,16 @@ Defend with evidence or concede immediately. Fix conceded issues. Re-run all tes
 | Thought | Reality |
 |---------|---------|
 | "This task is simple, skip cross-testing" | Simple tasks are where assumptions slip through. |
-| "The implementer's self-review is sufficient" | Self-review catches simple issues. Cross-testing catches design issues. Both needed. |
+| "The challengers should report to the Wizard" | Challengers attack the implementer and each other directly. |
 | "We can batch the review for multiple tasks" | Review per task. Batching lets issues compound. |
 | "I trust this agent's work" | Trust without verification is the definition of a bug farm. |
-| "Let's skip Stage 1, go straight to quality" | Wrong order. Build the wrong thing well = waste. |
 | "The same agent can implement twice in a row" | Rotation prevents blind spots. Enforce it. |
+| "I'll wait for the Wizard to coordinate the review" | Attack directly. Build on each other's findings. |
 
 ## Escalation
 
-- **3+ fix attempts on one task:** Question whether the task spec or design is wrong, not just the implementation.
-- **Agent repeatedly blocked:** The plan may need revision. Discuss with the team before forcing through.
+- **3+ fix attempts on one task:** Question whether the task spec or design is wrong.
+- **Agent repeatedly blocked:** The plan may need revision.
 - **Tests can't be written:** The design may not be testable. Return to Phase 1.
 
-**Terminal state:** All tasks approved. Invoke `raid-review`.
+**Terminal state:** All tasks approved. Archive Dungeon. Invoke `raid-review`.
