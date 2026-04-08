@@ -1,11 +1,11 @@
 ---
 name: raid-design
-description: "Phase 1 of Raid protocol. Read-only exploration, context gathering, requirements refinement, and design document creation. All agents explore, battle, learn from each other's mistakes and discoveries, and push the design to its edges."
+description: "Phase 1 of Raid protocol. Wizard opens the Dungeon, agents explore freely from different angles, challenge and build on each other directly, and pin verified findings. Wizard closes when design is battle-tested."
 ---
 
 # Raid Design — Phase 1
 
-Turn ideas into battle-tested designs through adversarial multi-agent exploration.
+Turn ideas into battle-tested designs through agent-driven adversarial exploration.
 
 <HARD-GATE>
 Do NOT write any code, scaffold any project, or take any implementation action until the Wizard has approved the design and it is committed to git. All assigned agents participate. No subagents.
@@ -13,30 +13,33 @@ Do NOT write any code, scaffold any project, or take any implementation action u
 
 ## Mode Behavior
 
-- **Full Raid**: All 3 agents explore from different angles, fight, cross-test. Full design doc required.
-- **Skirmish**: 2 agents explore, produce a lightweight design+plan combined doc.
+- **Full Raid**: All 3 agents explore from different angles, fight directly, pin findings to Dungeon. Full design doc required.
+- **Skirmish**: 2 agents explore and interact, produce a lightweight design+plan combined doc.
 - **Scout**: Wizard assesses inline, no design doc required. Skip this skill entirely.
 
 ## Process Flow
 
 ```dot
 digraph design {
-  "Comprehend request (read 3x)" -> "Scope check";
-  "Scope check" -> "Too large for single spec?" [shape=diamond];
-  "Too large for single spec?" -> "Decompose into sub-projects" [label="yes"];
+  "Wizard comprehends request (reads 3x)" -> "Scope check";
+  "Scope check" -> "Too large?" [shape=diamond];
+  "Too large?" -> "Decompose into sub-projects" [label="yes"];
   "Decompose into sub-projects" -> "Brainstorm first sub-project";
-  "Too large for single spec?" -> "Explore project context" [label="no"];
+  "Too large?" -> "Explore project context" [label="no"];
   "Explore project context" -> "Research dependencies";
   "Research dependencies" -> "Ask clarifying questions (one at a time)";
-  "Ask clarifying questions (one at a time)" -> "Dispatch exploration";
-  "Dispatch exploration" -> "Observe the fight";
-  "Observe the fight" -> "Synthesize 2-3 approaches";
-  "Synthesize 2-3 approaches" -> "Present design (section by section)";
+  "Ask clarifying questions (one at a time)" -> "Wizard opens Dungeon + dispatches";
+  "Wizard opens Dungeon + dispatches" -> "Agents explore, challenge, build freely";
+  "Agents explore, challenge, build freely" -> "Agents pin verified findings to Dungeon";
+  "Agents pin verified findings to Dungeon" -> "Dungeon sufficient?" [shape=diamond];
+  "Dungeon sufficient?" -> "Agents explore, challenge, build freely" [label="no"];
+  "Dungeon sufficient?" -> "Wizard closes: synthesizes 2-3 approaches from Dungeon" [label="yes"];
+  "Wizard closes: synthesizes 2-3 approaches from Dungeon" -> "Present design (section by section)";
   "Present design (section by section)" -> "Human approves?" [shape=diamond];
   "Human approves?" -> "Present design (section by section)" [label="revise"];
   "Human approves?" -> "Write design doc" [label="yes"];
-  "Write design doc" -> "Adversarial spec review (all agents attack)";
-  "Adversarial spec review (all agents attack)" -> "Spec self-review (fix inline)";
+  "Write design doc" -> "Adversarial spec review (agents attack directly)";
+  "Adversarial spec review (agents attack directly)" -> "Spec self-review (fix inline)";
   "Spec self-review (fix inline)" -> "Human reviews written spec";
   "Human reviews written spec" -> "Commit + invoke raid-implementation-plan" [shape=doublecircle];
 }
@@ -47,32 +50,57 @@ digraph design {
 Complete in order:
 
 1. **Comprehend the request** — read 3 times, identify the real problem beneath the stated one
-2. **Scope check** — if the request describes multiple independent subsystems, flag it immediately. Don't spend effort refining a project that needs decomposition first.
+2. **Scope check** — if the request describes multiple independent subsystems, flag it immediately
 3. **Explore project context** — files, docs, recent commits, dependencies, conventions, patterns
-4. **Research dependencies** — if external services/libraries involved: API surface, versioning, compatibility, known issues, rate limits, pricing, licensing. Read docs COMPLETELY, don't skim.
+4. **Research dependencies** — API surface, versioning, compatibility, known issues. Read docs COMPLETELY.
 5. **Ask clarifying questions** — one at a time to the human, eliminate every ambiguity
-6. **Dispatch exploration** — all agents explore from different angles
-7. **Observe the fight** — let agents cross-test, learn from each other, push to edges
-8. **Synthesize approaches** — propose 2-3 approaches with trade-offs and recommendation
-9. **Present design** — in sections scaled to complexity, get human approval per section
-10. **Write design doc** — save to specs path from `.claude/raid.json`
-11. **Adversarial spec review** — all agents attack the written spec
-12. **Spec self-review** — fix issues inline (see checklist below)
-13. **Human reviews written spec** — human approves before proceeding
-14. **Commit** — `docs(design): <topic> specification`
-15. **Transition** — invoke `raid-implementation-plan`
+6. **Open the Dungeon** — create `.claude/raid-dungeon.md` with Phase 1 header, quest, mode
+7. **Dispatch with angles** — give each agent their angle, then go silent
+8. **Observe the fight** — agents explore, challenge, build, roast, and pin findings to Dungeon. Intervene only on triggers.
+9. **Close the phase** — when Dungeon has sufficient verified findings to form 2-3 approaches
+10. **Synthesize approaches** — propose 2-3 approaches from Dungeon evidence, with trade-offs and recommendation
+11. **Present design** — in sections scaled to complexity, get human approval per section
+12. **Write design doc** — save to specs path from `.claude/raid.json`
+13. **Adversarial spec review** — agents attack the written spec directly, challenging each other
+14. **Spec self-review** — fix issues inline (see checklist below)
+15. **Human reviews written spec** — human approves before proceeding
+16. **Commit** — `docs(design): <topic> specification`
+17. **Archive Dungeon** — rename to `.claude/raid-dungeon-phase-1.md`
+18. **Transition** — invoke `raid-implementation-plan`
+
+## Opening the Dungeon
+
+Create `.claude/raid-dungeon.md`:
+
+```markdown
+# Dungeon — Phase 1: Design
+## Quest: <task description from human>
+## Mode: <Full Raid | Skirmish>
+
+### Discoveries
+
+### Active Battles
+
+### Resolved
+
+### Shared Knowledge
+
+### Escalations
+```
 
 ## Dispatch Pattern
 
-Each agent gets the same objective but a different starting angle:
+Each agent gets the same objective but a different starting angle. After dispatch, the Wizard goes silent.
 
 **📡 DISPATCH:**
 
-> **Warrior**: Explore from the data/infrastructure side. What are the hard technical constraints? What schemas, migrations, APIs are needed? What breaks if we get this wrong? Find the structural load-bearing walls.
+> **@Warrior**: Explore from the data/infrastructure side. What are the hard technical constraints? What schemas, migrations, APIs are needed? What breaks if we get this wrong? Find the structural load-bearing walls. Challenge @Archer and @Rogue's findings directly. Pin verified findings to the Dungeon.
 >
-> **Archer**: Explore from the integration/consistency side. How does this fit with existing patterns? What implicit contracts exist? What ripple effects? Trace the dependency chain. Check naming and file structure conventions.
+> **@Archer**: Explore from the integration/consistency side. How does this fit with existing patterns? What implicit contracts exist? What ripple effects? Trace the dependency chain. Check naming and file structure conventions. Challenge @Warrior and @Rogue's findings directly. Pin verified findings to the Dungeon.
 >
-> **Rogue**: Explore from the failure/adversarial side. What assumptions about inputs, state, timing, availability? Build failure scenarios. What does a malicious user do? What does a slow network do? What does concurrent access do?
+> **@Rogue**: Explore from the failure/adversarial side. What assumptions about inputs, state, timing, availability? Build failure scenarios. What does a malicious user do? What does a slow network do? What does concurrent access do? Challenge @Warrior and @Archer's findings directly. Pin verified findings to the Dungeon.
+>
+> **All**: Read the Dungeon. Build on each other's discoveries. Challenge everything. Pin only what survives. Escalate to me with `🆘 WIZARD:` only when genuinely stuck.
 
 ## What Agents Must Cover
 
@@ -93,16 +121,30 @@ Every agent addresses ALL of these from their assigned angle:
 ## The Fight — What Makes It Productive
 
 ```
-Agents must:
+Agents interact DIRECTLY — @Name addressing, building, challenging, roasting:
 1. Present findings with EVIDENCE (file paths, docs, concrete examples)
-2. Challenge with COUNTER-EVIDENCE (not opinions)
-3. Go to the EDGES — push every finding to its extreme
-4. LEARN from each other — incorporate discoveries into your model
-5. BUILD on discoveries — don't just attack, explore improvements
-6. Test wrong assumptions EXPLICITLY — document WHY it was wrong
+2. Challenge other agents DIRECTLY with COUNTER-EVIDENCE (not opinions)
+3. Build on each other's discoveries — 🔗 BUILDING ON @Name:
+4. Go to the EDGES — push every finding to its extreme
+5. LEARN from each other — incorporate discoveries into your model
+6. Pin verified findings — 📌 DUNGEON: only after surviving challenge
+7. Roast weak analysis — 🔥 ROAST: with evidence, not insults
+8. Escalate to Wizard — 🆘 WIZARD: only when genuinely stuck
 ```
 
-**The goal is not to tear each other down. The goal is to forge the strongest design by testing it from every angle.**
+**The goal is not to tear each other down. The goal is to forge the strongest design by testing it from every angle. The Dungeon captures what survived.**
+
+## Closing the Phase
+
+The Wizard closes when the Dungeon has sufficient verified findings — enough Discoveries, Shared Knowledge, and Resolved battles to synthesize 2-3 approaches.
+
+**How the Wizard knows it's time to close:**
+- Dungeon has verified findings covering all major aspects (performance, robustness, testability, etc.)
+- Active Battles section is empty or has only minor unresolved points
+- Agents are converging — new findings are variations, not revelations
+- Shared Knowledge section has the foundational truths the design needs
+
+**⚡ WIZARD RULING:** Synthesize from Dungeon evidence. Propose 2-3 approaches. Recommend one. Archive Dungeon.
 
 ## Spec Self-Review
 
@@ -113,7 +155,7 @@ After writing the design doc, the Wizard reviews with fresh eyes:
 3. **Scope check:** Focused enough for a single implementation plan, or needs decomposition?
 4. **Ambiguity check:** Could any requirement be interpreted two ways? Pick one and make it explicit.
 
-Fix issues inline. No need to re-review — just fix and move on.
+Fix issues inline.
 
 ## Design Document Structure
 
@@ -124,13 +166,13 @@ Save to: specs path from `.claude/raid.json` (default: `docs/raid/specs/YYYY-MM-
 
 **Date:** YYYY-MM-DD
 **Status:** Draft | Under Review | Approved
-**Raid Team:** Wizard (lead), [agents used]
+**Raid Team:** Wizard (dungeon master), [agents used]
 **Mode:** Full Raid | Skirmish
 
 ## Problem Statement
 ## Requirements (numbered, unambiguous)
 ## Constraints
-## Research Findings
+## Dungeon Findings (verified, from Phase 1 Dungeon)
 ### Key Discoveries (survived cross-testing)
 ### Lessons Learned (wrong assumptions corrected)
 ## Design Decision
@@ -152,14 +194,15 @@ Save to: specs path from `.claude/raid.json` (default: `docs/raid/specs/YYYY-MM-
 | "I already know the right approach" | Knowing and verifying are different. Propose 2-3 anyway. |
 | "Let's just start coding and figure it out" | Code without design becomes the design. And it's usually wrong. |
 | "The agents all agree, let's move on" | Agreement without challenge is groupthink. Did they actually cross-test? |
-| "We don't need to research this dependency" | Don't assume. Read the docs. Check versioning. Known issues exist. |
-| "One question covers it" | One question at a time. Cognitive overload hides ambiguity. |
+| "I'll wait for the Wizard to tell me what to do" | You own the phase. Explore, challenge, build. Self-organize. |
+| "Let me just post everything to the Dungeon" | Only verified, challenged findings get pinned. |
+| "I need the Wizard to mediate this disagreement" | Talk to the other agent directly first. Escalate only if stuck. |
 
 ## Escalation
 
-If the team is stuck on a fundamental design choice after genuine exploration:
+If the team is stuck on a fundamental design choice after genuine direct debate:
 1. Present the top 2 options with trade-offs to the human
 2. Let the human decide
 3. Never ask the human to resolve something the team should handle
 
-**Terminal state:** ⚡ WIZARD RULING: Design approved. Commit. Invoke `raid-implementation-plan`.
+**Terminal state:** ⚡ WIZARD RULING: Design approved. Commit. Archive Dungeon. Invoke `raid-implementation-plan`.
