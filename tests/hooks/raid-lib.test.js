@@ -288,6 +288,44 @@ echo "RAID_COMMAND=$RAID_COMMAND"
       assert.strictEqual(lines[4], 'YES', 'lib/utils.ts should be production');
     });
 
+    it('raid_session_set updates a single field in raid-session', () => {
+      const cwd = makeTempDir();
+      fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+      fs.writeFileSync(
+        path.join(cwd, '.claude', 'raid-session'),
+        JSON.stringify({ phase: 'design', sessionId: 'test-1' })
+      );
+      const script = `
+        cd "${cwd}"
+        source "${RAID_LIB}"
+        raid_session_set mode full
+      `;
+      execSync(`bash -c '${script.replace(/'/g, "'\\''")}'`, { cwd, encoding: 'utf8', timeout: 5000 });
+      const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+      assert.strictEqual(session.mode, 'full');
+      assert.strictEqual(session.phase, 'design');
+      assert.strictEqual(session.sessionId, 'test-1');
+    });
+
+    it('raid_session_set updates multiple fields', () => {
+      const cwd = makeTempDir();
+      fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+      fs.writeFileSync(
+        path.join(cwd, '.claude', 'raid-session'),
+        JSON.stringify({ phase: 'design' })
+      );
+      const script = `
+        cd "${cwd}"
+        source "${RAID_LIB}"
+        raid_session_set mode skirmish
+        raid_session_set implementer warrior
+      `;
+      execSync(`bash -c '${script.replace(/'/g, "'\\''")}'`, { cwd, encoding: 'utf8', timeout: 5000 });
+      const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+      assert.strictEqual(session.mode, 'skirmish');
+      assert.strictEqual(session.implementer, 'warrior');
+    });
+
     it('raid_block prints to stderr and exits 2', () => {
       const cwd = makeTempDir();
       fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });

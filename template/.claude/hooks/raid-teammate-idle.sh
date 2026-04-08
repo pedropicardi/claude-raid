@@ -17,5 +17,12 @@ fi
 raid_read_lifecycle_input
 TEAMMATE=$(echo "$RAID_HOOK_INPUT" | jq -r '.teammate_name // "Agent"')
 
-echo "$TEAMMATE: Unclaimed tasks remain on the board. Pick up the next available task and report your plan before starting." >&2
-exit 2
+cat <<ENDJSON
+{
+  "hookSpecificOutput": {
+    "hookEventName": "TeammateIdle",
+    "additionalContext": "$TEAMMATE: Unclaimed tasks remain on the board. Pick up the next available task and report your plan before starting."
+  }
+}
+ENDJSON
+exit 0

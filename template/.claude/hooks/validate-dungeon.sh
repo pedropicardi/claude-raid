@@ -30,7 +30,7 @@ if [ ! -f "$RAID_FILE_PATH" ]; then
   exit 0
 fi
 
-issues=()
+issues=""
 
 while IFS= read -r line; do
   # Skip empty lines
@@ -67,7 +67,8 @@ while IFS= read -r line; do
   esac
 
   if [ "$has_prefix" = "false" ]; then
-    issues+=("Unrecognized prefix on line: ${line:0:60}")
+    issues="${issues}
+  - Unrecognized prefix on line: ${line:0:60}"
     continue
   fi
 
@@ -77,7 +78,8 @@ while IFS= read -r line; do
     content_after_prefix="$(echo "$content_after_prefix" | sed 's/^[[:space:]]*//')"
     content_len=${#content_after_prefix}
     if [ "$content_len" -lt 50 ]; then
-      issues+=("Pinned entry too short. Include evidence.")
+      issues="${issues}
+  - Pinned entry too short. Include evidence."
     fi
 
     # Check that pinned entries reference at least two agents (survived challenge)
@@ -87,7 +89,8 @@ while IFS= read -r line; do
     echo "$content_after_prefix" | grep -qi "rogue" && agent_count=$((agent_count + 1))
     echo "$content_after_prefix" | grep -qi "wizard" && agent_count=$((agent_count + 1))
     if [ "$agent_count" -lt 2 ]; then
-      issues+=("Pinned entry must reference at least 2 agents who verified it (e.g., 'verified by @Warrior and @Archer').")
+      issues="${issues}
+  - Pinned entry must reference at least 2 agents who verified it (e.g., 'verified by @Warrior and @Archer')."
     fi
   fi
 
@@ -95,7 +98,8 @@ while IFS= read -r line; do
   if [ "$entry_type" = "TASK" ]; then
     case "${RAID_PHASE:-}" in
       design|implementation|review)
-        issues+=("TASK entries belong in Plan phase, not ${RAID_PHASE}.")
+        issues="${issues}
+  - TASK entries belong in Plan phase, not ${RAID_PHASE}."
         ;;
     esac
   fi
@@ -103,13 +107,8 @@ while IFS= read -r line; do
 done < "$RAID_FILE_PATH"
 
 # Report all issues together
-if [ ${#issues[@]} -gt 0 ]; then
-  msg="Dungeon validation failed:"
-  for issue in "${issues[@]}"; do
-    msg="$msg
-  - $issue"
-  done
-  raid_block "$msg"
+if [ -n "$issues" ]; then
+  raid_block "Dungeon validation failed:${issues}"
 fi
 
 exit 0

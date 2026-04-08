@@ -91,6 +91,22 @@ describe('ui', () => {
       assert.ok(output.includes('Adversarial'), 'should contain "Adversarial"');
       assert.ok(output.includes('Claude Code'), 'should contain "Claude Code"');
     });
+
+    it('banner uses gradient colors from amber to red', () => {
+      const { banner } = loadUi({ NO_COLOR: undefined, _forceTTY: true });
+      const output = banner();
+      assert.ok(output.includes('\x1b[1;33m'), 'should contain bold amber');
+      assert.ok(output.includes('\x1b[33m'), 'should contain amber');
+      assert.ok(output.includes('\x1b[1;31m'), 'should contain bold red');
+      assert.ok(output.includes('\x1b[31m'), 'should contain red');
+      assert.ok(output.includes('\x1b[2;31m'), 'should contain dim red');
+    });
+
+    it('banner tagline says "development" not "warfare"', () => {
+      const { banner } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = banner();
+      assert.ok(output.includes('Adversarial multi-agent development for Claude Code'));
+    });
   });
 
   describe('box', () => {
@@ -128,6 +144,58 @@ describe('ui', () => {
       const output = header('Battle Plan');
       assert.ok(output.includes('⚔'), 'should contain sword emoji');
       assert.ok(output.includes('Battle Plan'), 'should contain text');
+    });
+  });
+
+  describe('referenceCard', () => {
+    it('returns a string with How It Works and Next Step sections', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('How It Works'), 'should contain How It Works');
+      assert.ok(output.includes('Next Step'), 'should contain Next Step');
+    });
+
+    it('contains mode descriptions', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('Full Raid'), 'should contain Full Raid');
+      assert.ok(output.includes('Skirmish'), 'should contain Skirmish');
+      assert.ok(output.includes('Scout'), 'should contain Scout');
+    });
+
+    it('contains phase descriptions', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('Design'), 'should contain Design');
+      assert.ok(output.includes('Plan'), 'should contain Plan');
+      assert.ok(output.includes('Implement'), 'should contain Implement');
+      assert.ok(output.includes('Review'), 'should contain Review');
+    });
+
+    it('contains hook enforcement summary', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('design doc'), 'should mention design doc gate');
+      assert.ok(output.includes('passing tests'), 'should mention test gate');
+    });
+
+    it('contains next step command', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('claude --agent wizard'), 'should contain entry command');
+    });
+
+    it('contains controls section', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('Shift+Down'), 'should contain Shift+Down');
+      assert.ok(output.includes('Ctrl+T'), 'should contain Ctrl+T');
+    });
+
+    it('contains heal command hint', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('claude-raid heal'), 'should mention heal command');
     });
   });
 });

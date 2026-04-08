@@ -6,6 +6,7 @@ const { detectProject } = require('./detect-project');
 const { mergeSettings } = require('./merge-settings');
 const { runSetup } = require('./setup');
 const { banner, header, colors } = require('./ui');
+const { AGENTS, HOOKS, SKILLS, CONFIG } = require('./descriptions');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
 
@@ -59,6 +60,16 @@ function install(cwd) {
       fs.chmodSync(hookPath, 0o755);
     }
   }
+
+  // Count copied files by category
+  const agentsDir = path.join(claudeDir, 'agents');
+  const hooksDir2 = path.join(claudeDir, 'hooks');
+  const skillsDir = path.join(claudeDir, 'skills');
+  result.counts = {
+    agents: fs.existsSync(agentsDir) ? fs.readdirSync(agentsDir).filter(f => f.endsWith('.md')).length : 0,
+    hooks: fs.existsSync(hooksDir2) ? fs.readdirSync(hooksDir2).filter(f => f.endsWith('.sh')).length : 0,
+    skills: fs.existsSync(skillsDir) ? fs.readdirSync(skillsDir).filter(f => !f.startsWith('.')).length : 0,
+  };
 
   // Generate raid.json (skip if it already exists to preserve user config)
   const raidConfigPath = path.join(claudeDir, 'raid.json');
@@ -139,7 +150,8 @@ function install(cwd) {
   ];
   if (fs.existsSync(gitignorePath)) {
     let content = fs.readFileSync(gitignorePath, 'utf8');
-    const toAdd = ignoreEntries.filter(e => !content.includes(e));
+    const lines = content.split('\n').map(l => l.trim());
+    const toAdd = ignoreEntries.filter(e => !lines.includes(e.trim()));
     if (toAdd.length > 0) {
       const sep = content.endsWith('\n') ? '' : '\n';
       fs.appendFileSync(gitignorePath, sep + toAdd.join('\n') + '\n');
@@ -153,26 +165,149 @@ function install(cwd) {
 
 async function run() {
   const cwd = process.cwd();
+  const { bold, dim } = colors;
+
   console.log('\n' + banner());
   console.log(header('Summoning the Party...') + '\n');
 
   const result = install(cwd);
 
   if (result.alreadyInstalled) {
-    console.log('  The party is already here. Use ' + colors.bold('claude-raid update') + ' to reforge.');
+    console.log('  The party is already here. Use ' + bold('claude-raid update') + ' to reforge.');
     console.log('  Proceeding with re-summon...\n');
   }
 
-  console.log('  Realm detected: ' + colors.bold(result.detected.language));
+  // Detection summary
+  console.log('  Realm detected: ' + bold(result.detected.language));
   if (result.detected.testCommand) {
-    console.log('  Battle cry:     ' + colors.bold(result.detected.testCommand));
+    console.log('  Test command:   ' + bold(result.detected.testCommand));
   }
-  if (result.skipped.length > 0) {
-    console.log('\n  ' + colors.dim('Preserved existing scrolls:'));
-    result.skipped.forEach(f => console.log('    ' + colors.dim('→ ' + path.relative(cwd, f))));
+  if (result.detected.lintCommand) {
+    console.log('  Lint command:   ' + bold(result.detected.lintCommand));
   }
 
+  // Agents
+  console.log('');
+  console.log('  ' + header('Agents') + dim(`                                      ${result.counts.agents} files`));
+  console.log('    Copied wizard.md, warrior.md, archer.md, rogue.md');
+  console.log(dim('    AI teammates that challenge each other\'s work from'));
+  console.log(dim('    competing angles. Start a session with: claude --agent wizard'));
+
+  // Hooks
+  console.log('');
+  console.log('  ' + header('Hooks') + dim(`                                     ${result.counts.hooks} files`));
+  console.log('    Copied ' + bold(`${HOOKS.lifecycle.length} lifecycle hooks`) + ' + ' + bold(`${HOOKS.gates.length} quality gates`));
+  console.log(dim('    Lifecycle hooks manage session state automatically.'));
+  console.log(dim('    Quality gates block bad commits, missing tests, and'));
+  console.log(dim('    placeholder text \u2014 only active during Raid sessions.'));
+
+  // Skills
+  console.log('');
+  console.log('  ' + header('Skills') + dim(`                                ${result.counts.skills} folders`));
+  const skillNames = Object.keys(SKILLS).join(', ');
+  console.log('    ' + dim(skillNames));
+  console.log(dim('    Phase-specific workflows that guide agent behavior.'));
+
+  // Config
+  console.log('');
+  console.log('  ' + header('Config'));
+  console.log('    Generated ' + bold('raid.json') + '          ' + dim('Project settings (editable)'));
+  console.log('    Copied ' + bold('raid-rules.md') + '         ' + dim('17 team rules (editable)'));
+  console.log('    Merged ' + bold('settings.json') + '         ' + dim('Backup at .pre-raid-backup'));
+
+  // Skipped files
+  if (result.skipped.length > 0) {
+    console.log('');
+    console.log('  ' + dim('Preserved existing scrolls:'));
+    result.skipped.forEach(f => console.log('    ' + dim('\u2192 ' + path.relative(cwd, f))));
+  }
+
+  // Setup wizard
   await runSetup();
+
+  // Reference card
+  const { referenceCard } = require('./ui');
+  console.log('\n' + referenceCard() + '\n');
 }
 
-module.exports = { install, run };
+function dryRun(cwd) {
+  const detected = detectProject(cwd);
+  const lines = [];
+
+  lines.push(header('Dry Run — nothing will be written') + '\n');
+
+  // Realm
+  lines.push('  Realm detected: ' + colors.bold(detected.language));
+  if (detected.testCommand) {
+    lines.push('  Test command:   ' + colors.bold(detected.testCommand));
+  }
+  if (detected.lintCommand) {
+    lines.push('  Lint command:   ' + colors.bold(detected.lintCommand));
+  }
+  lines.push('');
+
+  // Helper: check if a file already exists
+  const claudeDir = path.join(cwd, '.claude');
+  function tag(relPath) {
+    const full = path.join(claudeDir, relPath);
+    return fs.existsSync(full) ? ' ' + colors.dim('(preserved)') : '';
+  }
+
+  // Agents
+  lines.push(header('Agents') + '\n');
+  for (const [file, desc] of Object.entries(AGENTS)) {
+    lines.push('  ' + colors.bold(file.padEnd(14)) + desc + tag('agents/' + file));
+  }
+  lines.push('');
+
+  // Hooks — Lifecycle
+  lines.push(header('Hooks — Lifecycle') + '\n');
+  for (const h of HOOKS.lifecycle) {
+    lines.push('  ' + colors.bold(h.name.padEnd(28)) + h.desc + tag('hooks/' + h.name));
+  }
+  lines.push('');
+
+  // Hooks — Quality Gates
+  lines.push(header('Hooks — Quality Gates') + '\n');
+  for (const h of HOOKS.gates) {
+    lines.push('  ' + colors.bold(h.name.padEnd(36)) + h.desc + tag('hooks/' + h.name));
+  }
+  lines.push('');
+
+  // Skills
+  lines.push(header('Skills') + '\n');
+  for (const [folder, desc] of Object.entries(SKILLS)) {
+    lines.push('  ' + colors.bold(folder.padEnd(28)) + desc + tag('skills/' + folder));
+  }
+  lines.push('');
+
+  // Config
+  lines.push(header('Config') + '\n');
+  for (const [file, desc] of Object.entries(CONFIG)) {
+    lines.push('  ' + colors.bold(file.padEnd(20)) + desc + tag(file));
+  }
+  lines.push('');
+
+  // .gitignore
+  lines.push(header('.gitignore entries') + '\n');
+  const ignoreEntries = [
+    '.claude/raid-last-test-run',
+    '.claude/raid-session',
+    '.claude/raid-dungeon.md',
+    '.claude/raid-dungeon-phase-*',
+    '.claude/raid-dungeon-backup.md',
+    '.claude/raid-dungeon-phase-*-backup.md',
+    '.claude/vault/.draft/',
+    '.env.raid',
+  ];
+  for (const entry of ignoreEntries) {
+    lines.push('  ' + colors.dim(entry));
+  }
+  lines.push('');
+
+  lines.push('  Run without --dry-run to install.');
+
+  return lines.join('\n');
+}
+
+module.exports = { install, run, dryRun };

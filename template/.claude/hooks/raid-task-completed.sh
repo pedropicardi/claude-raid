@@ -23,6 +23,10 @@ fi
 LAST_RUN=$(cat "$TEST_RUN_FILE" 2>/dev/null | tr -d '[:space:]')
 NOW=$(date +%s)
 WINDOW=$((RAID_LIFECYCLE_TEST_WINDOW * 60))
+# Guard against corrupted/non-numeric timestamp
+case "$LAST_RUN" in
+  ''|*[!0-9]*) raid_block "Tests must pass before marking a task complete. Test run timestamp is invalid — run your test command first." ;;
+esac
 AGE=$((NOW - LAST_RUN))
 
 if [ "$AGE" -gt "$WINDOW" ]; then

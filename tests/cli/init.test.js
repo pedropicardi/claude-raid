@@ -189,4 +189,94 @@ describe('init', () => {
     const gitignore = fs.readFileSync(path.join(cwd, '.gitignore'), 'utf8');
     assert.ok(gitignore.includes('.env.raid'));
   });
+
+  it('install returns categorized copy counts', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const result = init.install(cwd);
+    assert.ok(typeof result.counts === 'object', 'should have counts');
+    assert.ok(typeof result.counts.agents === 'number', 'should count agents');
+    assert.ok(typeof result.counts.hooks === 'number', 'should count hooks');
+    assert.ok(typeof result.counts.skills === 'number', 'should count skills');
+    assert.ok(result.counts.agents > 0, 'should have copied agents');
+    assert.ok(result.counts.hooks > 0, 'should have copied hooks');
+    assert.ok(result.counts.skills > 0, 'should have copied skills');
+  });
+
+  it('does not duplicate .gitignore entries when comment contains entry substring', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    // Create .gitignore with a comment that contains the substring "raid-session"
+    fs.writeFileSync(path.join(cwd, '.gitignore'), '# ignore raid-session related files\n');
+    init.install(cwd);
+    const gitignore = fs.readFileSync(path.join(cwd, '.gitignore'), 'utf8');
+    const lines = gitignore.split('\n').filter(l => l.trim() === '.claude/raid-session');
+    assert.strictEqual(lines.length, 1, 'Should add the actual entry even when comment contains substring');
+  });
+});
+
+describe('dryRun', () => {
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+  });
+
+  it('does not create any files', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ scripts: { test: 'jest' } }));
+    const output = init.dryRun(cwd);
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude')), '.claude should not be created');
+    assert.ok(typeof output === 'string', 'should return output string');
+  });
+
+  it('includes detected language', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ scripts: { test: 'jest' } }));
+    const output = init.dryRun(cwd);
+    assert.ok(output.includes('javascript'), 'should include detected language');
+  });
+
+  it('includes agent descriptions', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const output = init.dryRun(cwd);
+    assert.ok(output.includes('wizard.md'), 'should list wizard');
+    assert.ok(output.includes('warrior.md'), 'should list warrior');
+    assert.ok(output.includes('archer.md'), 'should list archer');
+    assert.ok(output.includes('rogue.md'), 'should list rogue');
+  });
+
+  it('includes hook descriptions', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const output = init.dryRun(cwd);
+    assert.ok(output.includes('validate-commit.sh'), 'should list commit hook');
+    assert.ok(output.includes('raid-session-start.sh'), 'should list session start');
+  });
+
+  it('includes skill descriptions', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const output = init.dryRun(cwd);
+    assert.ok(output.includes('raid-protocol'), 'should list protocol skill');
+    assert.ok(output.includes('raid-tdd'), 'should list tdd skill');
+  });
+
+  it('notes existing files as preserved', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const agentDir = path.join(cwd, '.claude', 'agents');
+    fs.mkdirSync(agentDir, { recursive: true });
+    fs.writeFileSync(path.join(agentDir, 'wizard.md'), 'custom');
+    const output = init.dryRun(cwd);
+    assert.ok(output.includes('preserved') || output.includes('skip'), 'should note preserved files');
+  });
+
+  it('ends with install instruction', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const output = init.dryRun(cwd);
+    assert.ok(output.includes('Run without --dry-run to install'), 'should end with install hint');
+  });
 });

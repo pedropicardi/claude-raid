@@ -53,7 +53,7 @@ cat >> "$QUEST_FILE" <<EOF
 EOF
 
 # List changed files from git (best effort)
-{ git diff --name-only HEAD~5 HEAD 2>/dev/null || true; } | while IFS= read -r f; do
+{ git diff --name-only "$(git rev-list --max-parents=0 HEAD 2>/dev/null || echo HEAD)" HEAD 2>/dev/null || git log --name-only --pretty=format: -5 2>/dev/null || true; } | sort -u | while IFS= read -r f; do
   [ -n "$f" ] && echo "- $f" >> "$QUEST_FILE"
 done
 

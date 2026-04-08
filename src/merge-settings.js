@@ -126,7 +126,7 @@ function mergeSettings(cwd) {
   if (!existing.hooks) existing.hooks = {};
 
   for (const [event, raidEntries] of Object.entries(RAID_HOOKS)) {
-    if (!existing.hooks[event]) {
+    if (!Array.isArray(existing.hooks[event])) {
       existing.hooks[event] = [];
     }
     existing.hooks[event] = existing.hooks[event].filter(entry => !isRaidHookEntry(entry));

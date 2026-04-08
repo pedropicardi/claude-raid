@@ -34,7 +34,7 @@ function versionGte(v, min) {
 const MIN_NODE = { major: 18, minor: 0, patch: 0 };
 const MIN_CLAUDE = { major: 2, minor: 1, patch: 32 };
 const VALID_TEAMMATE_MODES = ['tmux', 'in-process', 'auto'];
-const REQUIRED_IDS = ['node', 'claude'];
+const REQUIRED_IDS = ['node', 'claude', 'jq'];
 
 // --- Check functions (private) ---
 
@@ -166,11 +166,10 @@ function checkPlaywright(exec, cwd) {
   }
 
   // Determine exec command prefix (e.g. "npx" or "pnpm dlx")
-  const execCommand = raidConfig.execCommand || 'npx';
+  const execCommand = (raidConfig.project && raidConfig.project.execCommand) || 'npx';
 
   // Check if playwright config file exists
   const configFile = (raidConfig.browser && raidConfig.browser.playwrightConfig) || 'playwright.config.ts';
-  const configExists = cwd && fs.existsSync(path.join(cwd, configFile));
 
   // Check playwright version
   const raw = exec(`${execCommand} playwright --version`);
@@ -194,6 +193,45 @@ function checkPlaywright(exec, cwd) {
     label: 'Playwright',
     detail: `installed (${tag})`,
     hint: `Install: ${execCommand} playwright install`,
+  };
+}
+
+function checkJq(exec) {
+  const found = exec('command -v jq');
+  if (found) {
+    return {
+      id: 'jq',
+      ok: true,
+      label: 'jq',
+      detail: 'installed',
+    };
+  }
+  return {
+    id: 'jq',
+    ok: false,
+    label: 'jq',
+    detail: 'not found',
+    hint: process.platform === 'darwin'
+      ? 'Install: brew install jq'
+      : 'Install jq via your package manager (apt, dnf, brew, etc.)',
+  };
+}
+
+function checkPlatform(platform) {
+  if (platform === 'win32') {
+    return {
+      id: 'platform',
+      ok: false,
+      label: 'Platform',
+      detail: 'Windows is not supported — hooks require POSIX bash',
+      hint: 'Use WSL2 (Windows Subsystem for Linux) for full compatibility',
+    };
+  }
+  return {
+    id: 'platform',
+    ok: true,
+    label: 'Platform',
+    detail: platform,
   };
 }
 
@@ -273,9 +311,13 @@ function runChecks(opts = {}) {
 
   const nodeVersion = opts.nodeVersion || undefined;
 
+  const platform = opts.platform || process.platform;
+
   const checks = [
+    checkPlatform(platform),
     checkNode(nodeVersion),
     checkClaude(exec),
+    checkJq(exec),
     checkTeammateMode(homedir),
     checkSplitPane(exec),
     checkPlaywright(exec, cwd),

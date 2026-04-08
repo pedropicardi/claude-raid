@@ -104,6 +104,24 @@ describe('raid-session-start.sh', () => {
     assert.strictEqual(session.phase, 'plan'); // Not overwritten
   });
 
+  it('writes mode to raid-session when provided in input', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    const result = runHook('raid-session-start.sh', { source: 'startup', agent_type: 'wizard', session_id: 'mode-test', mode: 'skirmish' }, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+    assert.strictEqual(session.mode, 'skirmish');
+  });
+
+  it('defaults mode to full when not provided', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    const result = runHook('raid-session-start.sh', { source: 'startup', agent_type: 'wizard', session_id: 'default-mode' }, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+    assert.strictEqual(session.mode, 'full');
+  });
+
   it('outputs additionalContext when Vault has entries', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
@@ -142,13 +160,14 @@ describe('raid-teammate-idle.sh', () => {
     tmpDir = null;
   });
 
-  it('exits 2 with nudge when session active', () => {
+  it('exits 0 with additionalContext nudge when session active', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     writeSession(cwd);
-    const result = runHook('raid-teammate-idle.sh', {}, cwd);
-    assert.strictEqual(result.exitCode, 2);
-    assert.ok(result.stderr.includes('Unclaimed tasks'));
+    const result = runHook('raid-teammate-idle.sh', { teammate_name: 'warrior' }, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.ok(result.stdout.includes('additionalContext'), 'should output additionalContext');
+    assert.ok(result.stdout.includes('warrior') || result.stdout.includes('Unclaimed'), 'should mention agent or tasks');
   });
 
   it('exits 0 when no active session', () => {
@@ -377,7 +396,7 @@ describe('raid-stop.sh', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     writeSession(cwd, { phase: 'design', mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\n## Phase: plan\n\nSome content here.');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\n<!-- RAID_PHASE: plan -->\n\nSome content here.');
     const result = runHook('raid-stop.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
     assert.ok(result.stdout.includes('additionalContext'));
@@ -389,7 +408,7 @@ describe('raid-stop.sh', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     writeSession(cwd, { phase: 'design', mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Phase: plan content');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '<!-- RAID_PHASE: plan -->');
     runHook('raid-stop.sh', {}, cwd);
     const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
     assert.strictEqual(session.phase, 'plan');
@@ -399,10 +418,37 @@ describe('raid-stop.sh', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     writeSession(cwd, { phase: 'plan', mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Phase: plan content');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '<!-- RAID_PHASE: plan -->');
     const result = runHook('raid-stop.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
     assert.strictEqual(result.stdout.trim(), '');
+  });
+
+  it('ignores casual phase mentions in Dungeon text', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'design', mode: 'full' });
+    // Text mentions "plan" casually but no structured phase marker
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\nBack in the design phase we discussed the plan for implementation.');
+    const result = runHook('raid-stop.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    // Should NOT detect a phase transition
+    assert.strictEqual(result.stdout.trim(), '', 'should not detect transition from casual mention');
+    // Session should still be design
+    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+    assert.strictEqual(session.phase, 'design');
+  });
+
+  it('detects structured RAID_PHASE marker', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'design', mode: 'full' });
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\n<!-- RAID_PHASE: plan -->\n\nSome content here.');
+    const result = runHook('raid-stop.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.ok(result.stdout.includes('additionalContext'));
+    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+    assert.strictEqual(session.phase, 'plan');
   });
 
   it('does nothing when no Dungeon file exists', () => {

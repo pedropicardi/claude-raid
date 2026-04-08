@@ -17,6 +17,7 @@ raid_read_lifecycle_input
 SOURCE=$(echo "$RAID_HOOK_INPUT" | jq -r '.source // "startup"')
 AGENT_TYPE=$(echo "$RAID_HOOK_INPUT" | jq -r '.agent_type // ""')
 SESSION_ID=$(echo "$RAID_HOOK_INPUT" | jq -r '.session_id // ""')
+MODE=$(echo "$RAID_HOOK_INPUT" | jq -r '.mode // "full"')
 
 # Only activate for wizard agent type
 if [ "$AGENT_TYPE" != "wizard" ]; then
@@ -28,15 +29,11 @@ if [ "$SOURCE" = "resume" ] && [ -f ".claude/raid-session" ]; then
   exit 0
 fi
 
-# Create raid-session file
+# Create raid-session file — use jq to safely encode values
 mkdir -p .claude
-cat > .claude/raid-session <<ENDJSON
-{
-  "sessionId": "$SESSION_ID",
-  "startedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "phase": "design"
-}
-ENDJSON
+STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+jq -n --arg sid "$SESSION_ID" --arg ts "$STARTED_AT" --arg mode "$MODE" \
+  '{ sessionId: $sid, startedAt: $ts, phase: "design", mode: $mode }' > .claude/raid-session
 
 # Check Vault for past quests
 VAULT_COUNT=$(raid_vault_count)

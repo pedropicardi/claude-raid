@@ -113,8 +113,12 @@ if [ "$RAID_ACTIVE" = "true" ]; then
       raid_block "VERIFICATION: Commit claims completion but no test run evidence found. Run tests before claiming work is complete."
     fi
 
-    LAST_RUN=$(cat "$TIMESTAMP_FILE")
+    LAST_RUN=$(cat "$TIMESTAMP_FILE" | tr -d '[:space:]')
     NOW=$(date +%s)
+    # Guard against corrupted/non-numeric timestamp
+    case "$LAST_RUN" in
+      ''|*[!0-9]*) raid_block "VERIFICATION: Test run timestamp is corrupted. Run tests again before claiming completion." ;;
+    esac
     AGE=$((NOW - LAST_RUN))
 
     if [ "$AGE" -gt "$MAX_AGE" ]; then

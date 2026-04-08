@@ -11,12 +11,26 @@ const showUpdateNotice = versionCheck.start();
 
 const COMMANDS = {
   // Primary commands
-  summon: () => require('../src/init').run(),
+  summon: () => {
+    if (process.argv.includes('--dry-run')) {
+      console.log('\n' + banner());
+      console.log(require('../src/init').dryRun(process.cwd()));
+      return;
+    }
+    return require('../src/init').run();
+  },
   update: () => require('../src/update').run(),
   dismantle: () => require('../src/remove').run(),
   heal: () => require('../src/doctor').run(),
   // Aliases (backward compat)
-  init: () => require('../src/init').run(),
+  init: () => {
+    if (process.argv.includes('--dry-run')) {
+      console.log('\n' + banner());
+      console.log(require('../src/init').dryRun(process.cwd()));
+      return;
+    }
+    return require('../src/init').run();
+  },
   remove: () => require('../src/remove').run(),
   doctor: () => require('../src/doctor').run(),
 };

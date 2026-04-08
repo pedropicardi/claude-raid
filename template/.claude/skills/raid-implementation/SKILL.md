@@ -67,7 +67,7 @@ digraph implementation {
 
 One agent implements. Others prepare to attack. **Rotate the implementer** across tasks.
 
-The Wizard doesn't open a new Dungeon for every task — the Phase 3 Dungeon is continuous across all tasks. But the Wizard announces each task assignment clearly.
+Phase 3 uses a single continuous Dungeon (`.claude/raid-dungeon.md`) across all tasks — unlike Phases 1 and 2 which each get their own Dungeon that is archived on close. The Wizard announces each task assignment clearly within the running Dungeon.
 
 ### Step 2: Implementer Executes (TDD)
 

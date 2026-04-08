@@ -185,4 +185,17 @@ describe('validate-commit.sh', () => {
     const result = runHook(tmp, 'git commit -m "feat(hooks): add new validation logic"');
     assert.strictEqual(result.status, 0);
   });
+
+  it('blocks completion commit when timestamp file is corrupted (non-numeric)', () => {
+    const tmp = setupEnv({
+      raidActive: true,
+      config: { project: { testCommand: '' } },
+      lastTestRun: 'corrupted-not-a-number',
+    });
+    dirs.push(tmp);
+    const result = runHook(tmp, 'git commit -m "feat(hooks): complete the final validation"');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.toLowerCase().includes('corrupt') || result.stderr.toLowerCase().includes('timestamp'),
+      `Expected stderr to mention corruption, got: ${result.stderr}`);
+  });
 });
