@@ -74,8 +74,6 @@ function box(title, contentLines) {
     if (w > maxContent) maxContent = w;
   }
   const innerWidth = Math.max(maxContent + PADDING * 2, titleStr.length + 4);
-  const totalWidth = innerWidth + 2; // +2 for border chars
-
   // Top border: ┌─── ⚔ Title ───...─┐
   const titleDashesAfter = innerWidth - titleStr.length - 3;
   const topBorder = amber('┌') + amber('───') + titleStr + amber('─'.repeat(Math.max(0, titleDashesAfter))) + amber('┐');
@@ -102,11 +100,4 @@ function header(text) {
   return `  ${amber(bold(`\u2694 ${text}`))}`;
 }
 
-const print = {
-  success(text) { console.log(`  ${colors.green('✔')} ${text}`); },
-  fail(text) { console.log(`  ${colors.red('✖')} ${text}`); },
-  info(text) { console.log(`  ${colors.dim('→')} ${text}`); },
-  line(text) { console.log(`  ${text}`); },
-};
-
-module.exports = { colors, banner, box, header, print, stripAnsi };
+module.exports = { colors, banner, box, header, stripAnsi };

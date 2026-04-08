@@ -17,10 +17,6 @@ async function run() {
     process.exitCode = 1;
   }
 
-  if (result.checks.every(c => c.ok)) {
-    console.log('\n  ' + colors.green('The party is battle-ready.'));
-  }
-
   const quickStart = box('Quick Start', [
     '  In-process mode (any terminal):',
     '    ' + colors.bold('claude --agent wizard'),

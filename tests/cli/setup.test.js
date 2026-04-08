@@ -7,7 +7,7 @@ const os = require('os');
 const path = require('path');
 
 const { Readable, Writable } = require('stream');
-const { runChecks, formatChecks, VALID_TEAMMATE_MODES, runSetup } = require('../../src/setup');
+const { runChecks, VALID_TEAMMATE_MODES, runSetup } = require('../../src/setup');
 const { stripAnsi } = require('../../src/ui');
 
 let tmpDir;
@@ -204,17 +204,6 @@ describe('setup', () => {
     assert.strictEqual(tm.ok, false, 'teammate-mode should fail');
     assert.strictEqual(sp.ok, false, 'split-pane should fail');
     assert.strictEqual(result.allOk, true, 'allOk should be true (only required checks matter)');
-  });
-
-  it('formatChecks renders icons and hints', () => {
-    const checks = [
-      { id: 'node', ok: true, label: 'Node.js', detail: 'v20.0.0' },
-      { id: 'claude', ok: false, label: 'Claude Code', detail: 'not found', hint: 'Install it' },
-    ];
-    const out = stripAnsi(formatChecks(checks));
-    assert.ok(out.includes('✔'));
-    assert.ok(out.includes('✖'));
-    assert.ok(out.includes('→ Install it'));
   });
 
   it('exports VALID_TEAMMATE_MODES', () => {

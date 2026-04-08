@@ -20,10 +20,15 @@ const COMMANDS = {
 if (!command || !COMMANDS[command]) {
   console.log('\n' + banner());
   console.log(header('Commands') + '\n');
-  console.log('    ' + colors.bold('summon') + '      Summon the party into this realm');
-  console.log('    ' + colors.bold('update') + '      Reforge the party\'s arsenal');
-  console.log('    ' + colors.bold('dismantle') + '   Dismantle the camp and retreat');
-  console.log('    ' + colors.bold('heal') + '        Diagnose wounds and prepare for battle');
+  const cmds = [
+    ['summon',    'Summon the party into this realm'],
+    ['update',    'Reforge the party\'s arsenal'],
+    ['dismantle', 'Dismantle the camp and retreat'],
+    ['heal',      'Diagnose wounds and prepare for battle'],
+  ];
+  for (const [name, desc] of cmds) {
+    console.log('    ' + colors.bold(name.padEnd(12)) + desc);
+  }
   console.log(header('Begin the Raid') + '\n');
   console.log('    claude --agent wizard\n');
   console.log(colors.dim('  github.com/pedropicardi/claude-raid') + '\n');

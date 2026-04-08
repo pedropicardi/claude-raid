@@ -34,6 +34,7 @@ function versionGte(v, min) {
 const MIN_NODE = { major: 18, minor: 0, patch: 0 };
 const MIN_CLAUDE = { major: 2, minor: 1, patch: 32 };
 const VALID_TEAMMATE_MODES = ['tmux', 'in-process', 'auto'];
+const REQUIRED_IDS = ['node', 'claude'];
 
 // --- Check functions (private) ---
 
@@ -223,26 +224,11 @@ function runChecks(opts = {}) {
     checkSplitPane(exec),
   ];
 
-  const REQUIRED_IDS = ['node', 'claude'];
+
   return {
     checks,
     allOk: checks.filter(c => REQUIRED_IDS.includes(c.id)).every(c => c.ok),
   };
-}
-
-function formatChecks(checks) {
-  const lines = [];
-  const maxLabel = Math.max(...checks.map(c => c.label.length));
-
-  for (const check of checks) {
-    const icon = check.ok ? colors.green('✔') : colors.red('✖');
-    const pad = ' '.repeat(maxLabel - check.label.length + 2);
-    lines.push(`  ${icon} ${check.label}${pad}${check.detail}`);
-    if (check.hint) {
-      lines.push(`    ${colors.dim('→')} ${colors.dim(check.hint)}`);
-    }
-  }
-  return lines.join('\n');
 }
 
 async function runSetup(opts = {}) {
@@ -307,7 +293,7 @@ async function runSetup(opts = {}) {
   stdout.write('\n  ' + formatCheckLine(splitPane).join('\n  ') + '\n');
 
   // Recalculate allOk (required checks only: node + claude)
-  const REQUIRED_IDS = ['node', 'claude'];
+
   allOk = checks.filter(c => REQUIRED_IDS.includes(c.id)).every(c => c.ok);
 
   if (checks.every(c => c.ok)) {
@@ -318,4 +304,4 @@ async function runSetup(opts = {}) {
   return { checks, allOk, actions };
 }
 
-module.exports = { runChecks, formatChecks, VALID_TEAMMATE_MODES, runSetup };
+module.exports = { runChecks, VALID_TEAMMATE_MODES, runSetup };
