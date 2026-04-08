@@ -8,6 +8,7 @@ const path = require('path');
 
 const { Readable, Writable } = require('stream');
 const { runChecks, formatChecks, VALID_TEAMMATE_MODES, runSetup } = require('../../src/setup');
+const { stripAnsi } = require('../../src/ui');
 
 let tmpDir;
 
@@ -210,7 +211,7 @@ describe('setup', () => {
       { id: 'node', ok: true, label: 'Node.js', detail: 'v20.0.0' },
       { id: 'claude', ok: false, label: 'Claude Code', detail: 'not found', hint: 'Install it' },
     ];
-    const out = formatChecks(checks);
+    const out = stripAnsi(formatChecks(checks));
     assert.ok(out.includes('✔'));
     assert.ok(out.includes('✖'));
     assert.ok(out.includes('→ Install it'));

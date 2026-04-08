@@ -5,6 +5,7 @@ const path = require('path');
 const os = require('os');
 const readline = require('readline');
 const { execSync } = require('child_process');
+const { colors } = require('./ui');
 
 // --- Helpers (private) ---
 
@@ -223,11 +224,11 @@ function formatChecks(checks) {
   const maxLabel = Math.max(...checks.map(c => c.label.length));
 
   for (const check of checks) {
-    const icon = check.ok ? '✔' : '✖';
+    const icon = check.ok ? colors.green('✔') : colors.red('✖');
     const pad = ' '.repeat(maxLabel - check.label.length + 2);
     lines.push(`  ${icon} ${check.label}${pad}${check.detail}`);
     if (check.hint) {
-      lines.push(`    → ${check.hint}`);
+      lines.push(`    ${colors.dim('→')} ${colors.dim(check.hint)}`);
     }
   }
   return lines.join('\n');
