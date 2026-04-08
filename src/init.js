@@ -90,7 +90,7 @@ function install(cwd) {
 
   // Add raid-last-test-run to .gitignore
   const gitignorePath = path.join(cwd, '.gitignore');
-  const ignoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session'];
+  const ignoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session', '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*'];
   if (fs.existsSync(gitignorePath)) {
     let content = fs.readFileSync(gitignorePath, 'utf8');
     const toAdd = ignoreEntries.filter(e => !content.includes(e));

@@ -100,6 +100,15 @@ describe('init', () => {
     assert.ok(result.alreadyInstalled);
   });
 
+  it('adds Dungeon files to .gitignore', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const gitignore = fs.readFileSync(path.join(cwd, '.gitignore'), 'utf8');
+    assert.ok(gitignore.includes('.claude/raid-dungeon.md'), 'Should include raid-dungeon.md');
+    assert.ok(gitignore.includes('.claude/raid-dungeon-phase-*'), 'Should include raid-dungeon-phase-*');
+  });
+
   it('does not overwrite existing raid.json on re-install', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
