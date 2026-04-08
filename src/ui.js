@@ -16,6 +16,7 @@ const colors = {
   bold: wrap('1'),
   boldAmber: wrap('1;33'),
   boldRed: wrap('1;31'),
+  dimRed: wrap('2;31'),
 };
 
 function stripAnsi(str) {
@@ -23,7 +24,7 @@ function stripAnsi(str) {
 }
 
 function banner() {
-  const { amber, boldAmber, boldRed, dim } = colors;
+  const { amber, boldAmber, boldRed, red, dimRed, dim } = colors;
   const rule = amber('  ⚔ ═══════════════════════════════════════════════════════ ⚔');
 
   const claudeArt = [
@@ -44,14 +45,30 @@ function banner() {
     '              ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ',
   ];
 
-  const tagline = '      Adversarial multi-agent warfare for Claude Code';
+  // 5-tone vertical gradient: boldAmber -> amber -> boldRed -> red -> dimRed
+  // Lines 1-2 (CLAUDE top): boldAmber
+  // Lines 3-5 (CLAUDE bottom + transition): amber
+  // Line 6 (CLAUDE/RAID boundary): boldRed
+  // Lines 7-8 (RAID top): boldRed
+  // Lines 9-11 (RAID middle): red
+  // Line 12 (RAID bottom): dimRed
+  const gradientColors = [
+    boldAmber, boldAmber,       // claudeArt[0-1]
+    amber, amber, amber,        // claudeArt[2-4]
+    boldRed,                    // claudeArt[5]
+    boldRed, boldRed,           // raidArt[0-1]
+    red, red, red,              // raidArt[2-4]
+    dimRed,                     // raidArt[5]
+  ];
+
+  const allArt = [...claudeArt, ...raidArt];
+  const tagline = '      Adversarial multi-agent development for Claude Code';
 
   const lines = [
     '',
     rule,
     '',
-    ...claudeArt.map(l => boldAmber(l)),
-    ...raidArt.map(l => boldRed(l)),
+    ...allArt.map((l, i) => gradientColors[i](l)),
     '',
     dim(tagline),
     '',

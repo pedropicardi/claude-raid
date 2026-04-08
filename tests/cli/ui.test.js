@@ -91,6 +91,22 @@ describe('ui', () => {
       assert.ok(output.includes('Adversarial'), 'should contain "Adversarial"');
       assert.ok(output.includes('Claude Code'), 'should contain "Claude Code"');
     });
+
+    it('banner uses gradient colors from amber to red', () => {
+      const { banner } = loadUi({ NO_COLOR: undefined, _forceTTY: true });
+      const output = banner();
+      assert.ok(output.includes('\x1b[1;33m'), 'should contain bold amber');
+      assert.ok(output.includes('\x1b[33m'), 'should contain amber');
+      assert.ok(output.includes('\x1b[1;31m'), 'should contain bold red');
+      assert.ok(output.includes('\x1b[31m'), 'should contain red');
+      assert.ok(output.includes('\x1b[2;31m'), 'should contain dim red');
+    });
+
+    it('banner tagline says "development" not "warfare"', () => {
+      const { banner } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = banner();
+      assert.ok(output.includes('Adversarial multi-agent development for Claude Code'));
+    });
   });
 
   describe('box', () => {
