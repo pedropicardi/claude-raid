@@ -25,64 +25,67 @@ claude --agent wizard --teammate-mode tmux
 
 ## How It Works
 
-You describe your task. The Wizard assesses complexity, recommends a mode, and orchestrates the team through a 4-phase workflow:
+You describe your task. The Wizard assesses complexity, recommends a mode, and opens the Dungeon:
 
 ```
-Phase 1: DESIGN          All agents explore from different angles.
-                          They fight, learn from mistakes, push to edges.
-                          Output: battle-tested design specification.
+Phase 1: DESIGN          Wizard opens the Dungeon, dispatches with angles.
+                          Agents explore freely, challenge each other directly,
+                          roast weak findings, build on discoveries.
+                          Verified findings pinned to the Dungeon.
+                          Wizard closes when design is battle-tested.
 
 Phase 2: PLAN             Agents decompose the design into tasks.
-                          They cross-test for compliance, naming consistency,
+                          They fight directly over compliance, naming,
                           test coverage, and ordering.
-                          Output: implementation plan with TDD steps.
+                          Agreed tasks pinned to the Dungeon.
 
-Phase 3: IMPLEMENTATION   One agent implements each task. The others attack.
-                          Rotate. TDD enforced. Every task earns approval.
+Phase 3: IMPLEMENTATION   One agent implements each task. The others attack
+                          directly — and attack each other's reviews too.
+                          TDD enforced. Every task earns approval.
 
-Phase 4: REVIEW           Independent reviews from every angle.
-                          Cross-tested. Issues categorized by severity.
+Phase 4: REVIEW           Independent reviews, then agents fight over findings
+                          AND missing findings. Issues pinned by severity.
                           Critical and Important must be fixed.
 
-         FINISHING        Agents debate completeness against the spec.
-                          Wizard presents merge options.
+         FINISHING        Agents debate completeness directly.
+                          Wizard presents merge options. Dungeon cleaned up.
 ```
 
-Every phase follows the same pattern: Wizard dispatches with different angles, agents explore independently, agents cross-test and challenge each other, Wizard synthesizes and delivers a binding ruling. No phase is skipped. No work passes unchallenged.
+Every phase follows the same pattern: Wizard opens the Dungeon and dispatches with angles, agents self-organize and interact directly (challenge, roast, build on each other's work), pin verified findings to the Dungeon, and the Wizard closes with a binding ruling. No phase is skipped. No work passes unchallenged.
 
 ## The Team
 
-### Wizard (Lead)
+### Wizard (Dungeon Master)
 
 Purple. Model: Opus 4.6. Observes 90%, acts 10%.
 
-The Wizard doesn't write code -- it thinks. Every response has been turned over 3, 4, 5 times before a single word is committed. It reads the full prompt three times, identifies the real problem beneath the stated one, maps the blast radius, and only then dispatches the team with precise angles.
+The Wizard doesn't write code -- it thinks. Every response has been turned over 3, 4, 5 times before a single word is committed. It reads the full prompt three times, identifies the real problem beneath the stated one, maps the blast radius, and only then opens the Dungeon and dispatches the team with precise angles.
 
-It detects destructive loops, enforces efficiency, ensures agents learn from each other, and delivers binding rulings. When the team disagrees, the Wizard lets friction produce truth -- but intervenes when the dispute stops being productive.
+After dispatch, the Wizard goes silent. Agents own the phase -- they interact directly, challenge each other, build on discoveries, and pin verified findings to the Dungeon. The Wizard watches, intervening only on destructive loops, drift, deadlock, laziness, ego, or misinformation. When the phase objective is met, the Wizard closes with a binding ruling citing Dungeon evidence.
 
 ### Warrior
 
 Red. Aggressive thoroughness. Stress-tests to destruction.
 
-The Warrior doesn't skim -- it rips things apart. When other agents present findings, its first instinct is: *"Where is this wrong?"* It demands evidence, proposes counter-examples, and pushes until things break. Race conditions, null input, scale, memory pressure -- nothing passes unchecked. But it fights smart: every move counts, and it concedes instantly when proven wrong.
+The Warrior doesn't skim -- it rips things apart. When @Archer or @Rogue present findings, its first instinct is: *"Where is this wrong?"* It demands evidence, proposes counter-examples, and pushes until things break. Race conditions, null input, scale, memory pressure -- nothing passes unchecked. It builds on teammates' discoveries and roasts weak analysis. Every move counts, and it concedes instantly when proven wrong.
 
-**Signals:** `🔍 FINDING:` / `⚔️ CHALLENGE:` / `✅ CONCEDE:`
+**Signals:** `🔍 FINDING:` / `⚔️ CHALLENGE:` / `🔥 ROAST:` / `🔗 BUILDING ON @Name:` / `📌 DUNGEON:` / `🆘 WIZARD:` / `✅ CONCEDE:`
 
 ### Archer
 
 Green. Precision over brute force. Pattern recognition.
 
-The Archer finds what brute force misses. It spots naming mismatches, violated conventions, and design drift. It traces ripple effects -- changing X in module A silently breaks Y in module C through an implicit contract in Z. It checks consistency with existing codebase patterns, not just correctness in isolation. Every finding includes the exact location and the exact consequence.
+The Archer finds what brute force misses. It spots naming mismatches, violated conventions, and design drift. It traces ripple effects -- changing X in module A silently breaks Y in module C through an implicit contract in Z. It challenges @Warrior and @Rogue from unexpected angles, building on their discoveries with surgical precision. Every finding includes the exact location and the exact consequence.
 
-**Signals:** `🎯 FINDING:` / `🏹 CHALLENGE:` / `✅ CONCEDE:`
+**Signals:** `🎯 FINDING:` / `🏹 CHALLENGE:` / `🔥 ROAST:` / `🔗 BUILDING ON @Name:` / `📌 DUNGEON:` / `🆘 WIZARD:` / `✅ CONCEDE:`
 
 ### Rogue
 
 Orange. Adversarial mindset. Assumption destroyer.
 
-The Rogue thinks like a malicious user, a failing network, a corrupted database, a race condition at 3 AM. *"This will never be null."* Oh really? *"Users won't do that."* Watch me. It constructs the exact sequence of events that turns a minor oversight into a critical failure. Every finding is a concrete attack scenario, not a theoretical concern.
+The Rogue thinks like a malicious user, a failing network, a corrupted database, a race condition at 3 AM. *"This will never be null."* Oh really? *"Users won't do that."* Watch me. It constructs the exact sequence of events that turns a minor oversight into a critical failure. It weaponizes @Warrior and @Archer's findings to build nastier scenarios. Every finding is a concrete attack scenario, not a theoretical concern.
 
-**Signals:** `💀 FINDING:` / `🗡️ CHALLENGE:` / `✅ CONCEDE:`
+**Signals:** `💀 FINDING:` / `🗡️ CHALLENGE:` / `🔥 ROAST:` / `🔗 BUILDING ON @Name:` / `📌 DUNGEON:` / `🆘 WIZARD:` / `✅ CONCEDE:`
 
 ## Modes
 
@@ -109,6 +112,18 @@ Override the Wizard's recommendation: *"Full Raid this"*, *"Skirmish this bugfix
 The Wizard can escalate mid-task (Scout to Skirmish, Skirmish to Full Raid) with your approval. It cannot de-escalate without asking.
 
 **TDD is non-negotiable in all modes.** No production code without a failing test first.
+
+## The Dungeon
+
+The Dungeon (`.claude/raid-dungeon.md`) is the team's shared knowledge artifact -- a curated board where agents pin verified findings during each phase.
+
+**What goes in the Dungeon:** Findings that survived challenge, active unresolved battles, shared knowledge verified by 2+ agents, key decisions, escalation points.
+
+**What stays in conversation:** The back-and-forth of challenges and roasts, exploratory thinking, concessions. The conversation is the sparring ring. The Dungeon is the scoreboard.
+
+**Lifecycle:** Wizard creates the Dungeon when opening a phase, agents pin findings with `📌 DUNGEON:`, Wizard archives it when closing (`.claude/raid-dungeon-phase-N.md`), and agents can reference archived Dungeons from prior phases. All Dungeon files are cleaned up when the session ends.
+
+**Direct interaction:** Agents talk to each other directly (`@Name`), build on discoveries (`🔗 BUILDING ON @Name:`), roast weak analysis (`🔥 ROAST:`), and escalate to the Wizard only when genuinely stuck (`🆘 WIZARD:`). The Wizard observes silently and intervenes only on destructive loops, drift, deadlock, laziness, ego, or misinformation.
 
 ## Skills
 
@@ -149,7 +164,7 @@ Hooks that enforce workflow discipline (phase-gate, test-pass, verification) onl
 
 ## Team Rules
 
-13 non-negotiable rules that every agent follows, stored in `.claude/raid-rules.md`:
+17 non-negotiable rules that every agent follows, stored in `.claude/raid-rules.md`:
 
 1. **No subagents** -- agent teams only
 2. **No laziness** -- every challenge carries evidence
@@ -164,6 +179,10 @@ Hooks that enforce workflow discipline (phase-gate, test-pass, verification) onl
 11. **Wizard observes 90%, acts 10%** -- speaks when 90% confident
 12. **Maximum effort, always**
 13. **No hallucination** -- say "I don't know" when uncertain
+14. **Dungeon discipline** -- only pin verified findings, don't spam
+15. **Direct engagement** -- address agents by name, build on each other's work
+16. **Escalate wisely** -- pull the Wizard only when genuinely stuck
+17. **Roast with evidence** -- every critique carries proof
 
 Edit this file to add project-specific rules. Updates via `claude-raid update` will overwrite it, so keep a backup if you've customized it.
 
@@ -286,6 +305,8 @@ npx claude-raid remove    # Uninstall and restore original settings
     └── raid-git-worktrees/          # Isolated workspaces
 ```
 
+**Note:** Dungeon files (`.claude/raid-dungeon.md`, `.claude/raid-dungeon-phase-*.md`) are created at runtime during Raid sessions, not during installation. They are session artifacts and are automatically cleaned up.
+
 ## Non-Invasive Design
 
 The Raid is a tool in your toolkit, not your project's operating system.
@@ -317,7 +338,7 @@ The Raid inherits and adapts the [Superpowers](https://github.com/obra/superpowe
 | YAGNI / DRY | Remove unnecessary features. Don't duplicate logic. |
 | Conventional commits | Enforced via hook: `type(scope): description`. |
 
-**What's different:** Superpowers uses a single agent with subagent delegation. The Raid uses 4 agents in an agent team with adversarial cross-testing, competitive exploration, and collaborative learning. Every decision is stress-tested from multiple angles before it passes.
+**What's different:** Superpowers uses a single agent with subagent delegation. The Raid uses 4 agents in an agent team with adversarial cross-testing, competitive exploration, and collaborative learning. Agents interact directly with each other (not through the Wizard), pin verified findings to a shared Dungeon, and self-organize within phases. The Wizard observes 90%, acts 10% -- opening and closing phases, but never mediating every exchange. Every decision is stress-tested from multiple angles before it passes.
 
 ## License
 
