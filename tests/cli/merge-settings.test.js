@@ -198,4 +198,40 @@ describe('mergeSettings', () => {
     fs.writeFileSync(path.join(claudeDir, 'settings.json'), '{corrupt}');
     assert.throws(() => removeRaidSettings(cwd), /invalid JSON/);
   });
+
+  it('handles non-array hook values without crashing', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'settings.json'), JSON.stringify({
+      hooks: {
+        PostToolUse: 'not-an-array',
+        PreToolUse: { bad: 'object' },
+      },
+    }));
+    // Should not throw — should replace with valid arrays
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
+    assert.ok(Array.isArray(settings.hooks.PostToolUse));
+    assert.ok(Array.isArray(settings.hooks.PreToolUse));
+  });
+
+  it('preserves non-raid hooks when merging', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    const customHook = { matcher: 'Write', hooks: [{ type: 'command', command: 'echo my-custom-hook' }] };
+    fs.writeFileSync(path.join(claudeDir, 'settings.json'), JSON.stringify({
+      hooks: { PostToolUse: [customHook] },
+    }));
+    mergeSettings(cwd);
+    mergeSettings(cwd); // Run twice to test idempotency
+    const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
+    const customSurvived = settings.hooks.PostToolUse.some(h =>
+      h.hooks && h.hooks.some(hh => hh.command === 'echo my-custom-hook')
+    );
+    assert.ok(customSurvived, 'Non-raid hooks must survive merge');
+  });
 });

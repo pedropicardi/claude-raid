@@ -29,24 +29,19 @@ phase_rank() {
 }
 
 # Detect current phase from Dungeon file
-# Looks for phase markers like "## Phase: plan" or "PHASE: implementation"
+# Only matches structured markers: <!-- RAID_PHASE: plan -->
 DETECTED_PHASE="$STORED_PHASE"
 if [ -f ".claude/raid-dungeon.md" ]; then
-  # Match named phases: "Phase: design", "PHASE: plan", "## Phase: implementation", etc.
-  FOUND=$(grep -oiE '(phase:?\s*)(design|plan|implementation|review|finishing)' ".claude/raid-dungeon.md" 2>/dev/null | grep -oiE '(design|plan|implementation|review|finishing)' | tr '[:upper:]' '[:lower:]' | sort -u | tail -1)
-  if [ -n "$FOUND" ]; then
-    # Take the highest-ranked phase found
-    BEST_RANK=0
-    BEST_PHASE="$STORED_PHASE"
-    for phase_name in $(grep -oiE '(phase:?\s*)(design|plan|implementation|review|finishing)' ".claude/raid-dungeon.md" 2>/dev/null | grep -oiE '(design|plan|implementation|review|finishing)' | tr '[:upper:]' '[:lower:]' | sort -u); do
-      RANK=$(phase_rank "$phase_name")
-      if [ "$RANK" -gt "$BEST_RANK" ]; then
-        BEST_RANK=$RANK
-        BEST_PHASE=$phase_name
-      fi
-    done
-    DETECTED_PHASE="$BEST_PHASE"
-  fi
+  BEST_RANK=0
+  BEST_PHASE="$STORED_PHASE"
+  for phase_name in $(grep -oE '<!-- RAID_PHASE: (design|plan|implementation|review|finishing) -->' ".claude/raid-dungeon.md" 2>/dev/null | grep -oE '(design|plan|implementation|review|finishing)'); do
+    RANK=$(phase_rank "$phase_name")
+    if [ "$RANK" -gt "$BEST_RANK" ]; then
+      BEST_RANK=$RANK
+      BEST_PHASE=$phase_name
+    fi
+  done
+  DETECTED_PHASE="$BEST_PHASE"
 fi
 
 # Compare phases by rank

@@ -178,6 +178,7 @@ describe('setup', () => {
     const exec = (cmd) => {
       if (cmd === 'claude --version') return '2.3.1';
       if (cmd === 'command -v tmux') return '/usr/local/bin/tmux';
+      if (cmd === 'command -v jq') return '/usr/local/bin/jq';
       return null;
     };
     const result = runChecks({ homedir: home, exec });
@@ -193,9 +194,10 @@ describe('setup', () => {
   it('allOk true when required pass but optional fail', () => {
     const home = makeTempDir();
     // No .claude.json (teammate-mode fails) and no tmux/it2 (split-pane fails)
-    // but node and claude pass => allOk should be true
+    // but node, claude, and jq pass => allOk should be true
     const exec = (cmd) => {
       if (cmd === 'claude --version') return '2.3.1';
+      if (cmd === 'command -v jq') return '/usr/local/bin/jq';
       return null;
     };
     const result = runChecks({ homedir: home, exec, nodeVersion: 'v20.0.0' });
@@ -243,6 +245,67 @@ describe('setup', () => {
     assert.ok(pw, 'playwright check should be present');
     assert.strictEqual(pw.ok, true);
     assert.ok(pw.detail.includes('installed'));
+  });
+
+  it('jq check passes when jq is found', () => {
+    const home = makeTempDir();
+    const exec = (cmd) => {
+      if (cmd === 'command -v jq') return '/usr/local/bin/jq';
+      return null;
+    };
+    const result = runChecks({ homedir: home, exec });
+    const jq = result.checks.find(c => c.id === 'jq');
+    assert.ok(jq, 'jq check should be present');
+    assert.strictEqual(jq.ok, true);
+    assert.ok(jq.detail.includes('installed'));
+  });
+
+  it('jq check fails when jq is not found', () => {
+    const home = makeTempDir();
+    const result = runChecks({ homedir: home, exec: () => null });
+    const jq = result.checks.find(c => c.id === 'jq');
+    assert.ok(jq, 'jq check should be present');
+    assert.strictEqual(jq.ok, false);
+    assert.ok(jq.hint);
+  });
+
+  it('jq is a required check (blocks allOk)', () => {
+    const home = makeTempDir();
+    fs.writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ teammateMode: 'tmux' }));
+    const exec = (cmd) => {
+      if (cmd === 'claude --version') return '2.3.1';
+      if (cmd === 'command -v tmux') return '/usr/local/bin/tmux';
+      // jq not found
+      return null;
+    };
+    const result = runChecks({ homedir: home, exec, nodeVersion: 'v20.0.0' });
+    assert.strictEqual(result.allOk, false, 'allOk should be false when jq is missing');
+  });
+
+  it('platform check warns on win32', () => {
+    const home = makeTempDir();
+    const result = runChecks({ homedir: home, exec: () => null, platform: 'win32' });
+    const plat = result.checks.find(c => c.id === 'platform');
+    assert.ok(plat, 'platform check should be present');
+    assert.strictEqual(plat.ok, false);
+    assert.ok(plat.detail.includes('Windows'));
+    assert.ok(plat.hint);
+  });
+
+  it('platform check passes on darwin', () => {
+    const home = makeTempDir();
+    const result = runChecks({ homedir: home, exec: () => null, platform: 'darwin' });
+    const plat = result.checks.find(c => c.id === 'platform');
+    assert.ok(plat, 'platform check should be present');
+    assert.strictEqual(plat.ok, true);
+  });
+
+  it('platform check passes on linux', () => {
+    const home = makeTempDir();
+    const result = runChecks({ homedir: home, exec: () => null, platform: 'linux' });
+    const plat = result.checks.find(c => c.id === 'platform');
+    assert.ok(plat, 'platform check should be present');
+    assert.strictEqual(plat.ok, true);
   });
 
   it('reports playwright not installed when version check fails', () => {
@@ -296,6 +359,7 @@ function mockStdout() {
 function allPassExec(cmd) {
   if (cmd === 'claude --version') return '2.3.1';
   if (cmd === 'command -v tmux') return '/usr/local/bin/tmux';
+  if (cmd === 'command -v jq') return '/usr/local/bin/jq';
   return null;
 }
 

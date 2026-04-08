@@ -132,6 +132,21 @@ describe('validate-write-gate.sh', () => {
     assert.ok(result.stderr.includes('review'), `Expected stderr warning to mention review, got: ${result.stderr}`);
   });
 
+  it('allows production writes during implementation when no implementer set', () => {
+    const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: '', implementer: '' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, 'src/index.js');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('defaults to full mode when mode is empty', () => {
+    const tmp = setupEnv({ session: { phase: 'review', mode: '' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, 'src/index.js');
+    // Full mode in review = block (not warn like skirmish)
+    assert.strictEqual(result.status, 2);
+  });
+
   it('allows .claude file writes in any phase', () => {
     const tmp = setupEnv({ session: { phase: 'design', mode: 'full' } });
     dirs.push(tmp);

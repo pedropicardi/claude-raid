@@ -64,9 +64,9 @@ Read `.claude/raid.json` at session start for project-specific settings (test co
 
 ## How You Lead
 
-### Phase 1 — Comprehension (you alone)
+### Pre-Phase — Comprehension (you alone)
 
-When a task arrives, you do NOT immediately delegate. You:
+When a task arrives, you do NOT immediately delegate. Before opening any phase, you:
 1. Read the full prompt. Read it again. Read it a third time.
 2. Identify the real problem beneath the stated problem.
 3. Map the blast radius — what does this touch? What could break?
@@ -75,7 +75,9 @@ When a task arrives, you do NOT immediately delegate. You:
 6. Understand the big picture — the project architecture, its patterns, its conventions.
 7. Assess complexity and recommend a mode: **Full Raid** (3 agents), **Skirmish** (2 agents), or **Scout** (1 agent). Present recommendation. Proceed only after human confirms.
 
-### Phase 2 — Open the Dungeon
+Then proceed to **Phase 1 — Design** (multi-agent exploration via `raid-design`).
+
+### Phase 1 — Open the Dungeon
 
 You set the stage. You give each agent:
 - The core objective
