@@ -127,14 +127,14 @@ describe('mergeSettings', () => {
     assert.ok(bashEntry.hooks[0].command.includes('validate-commit.sh'));
   });
 
-  it('wires validate-write-gate.sh as Write PreToolUse hook', () => {
+  it('wires validate-write-gate.sh as Write|Edit PreToolUse hook', () => {
     mergeSettings = require('../../src/merge-settings').mergeSettings;
     const cwd = makeTempDir();
     fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
     mergeSettings(cwd);
     const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
-    const writeEntry = settings.hooks.PreToolUse.find(e => e.matcher === 'Write');
-    assert.ok(writeEntry, 'should have a Write matcher in PreToolUse');
+    const writeEntry = settings.hooks.PreToolUse.find(e => e.matcher === 'Write|Edit');
+    assert.ok(writeEntry, 'should have a Write|Edit matcher in PreToolUse');
     assert.ok(writeEntry.hooks.some(h => h.command.includes('validate-write-gate.sh')));
   });
 

@@ -46,8 +46,9 @@ case "${RAID_PHASE:-}" in
   review)
     if [ "$RAID_MODE" = "skirmish" ]; then
       raid_warn "Read-only phase (review). File fixes go through implementation."
+    else
+      raid_block "Read-only phase (review). File fixes go through implementation."
     fi
-    raid_block "Read-only phase (review). File fixes go through implementation."
     ;;
   finishing)
     raid_block "Finishing phase. No new code."

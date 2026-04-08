@@ -30,7 +30,7 @@ const RAID_HOOKS = {
       ],
     },
     {
-      matcher: 'Write',
+      matcher: 'Write|Edit',
       hooks: [
         { type: 'command', command: `bash .claude/hooks/validate-write-gate.sh ${RAID_HOOK_MARKER}` },
       ],

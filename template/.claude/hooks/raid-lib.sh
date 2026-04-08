@@ -20,7 +20,8 @@ if [ -f ".claude/raid-session" ]; then
     .task // ""
   ' ".claude/raid-session" 2>/dev/null)
 
-  if [ $? -eq 0 ] && [ -n "$_session_json" ]; then
+  _jq_rc=$?
+  if [ "$_jq_rc" -eq 0 ] && [ -n "$_session_json" ]; then
     RAID_ACTIVE=true
     RAID_PHASE=$(echo "$_session_json" | sed -n '1p')
     RAID_MODE=$(echo "$_session_json" | sed -n '2p')
@@ -29,7 +30,10 @@ if [ -f ".claude/raid-session" ]; then
     RAID_TASK=$(echo "$_session_json" | sed -n '5p')
   else
     RAID_ACTIVE=false
-    echo "raid-lib: warning: .claude/raid-session contains invalid JSON" >&2
+    # Only warn if file has content (empty file is a transient state during phase transitions)
+    if [ -s ".claude/raid-session" ]; then
+      echo "raid-lib: warning: .claude/raid-session contains invalid JSON" >&2
+    fi
   fi
 fi
 

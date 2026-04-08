@@ -68,6 +68,7 @@ esac
 # ============================================================
 
 if [ "$RAID_ACTIVE" = "true" ] && [ -n "$RAID_TEST_CMD" ]; then
+  # TRUST: RAID_TEST_CMD comes from project-local raid.json — user-controlled, not untrusted input
   set +e
   (eval "$RAID_TEST_CMD") > /dev/null 2>&1
   _test_rc=$?
