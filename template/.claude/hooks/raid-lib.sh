@@ -37,7 +37,7 @@ if [ -f ".claude/raid-session" ]; then
   fi
 fi
 
-# --- Config parsing (single jq call for all config + browser fields) ---
+# --- Config parsing (single jq call for config + browser + lifecycle fields) ---
 RAID_TEST_CMD=""
 RAID_NAMING="none"
 RAID_MAX_DEPTH=8
@@ -49,6 +49,15 @@ RAID_BROWSER_PORT_START=""
 RAID_BROWSER_PORT_END=""
 RAID_BROWSER_EXEC_CMD=""
 RAID_BROWSER_PW_CONFIG=""
+RAID_VAULT_ENABLED=true
+RAID_VAULT_PATH=".claude/vault"
+RAID_LIFECYCLE_SESSION=true
+RAID_LIFECYCLE_NUDGE=true
+RAID_LIFECYCLE_TASK_VALIDATION=true
+RAID_LIFECYCLE_COMPLETION_GATE=true
+RAID_LIFECYCLE_PHASE_CONFIRM=true
+RAID_LIFECYCLE_COMPACT_BACKUP=true
+RAID_LIFECYCLE_TEST_WINDOW=10
 
 if [ -f ".claude/raid.json" ]; then
   _config_json=$(jq -r '
@@ -62,7 +71,16 @@ if [ -f ".claude/raid.json" ]; then
     (.browser.portRange[0] // ""),
     (.browser.portRange[1] // ""),
     (.project.execCommand // "npx"),
-    (.browser.playwrightConfig // "")
+    (.browser.playwrightConfig // ""),
+    (if .raid.vault.enabled == null then true else .raid.vault.enabled end),
+    (.raid.vault.path // ".claude/vault"),
+    (if .raid.lifecycle.autoSessionManagement == null then true else .raid.lifecycle.autoSessionManagement end),
+    (if .raid.lifecycle.teammateNudge == null then true else .raid.lifecycle.teammateNudge end),
+    (if .raid.lifecycle.taskValidation == null then true else .raid.lifecycle.taskValidation end),
+    (if .raid.lifecycle.completionGate == null then true else .raid.lifecycle.completionGate end),
+    (if .raid.lifecycle.phaseTransitionConfirm == null then true else .raid.lifecycle.phaseTransitionConfirm end),
+    (if .raid.lifecycle.compactBackup == null then true else .raid.lifecycle.compactBackup end),
+    (.raid.lifecycle.testWindowMinutes // 10)
   ' ".claude/raid.json" 2>/dev/null)
 
   if [ $? -eq 0 ] && [ -n "$_config_json" ]; then
@@ -77,50 +95,21 @@ if [ -f ".claude/raid.json" ]; then
     RAID_BROWSER_PORT_END=$(echo "$_config_json" | sed -n '9p')
     RAID_BROWSER_EXEC_CMD=$(echo "$_config_json" | sed -n '10p')
     RAID_BROWSER_PW_CONFIG=$(echo "$_config_json" | sed -n '11p')
+    RAID_VAULT_ENABLED=$(echo "$_config_json" | sed -n '12p')
+    RAID_VAULT_PATH=$(echo "$_config_json" | sed -n '13p')
+    RAID_LIFECYCLE_SESSION=$(echo "$_config_json" | sed -n '14p')
+    RAID_LIFECYCLE_NUDGE=$(echo "$_config_json" | sed -n '15p')
+    RAID_LIFECYCLE_TASK_VALIDATION=$(echo "$_config_json" | sed -n '16p')
+    RAID_LIFECYCLE_COMPLETION_GATE=$(echo "$_config_json" | sed -n '17p')
+    RAID_LIFECYCLE_PHASE_CONFIRM=$(echo "$_config_json" | sed -n '18p')
+    RAID_LIFECYCLE_COMPACT_BACKUP=$(echo "$_config_json" | sed -n '19p')
+    RAID_LIFECYCLE_TEST_WINDOW=$(echo "$_config_json" | sed -n '20p')
   fi
 fi
 
 export RAID_ACTIVE RAID_PHASE RAID_MODE RAID_CURRENT_AGENT RAID_IMPLEMENTER RAID_TASK
 export RAID_TEST_CMD RAID_NAMING RAID_MAX_DEPTH RAID_COMMIT_MIN_LENGTH RAID_SPECS_PATH RAID_PLANS_PATH
 export RAID_BROWSER_ENABLED RAID_BROWSER_PORT_START RAID_BROWSER_PORT_END RAID_BROWSER_EXEC_CMD RAID_BROWSER_PW_CONFIG
-
-# --- Lifecycle & Vault config ---
-RAID_VAULT_ENABLED=true
-RAID_VAULT_PATH=".claude/vault"
-RAID_LIFECYCLE_SESSION=true
-RAID_LIFECYCLE_NUDGE=true
-RAID_LIFECYCLE_TASK_VALIDATION=true
-RAID_LIFECYCLE_COMPLETION_GATE=true
-RAID_LIFECYCLE_PHASE_CONFIRM=true
-RAID_LIFECYCLE_COMPACT_BACKUP=true
-RAID_LIFECYCLE_TEST_WINDOW=10
-
-if [ -f ".claude/raid.json" ]; then
-  _lifecycle_json=$(jq -r '
-    (if .raid.vault.enabled == null then true else .raid.vault.enabled end),
-    (.raid.vault.path // ".claude/vault"),
-    (if .raid.lifecycle.autoSessionManagement == null then true else .raid.lifecycle.autoSessionManagement end),
-    (if .raid.lifecycle.teammateNudge == null then true else .raid.lifecycle.teammateNudge end),
-    (if .raid.lifecycle.taskValidation == null then true else .raid.lifecycle.taskValidation end),
-    (if .raid.lifecycle.completionGate == null then true else .raid.lifecycle.completionGate end),
-    (if .raid.lifecycle.phaseTransitionConfirm == null then true else .raid.lifecycle.phaseTransitionConfirm end),
-    (if .raid.lifecycle.compactBackup == null then true else .raid.lifecycle.compactBackup end),
-    (.raid.lifecycle.testWindowMinutes // 10)
-  ' ".claude/raid.json" 2>/dev/null)
-
-  if [ $? -eq 0 ] && [ -n "$_lifecycle_json" ]; then
-    RAID_VAULT_ENABLED=$(echo "$_lifecycle_json" | sed -n '1p')
-    RAID_VAULT_PATH=$(echo "$_lifecycle_json" | sed -n '2p')
-    RAID_LIFECYCLE_SESSION=$(echo "$_lifecycle_json" | sed -n '3p')
-    RAID_LIFECYCLE_NUDGE=$(echo "$_lifecycle_json" | sed -n '4p')
-    RAID_LIFECYCLE_TASK_VALIDATION=$(echo "$_lifecycle_json" | sed -n '5p')
-    RAID_LIFECYCLE_COMPLETION_GATE=$(echo "$_lifecycle_json" | sed -n '6p')
-    RAID_LIFECYCLE_PHASE_CONFIRM=$(echo "$_lifecycle_json" | sed -n '7p')
-    RAID_LIFECYCLE_COMPACT_BACKUP=$(echo "$_lifecycle_json" | sed -n '8p')
-    RAID_LIFECYCLE_TEST_WINDOW=$(echo "$_lifecycle_json" | sed -n '9p')
-  fi
-fi
-
 export RAID_VAULT_ENABLED RAID_VAULT_PATH
 export RAID_LIFECYCLE_SESSION RAID_LIFECYCLE_NUDGE RAID_LIFECYCLE_TASK_VALIDATION
 export RAID_LIFECYCLE_COMPLETION_GATE RAID_LIFECYCLE_PHASE_CONFIRM RAID_LIFECYCLE_COMPACT_BACKUP

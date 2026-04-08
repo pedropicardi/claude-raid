@@ -37,11 +37,12 @@ function performRemove(cwd) {
 
   const hooksDir = path.join(claudeDir, 'hooks');
   if (fs.existsSync(hooksDir)) {
-    const hooks = fs.readdirSync(hooksDir).filter(f => f.startsWith('validate-') && f.endsWith('.sh'));
+    const hooks = fs.readdirSync(hooksDir).filter(f =>
+      (f.startsWith('validate-') || f.startsWith('raid-')) && f.endsWith('.sh')
+    );
     for (const hook of hooks) {
       rmSafe(path.join(hooksDir, hook));
     }
-    rmSafe(path.join(hooksDir, 'raid-lib.sh'));
   }
 
   for (const skill of RAID_SKILLS) {
