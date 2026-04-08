@@ -218,7 +218,7 @@ async function runSetup(opts = {}) {
 
   let { checks, allOk } = runChecks({ homedir, exec });
 
-  const isInteractive = stdin.isTTY !== false;
+  const isInteractive = !!stdin.isTTY;
 
   // Print initial checks (node, claude, teammate-mode — NOT split-pane)
   const initialChecks = checks.filter(c => c.id !== 'split-pane');
