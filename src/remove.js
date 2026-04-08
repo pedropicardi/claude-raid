@@ -68,11 +68,29 @@ function performRemove(cwd) {
     }
   }
 
+  // Clean up Dungeon backups
+  rmSafe(path.join(claudeDir, 'raid-dungeon-backup.md'));
+  if (fs.existsSync(claudeDir)) {
+    const backupFiles = fs.readdirSync(claudeDir).filter(f => f.startsWith('raid-dungeon-phase-') && f.endsWith('-backup.md'));
+    for (const file of backupFiles) {
+      rmSafe(path.join(claudeDir, file));
+    }
+  }
+
+  // Clean up Vault draft
+  rmDirSafe(path.join(claudeDir, 'vault', '.draft'));
+
   removeRaidSettings(cwd);
 
   // Clean .gitignore entries
   const gitignorePath = path.join(cwd, '.gitignore');
-  const raidIgnoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session', '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*', '.env.raid'];
+  const raidIgnoreEntries = [
+    '.claude/raid-last-test-run', '.claude/raid-session',
+    '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*',
+    '.claude/raid-dungeon-backup.md', '.claude/raid-dungeon-phase-*-backup.md',
+    '.claude/vault/.draft/',
+    '.env.raid',
+  ];
   if (fs.existsSync(gitignorePath)) {
     const lines = fs.readFileSync(gitignorePath, 'utf8').split('\n');
     const filtered = lines.filter(line => !raidIgnoreEntries.includes(line.trim()));
