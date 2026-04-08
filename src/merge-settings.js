@@ -43,6 +43,56 @@ const RAID_HOOKS = {
       ],
     },
   ],
+  SessionStart: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-session-start.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  SessionEnd: [
+    {
+      matcher: 'prompt_input_exit|clear',
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-session-end.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  TeammateIdle: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-teammate-idle.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  TaskCreated: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-task-created.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  TaskCompleted: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-task-completed.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  Stop: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-stop.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  PreCompact: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-pre-compact.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
 };
 
 function isRaidHookEntry(entry) {

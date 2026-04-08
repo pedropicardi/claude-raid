@@ -162,6 +162,18 @@ describe('mergeSettings', () => {
     assert.ok(!json.includes('validate-phase-gate.sh'), 'should not contain validate-phase-gate.sh');
   });
 
+  it('registers lifecycle hook events', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
+    const events = Object.keys(settings.hooks);
+    for (const evt of ['SessionStart', 'SessionEnd', 'TeammateIdle', 'TaskCreated', 'TaskCompleted', 'Stop', 'PreCompact']) {
+      assert.ok(events.includes(evt), `Missing hook event: ${evt}`);
+    }
+  });
+
   it('removeRaidSettings surgically removes raid entries when no backup exists', () => {
     const { removeRaidSettings } = require('../../src/merge-settings');
     mergeSettings = require('../../src/merge-settings').mergeSettings;
