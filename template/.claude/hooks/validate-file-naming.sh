@@ -1,26 +1,20 @@
 #!/usr/bin/env bash
 # Raid quality gate: validates file naming conventions
 # PostToolUse hook for Write and Edit operations
-# Reads conventions from .claude/raid.json
+# Sources raid-lib.sh for config and input parsing
 set -euo pipefail
 
-INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.path // empty')
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/raid-lib.sh"
 
-if [ -z "$FILE_PATH" ]; then
+raid_read_input
+
+if [ -z "$RAID_FILE_PATH" ]; then
   exit 0
 fi
 
-RAID_CONFIG=".claude/raid.json"
 ISSUES=""
-
-# Read naming convention from config (default: none)
-NAMING="none"
-if [ -f "$RAID_CONFIG" ]; then
-  NAMING=$(jq -r '.conventions.fileNaming // "none"' "$RAID_CONFIG")
-fi
-
-BASENAME=$(basename "$FILE_PATH")
+BASENAME=$(basename "$RAID_FILE_PATH")
 
 # Check 1: No spaces in filenames (always enforced)
 if echo "$BASENAME" | grep -qE '[[:space:]]'; then
@@ -28,11 +22,11 @@ if echo "$BASENAME" | grep -qE '[[:space:]]'; then
 fi
 
 # Check 2: Naming convention (if configured)
-if [ "$NAMING" != "none" ]; then
+if [ "$RAID_NAMING" != "none" ]; then
   # Strip extension for naming check
   NAME_PART=$(echo "$BASENAME" | sed 's/\.[^.]*$//')
 
-  case "$NAMING" in
+  case "$RAID_NAMING" in
     kebab-case)
       if ! echo "$NAME_PART" | grep -qE '^[a-z0-9]+(-[a-z0-9]+)*$'; then
         ISSUES="${ISSUES}NAMING: File '$BASENAME' does not follow kebab-case convention.\n"
@@ -51,18 +45,10 @@ if [ "$NAMING" != "none" ]; then
   esac
 fi
 
-# Check 3: Directory depth (default max 8)
-MAX_DEPTH=8
-if [ -f "$RAID_CONFIG" ]; then
-  CONFIGURED_DEPTH=$(jq -r '.conventions.maxDepth // empty' "$RAID_CONFIG")
-  if [ -n "$CONFIGURED_DEPTH" ]; then
-    MAX_DEPTH="$CONFIGURED_DEPTH"
-  fi
-fi
-
-DEPTH=$(echo "$FILE_PATH" | awk -F'/' '{print NF}')
-if [ "$DEPTH" -gt "$MAX_DEPTH" ]; then
-  ISSUES="${ISSUES}STRUCTURE: File at depth $DEPTH ($FILE_PATH). Maximum is $MAX_DEPTH.\n"
+# Check 3: Directory depth
+DEPTH=$(echo "$RAID_FILE_PATH" | awk -F'/' '{print NF}')
+if [ "$DEPTH" -gt "$RAID_MAX_DEPTH" ]; then
+  ISSUES="${ISSUES}STRUCTURE: File at depth $DEPTH ($RAID_FILE_PATH). Maximum is $RAID_MAX_DEPTH.\n"
 fi
 
 if [ -n "$ISSUES" ]; then

@@ -18,6 +18,7 @@ const RAID_HOOKS = {
       hooks: [
         { type: 'command', command: `bash .claude/hooks/validate-file-naming.sh ${RAID_HOOK_MARKER}` },
         { type: 'command', command: `bash .claude/hooks/validate-no-placeholders.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-dungeon.sh ${RAID_HOOK_MARKER}` },
       ],
     },
   ],
@@ -25,15 +26,13 @@ const RAID_HOOKS = {
     {
       matcher: 'Bash',
       hooks: [
-        { type: 'command', command: `bash .claude/hooks/validate-commit-message.sh ${RAID_HOOK_MARKER}` },
-        { type: 'command', command: `bash .claude/hooks/validate-tests-pass.sh ${RAID_HOOK_MARKER}` },
-        { type: 'command', command: `bash .claude/hooks/validate-verification.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-commit.sh ${RAID_HOOK_MARKER}` },
       ],
     },
     {
-      matcher: 'Write',
+      matcher: 'Write|Edit',
       hooks: [
-        { type: 'command', command: `bash .claude/hooks/validate-phase-gate.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-write-gate.sh ${RAID_HOOK_MARKER}` },
       ],
     },
   ],
