@@ -68,6 +68,9 @@ Worktree ready at [path]
 Branch: [branch-name]
 Tests: [N] passing, 0 failures
 Ready for Raid implementation
+
+Note: Dungeon files (.claude/raid-dungeon*.md) are session artifacts
+and will be cleaned up by raid-finishing. No gitignore needed.
 ```
 
 ## Quick Reference
