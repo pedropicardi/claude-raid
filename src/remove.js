@@ -10,6 +10,7 @@ const RAID_SKILLS = [
   'raid-protocol', 'raid-design', 'raid-implementation-plan', 'raid-implementation',
   'raid-review', 'raid-finishing', 'raid-tdd', 'raid-debugging',
   'raid-verification', 'raid-git-worktrees',
+  'raid-browser', 'raid-browser-playwright', 'raid-browser-chrome',
 ];
 
 function rmSafe(filePath) {
@@ -69,7 +70,7 @@ function performRemove(cwd) {
 
   // Clean .gitignore entries
   const gitignorePath = path.join(cwd, '.gitignore');
-  const raidIgnoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session', '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*'];
+  const raidIgnoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session', '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*', '.env.raid'];
   if (fs.existsSync(gitignorePath)) {
     const lines = fs.readFileSync(gitignorePath, 'utf8').split('\n');
     const filtered = lines.filter(line => !raidIgnoreEntries.includes(line.trim()));
