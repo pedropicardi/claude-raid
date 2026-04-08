@@ -1,6 +1,25 @@
 # claude-raid
 
-**Adversarial multi-agent development system for [Claude Code](https://claude.ai/code).**
+```ansi
+[33m  ⚔ ═══════════════════════════════════════════════════════ ⚔[0m
+
+[1;33m      ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗[0m
+[1;33m     ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝[0m
+[1;33m     ██║     ██║     ███████║██║   ██║██║  ██║█████╗  [0m
+[1;33m     ██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝  [0m
+[1;33m     ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗[0m
+[1;33m      ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝[0m
+[1;31m              ██████╗  █████╗ ██╗██████╗ [0m
+[1;31m              ██╔══██╗██╔══██╗██║██╔══██╗[0m
+[1;31m              ██████╔╝███████║██║██║  ██║[0m
+[1;31m              ██╔══██╗██╔══██║██║██║  ██║[0m
+[1;31m              ██║  ██║██║  ██║██║██████╔╝[0m
+[1;31m              ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ [0m
+
+[90m      Adversarial multi-agent warfare for Claude Code[0m
+
+[33m  ⚔ ═══════════════════════════════════════════════════════ ⚔[0m
+```
 
 Four agents -- Wizard, Warrior, Archer, Rogue -- work through a strict 4-phase workflow where every decision, implementation, and review is stress-tested by competing agents who learn from each other's mistakes and push every finding to its edges.
 
