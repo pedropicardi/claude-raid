@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { removeRaidSettings } = require('./merge-settings');
+const { banner, colors } = require('./ui');
 
 const RAID_AGENTS = ['wizard.md', 'warrior.md', 'archer.md', 'rogue.md'];
 const RAID_SKILLS = [
@@ -84,9 +85,11 @@ function performRemove(cwd) {
 
 function run() {
   const cwd = process.cwd();
-  console.log('\nclaude-raid — Removing The Raid\n');
+  console.log('\n' + banner());
+  console.log('');
   performRemove(cwd);
-  console.log('The Raid has been removed. Your project settings have been restored.');
+  console.log('  ' + colors.green('✔') + ' The camp has been dismantled.');
+  console.log('  ' + colors.dim('Your realm has been restored to its former state.') + '\n');
 }
 
 module.exports = { performRemove, run };
