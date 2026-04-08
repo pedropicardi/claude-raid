@@ -67,6 +67,10 @@ function install(cwd) {
       project: {
         name: detected.name || path.basename(cwd),
         language: detected.language,
+        packageManager: detected.packageManager || undefined,
+        runCommand: detected.runCommand || undefined,
+        execCommand: detected.execCommand || undefined,
+        installCommand: detected.installCommand || undefined,
         testCommand: detected.testCommand || '',
         lintCommand: detected.lintCommand || '',
         buildCommand: detected.buildCommand || '',
@@ -84,6 +88,24 @@ function install(cwd) {
         defaultMode: 'full',
       },
     };
+    Object.keys(raidConfig.project).forEach(key => {
+      if (raidConfig.project[key] === undefined) {
+        delete raidConfig.project[key];
+      }
+    });
+    if (detected.browser) {
+      raidConfig.browser = {
+        enabled: true,
+        framework: detected.browser.framework,
+        devCommand: detected.browser.devCommand,
+        baseUrl: `http://localhost:${detected.browser.defaultPort}`,
+        defaultPort: detected.browser.defaultPort,
+        portRange: [detected.browser.defaultPort + 1, detected.browser.defaultPort + 5],
+        playwrightConfig: 'playwright.config.ts',
+        auth: null,
+        startup: null,
+      };
+    }
     fs.writeFileSync(raidConfigPath, JSON.stringify(raidConfig, null, 2) + '\n');
   }
 
@@ -92,7 +114,7 @@ function install(cwd) {
 
   // Add raid-last-test-run to .gitignore
   const gitignorePath = path.join(cwd, '.gitignore');
-  const ignoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session', '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*'];
+  const ignoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session', '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*', '.env.raid'];
   if (fs.existsSync(gitignorePath)) {
     let content = fs.readFileSync(gitignorePath, 'utf8');
     const toAdd = ignoreEntries.filter(e => !content.includes(e));
