@@ -92,10 +92,10 @@ Report status: **DONE** | **DONE_WITH_CONCERNS** | **NEEDS_CONTEXT** | **BLOCKED
 This is where the new model shines. Challengers don't just report to the Wizard — they:
 
 1. **Read ACTUAL CODE** (not the implementer's report — reports lie)
-2. **Challenge the implementer directly:** `⚔️ CHALLENGE: @Warrior, your implementation at handler.js:23 doesn't validate...`
-3. **Build on each other's critiques:** `🔗 BUILDING ON @Archer: Your naming drift finding — the inconsistency also affects the test at...`
-4. **Roast weak implementations:** `🔥 ROAST: @Rogue, you claimed this handles concurrent access but there's no lock at...`
-5. **Pin verified issues to Dungeon:** `📌 DUNGEON: Confirmed issue — handler.js:23 missing validation [verified by @Archer and @Rogue]`
+2. **Challenge the implementer directly:** `CHALLENGE: @Warrior, your implementation at handler.js:23 doesn't validate...`
+3. **Build on each other's critiques:** `BUILDING: @Archer, your naming drift finding — the inconsistency also affects the test at...`
+4. **Challenge weak implementations:** `CHALLENGE: @Rogue, you claimed this handles concurrent access but there's no lock at...`
+5. **Pin verified issues to Dungeon:** `DUNGEON: Confirmed issue — handler.js:23 missing validation [verified by @Archer and @Rogue]`
 
 **Browser verification (if `browser.enabled`):**
 - Challengers can BOOT on their own ports to run Playwright tests independently
@@ -117,11 +117,11 @@ The implementer defends against BOTH challengers simultaneously:
 - Respond to each challenge with evidence or concede immediately
 - Fix conceded issues
 - Re-run all tests
-- Pin resolved issues to Dungeon: `📌 DUNGEON: Resolved — added validation at handler.js:23 [tests pass]`
+- Pin resolved issues to Dungeon: `DUNGEON: Resolved — added validation at handler.js:23 [tests pass]`
 
 ### Step 5: Wizard Closes Task
 
-⚡ WIZARD RULING: Task N [approved | needs fixes]
+RULING: Task N [approved | needs fixes]
 
 The Wizard closes when the Dungeon shows all issues resolved and challengers have no remaining critiques.
 

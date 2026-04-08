@@ -32,7 +32,7 @@ Do NOT start inspection without invoking `raid-browser` pre-flight first. Do NOT
 4. read_page → verify logged in (check for dashboard, user menu, etc.)
 
 If login fails → pin as CRITICAL finding, skip inspection:
-📌 DUNGEON [CRITICAL]: Login failed — cannot test authenticated flows
+DUNGEON [CRITICAL]: Login failed — cannot test authenticated flows
 ```
 
 ## Minimum Coverage Gates (MANDATORY for every challenger)
@@ -62,7 +62,7 @@ Break things. Find what crashes under pressure.
 
 Evidence format:
 ```
-⚔️ CHALLENGE: Double-clicking "Place Order" submits two orders.
+CHALLENGE: Double-clicking "Place Order" submits two orders.
 Console: "Unhandled rejection: duplicate key constraint"
 Network: Two POST /api/orders — first returned 201, second returned 500
 [GIF: warrior-double-submit.gif]
@@ -82,7 +82,7 @@ Every pixel matters. Every pattern must be consistent.
 
 Evidence format:
 ```
-🏹 CHALLENGE: Search results page makes 3 identical GET /api/products calls on load.
+CHALLENGE: Search results page makes 3 identical GET /api/products calls on load.
 Network: Duplicate requests at 0ms, 50ms, 120ms — useEffect re-render bug.
 Console: "Warning: Cannot update a component while rendering a different component"
 [Screenshot: archer-duplicate-fetches.png]
@@ -103,7 +103,7 @@ Think like an attacker. Find what the developers assumed couldn't happen.
 
 Evidence format:
 ```
-🗡️ CHALLENGE: Changing /api/users/15 to /api/users/16 returns another user's full profile including email and phone.
+CHALLENGE: Changing /api/users/15 to /api/users/16 returns another user's full profile including email and phone.
 IDOR vulnerability — no server-side ownership check.
 [Screenshot: rogue-idor-leak.png]
 ```
@@ -147,17 +147,17 @@ IDOR vulnerability — no server-side ownership check.
 
 After all challengers report, they cross-verify findings on their own instances:
 
-- **Can reproduce + confirm:** `🔗 BUILDING ON @Warrior: Confirmed double-submit on port 3002. Also affects payment endpoint.`
-- **Cannot reproduce:** `⚔️ CHALLENGE: Could not reproduce @Warrior's double-submit on port 3002. Tried 10 rapid clicks, all debounced. Possible race condition — flaky or env-specific?`
-- **Find it's worse:** `🔗 BUILDING ON @Rogue: The IDOR on /api/users also works on /api/orders — any authenticated user can read any order.`
+- **Can reproduce + confirm:** `BUILDING: @Warrior, confirmed double-submit on port 3002. Also affects payment endpoint.`
+- **Cannot reproduce:** `CHALLENGE: Could not reproduce @Warrior's double-submit on port 3002. Tried 10 rapid clicks, all debounced. Possible race condition — flaky or env-specific?`
+- **Find it's worse:** `BUILDING: @Rogue, the IDOR on /api/users also works on /api/orders — any authenticated user can read any order.`
 
 ## Dungeon Pinning
 
 ```
-📌 DUNGEON [CRITICAL]: IDOR vulnerability on /api/users/:id — no ownership check
-📌 DUNGEON [IMPORTANT]: Button padding 16px on /settings, 12px on /profile — visual inconsistency
-📌 DUNGEON [IMPORTANT]: No loading state on search results — blank screen for 2s on slow network
-📌 DUNGEON [MINOR]: Console warning "act() not wrapped" on search page — React testing artifact
+DUNGEON [CRITICAL]: IDOR vulnerability on /api/users/:id — no ownership check
+DUNGEON [IMPORTANT]: Button padding 16px on /settings, 12px on /profile — visual inconsistency
+DUNGEON [IMPORTANT]: No loading state on search results — blank screen for 2s on slow network
+DUNGEON [MINOR]: Console warning "act() not wrapped" on search page — React testing artifact
 ```
 
 ## Cleanup Iron Law

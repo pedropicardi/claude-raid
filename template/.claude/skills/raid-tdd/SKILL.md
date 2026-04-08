@@ -125,9 +125,9 @@ After TDD cycle, challengers attack the TESTS directly — and build on each oth
 5. **Would this catch a regression?** If someone changes the implementation next month, does this test catch the break?
 
 **Challengers interact directly:**
-- `⚔️ CHALLENGE: @Warrior, your test at line 15 only validates the happy path — here's an input that passes with a broken implementation: ...`
-- `🔗 BUILDING ON @Archer: Your edge case finding — the same gap exists in the error path test at line 32...`
-- `🔥 ROAST: @Rogue, you claimed the test is implementation-dependent but renaming the internal method doesn't break it — here's proof: ...`
+- `CHALLENGE: @Warrior, your test at line 15 only validates the happy path — here's an input that passes with a broken implementation: ...`
+- `BUILDING: @Archer, your edge case finding — the same gap exists in the error path test at line 32...`
+- `CHALLENGE: @Rogue, you claimed the test is implementation-dependent but renaming the internal method doesn't break it — here's proof: ...`
 
 **Browser-specific attacks (when `browser.enabled`):**
 

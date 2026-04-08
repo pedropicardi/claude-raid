@@ -145,14 +145,14 @@ The Dungeon (`.claude/raid-dungeon.md`) is the team's shared knowledge board. It
 | Event | Action | Who |
 |-------|--------|-----|
 | Phase opens | Create `.claude/raid-dungeon.md` with header | Wizard |
-| During phase | Read and write via `📌 DUNGEON:` signal | Agents |
+| During phase | Read and write via `DUNGEON:` signal | Agents |
 | Phase closes | Rename to `.claude/raid-dungeon-phase-N.md` | Wizard |
 | Next phase opens | Create fresh `.claude/raid-dungeon.md` | Wizard |
 | Session ends | Remove all Dungeon files | Wizard |
 
 ### Dungeon Curation Rules
 
-**What goes IN the Dungeon (via `📌 DUNGEON:` only):**
+**What goes IN the Dungeon (via `DUNGEON:` only):**
 - Findings that survived a challenge (verified truths)
 - Active unresolved battles (prevents re-litigation)
 - Shared knowledge promoted by 2+ agents agreeing
@@ -208,30 +208,24 @@ digraph phase_pattern {
 
 | Signal | Who | Meaning | Goes to Dungeon? |
 |--------|-----|---------|------------------|
-| `📡 DISPATCH:` | Wizard | Opening a phase, assigning angles | No (phase opening) |
-| `⚡ WIZARD OBSERVES:` | Wizard | Brief course correction, hint, nudge | No |
-| `⚡ WIZARD INTERVENES:` | Wizard | Stops action, something wrong | No |
-| `⚡ WIZARD RULING:` | Wizard | Phase over, binding decision | Ruling archived with Dungeon |
+| `DISPATCH:` | Wizard | Opening a phase, assigning angles | No (phase opening) |
+| `REDIRECT:` | Wizard | Brief course correction — one sentence, then silence | No |
+| `RULING:` | Wizard | Phase over, binding decision | Ruling archived with Dungeon |
 | `@Name, ...` | Any agent | Direct address to specific agent | No |
-| `🔍 FINDING:` | Warrior | Discovery with evidence | Only after surviving challenge |
-| `🎯 FINDING:` | Archer | Discovery with evidence | Only after surviving challenge |
-| `💀 FINDING:` | Rogue | Discovery with attack scenario | Only after surviving challenge |
-| `⚔️ CHALLENGE:` | Warrior | Direct challenge | No |
-| `🏹 CHALLENGE:` | Archer | Direct challenge | No |
-| `🗡️ CHALLENGE:` | Rogue | Direct challenge | No |
-| `🔥 ROAST:` | Any agent | Pointed critique with evidence | No |
-| `🔗 BUILDING ON @Name:` | Any agent | Extending another's work | Result goes to Dungeon if verified |
-| `📌 DUNGEON:` | Any agent | Pinning verified finding | Yes — this is the write gate |
-| `🆘 WIZARD:` | Any agent | Escalation — needs Wizard input | Yes (as escalation point) |
-| `✅ CONCEDE:` | Any agent | Admitting wrong, moving on | No |
+| `FINDING:` | Any agent | Discovery with own evidence | No |
+| `CHALLENGE:` | Any agent | Independently verified a claim, found a problem | No |
+| `BUILDING:` | Any agent | Independently verified a claim, found it goes deeper | Result goes to Dungeon if verified |
+| `DUNGEON:` | Any agent | Pinning finding verified by 2+ agents | Yes — this is the write gate |
+| `WIZARD:` | Any agent | Escalation — needs Wizard input | Yes (as escalation point) |
+| `CONCEDE:` | Any agent | Proven wrong, moving on | No |
 
 ### Direct Interaction Rules
 
 - **Evidence required.** All challenges, roasts, and findings must carry proof — file paths, line numbers, concrete scenarios. "This is wrong" without evidence is laziness.
-- **Build explicitly.** `🔗 BUILDING ON @Name:` forces credit and continuity. Don't restart from scratch when someone found something useful.
+- **Build explicitly.** `BUILDING:` forces credit and continuity. Don't restart from scratch when someone found something useful.
 - **Concede instantly.** When proven wrong, concede. Then find a new angle. No ego.
-- **Pin deliberately.** `📌 DUNGEON:` is the quality gate. Only verified, challenged findings get pinned. Other agents can challenge whether a pin belongs.
-- **Escalate wisely.** `🆘 WIZARD:` when genuinely stuck, split on fundamentals, or need project-level context. Not when lazy.
+- **Pin deliberately.** `DUNGEON:` is the quality gate. Only verified, challenged findings get pinned. Other agents can challenge whether a pin belongs.
+- **Escalate wisely.** `WIZARD:` when genuinely stuck, split on fundamentals, or need project-level context. Not when lazy.
 
 ### When to Escalate to Wizard
 
@@ -253,14 +247,16 @@ The Wizard observes 90%, acts 10%. Intervention triggers:
 
 | Signal | Action |
 |--------|--------|
-| Same arguments 3+ rounds, no new evidence | `⚡ WIZARD INTERVENES:` Break the loop. Rule or redirect. |
-| Agents drifting from objective | `⚡ WIZARD OBSERVES:` Redirect with clarity. |
-| Agents stuck, no progress (deadlock) | `⚡ WIZARD INTERVENES:` Rule with rationale. Binding. |
-| Shallow work, rubber-stamping (laziness) | `⚡ WIZARD INTERVENES:` Call out and demand genuine challenge. |
-| Defending past evidence (ego) | `⚡ WIZARD OBSERVES:` Evidence or concede. |
-| Wrong finding in Dungeon (misinformation) | `⚡ WIZARD INTERVENES:` Remove and correct. |
-| Agent escalation (`🆘 WIZARD:`) | Answer or redirect as appropriate. |
-| All agents converged | `⚡ WIZARD RULING:` Synthesize and close. |
+| Same arguments 3+ rounds, no new evidence | `REDIRECT:` Break the loop. Or `RULING:` if unresolvable. |
+| Agents drifting from objective | `REDIRECT:` One sentence back on track. |
+| Agents stuck, no progress (deadlock) | `RULING:` Decide with rationale. Binding. |
+| Shallow work, rubber-stamping (laziness) | `REDIRECT:` Demand genuine independent verification. |
+| Skipped verification (responded without own evidence) | `REDIRECT:` "Verify first, then respond." |
+| Premature convergence (agreed without challenging) | `REDIRECT:` "Challenge before agreeing." |
+| Defending past evidence (ego) | `REDIRECT:` Evidence or concede. |
+| Wrong finding in Dungeon (misinformation) | `REDIRECT:` Remove and correct. |
+| Agent escalation (`WIZARD:`) | Answer or redirect as appropriate. |
+| All agents converged with genuine verification | `RULING:` Synthesize and close. |
 
 ## Red Flags — Thoughts That Signal Violations
 

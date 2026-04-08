@@ -76,7 +76,7 @@ Create `.claude/raid-dungeon.md`:
 
 ## Dispatch for Decomposition
 
-**📡 DISPATCH:**
+**DISPATCH:**
 
 > **@Warrior**: Decompose into tasks. Focus on structural ordering — what MUST be built first? Hard dependencies? Critical path? Include tests for every task. Challenge @Archer and @Rogue's decompositions directly. Pin agreed tasks to Dungeon.
 >
@@ -84,7 +84,7 @@ Create `.claude/raid-dungeon.md`:
 >
 > **@Rogue**: Decompose into tasks. Focus on hidden complexity — which tasks are deceptively hard? Where will the implementer guess wrong? Which tests miss the failure path? Challenge @Warrior and @Archer directly. Pin agreed tasks to Dungeon.
 >
-> **All**: Read the Phase 1 archived Dungeon for design knowledge. Interact directly. Build on each other's decompositions. Pin agreed tasks with `📌 DUNGEON:`. Escalate to me with `🆘 WIZARD:` only when genuinely stuck.
+> **All**: Read the Phase 1 archived Dungeon for design knowledge. Interact directly. Build on each other's decompositions. Pin agreed tasks with `DUNGEON:`. Escalate to me with `WIZARD:` only when genuinely stuck.
 
 ## Collaborative Compliance Testing (Agent-Driven)
 
@@ -181,4 +181,4 @@ Fix issues inline. If a spec requirement has no task, add the task.
 | "Tests can be added later" | TDD means tests are in the plan. No test = no task. |
 | "The naming will be consistent enough" | Check it explicitly. Naming drift is the #1 source of bugs. |
 
-**Terminal state:** ⚡ WIZARD RULING: Plan approved. Commit. Archive Dungeon. Invoke `raid-implementation`.
+**Terminal state:** RULING: Plan approved. Commit. Archive Dungeon. Invoke `raid-implementation`.

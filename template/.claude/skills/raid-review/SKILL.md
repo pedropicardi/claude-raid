@@ -73,7 +73,7 @@ Create `.claude/raid-dungeon.md`:
 
 ## Dispatch
 
-**📡 DISPATCH:**
+**DISPATCH:**
 
 > **@Warrior**: Review full implementation. Run every test. Check error handling at every boundary. Verify all requirements from design doc. Find the bugs that crash in production. Then fight @Archer and @Rogue over their findings.
 >
@@ -81,7 +81,7 @@ Create `.claude/raid-dungeon.md`:
 >
 > **@Rogue**: Review full implementation. Think like an attacker. What inputs break it? What timing causes races? What happens when dependencies fail? Find the bugs nobody else will find. Then fight @Warrior and @Archer.
 >
-> **All**: Review independently first, then fight directly. Challenge each other's findings AND each other's blind spots. Pin severity-classified issues to Dungeon with `📌 DUNGEON:`. Reference the Phase 3 Dungeon for context.
+> **All**: Review independently first, then fight directly. Challenge each other's findings AND each other's blind spots. Pin severity-classified issues to Dungeon with `DUNGEON:`. Reference the Phase 3 Dungeon for context.
 
 ## Review Checklist — Each Agent
 
@@ -101,9 +101,9 @@ Create `.claude/raid-dungeon.md`:
 
 After independent reviews, agents fight DIRECTLY over findings AND missing findings:
 
-- `⚔️ CHALLENGE: @Archer, you gave the auth module a pass but didn't check the session rotation path — review it now.`
-- `🔗 BUILDING ON @Warrior: Your finding about the missing error handler — the impact is worse than you stated because...`
-- `🔥 ROAST: @Rogue, your "Critical" severity on the naming inconsistency is overblown — here's why it's actually Minor...`
+- `CHALLENGE: @Archer, you gave the auth module a pass but didn't check the session rotation path — review it now.`
+- `BUILDING: @Warrior, your finding about the missing error handler — the impact is worse than you stated because...`
+- `CHALLENGE: @Rogue, your "Critical" severity on the naming inconsistency is overblown — here's why it's actually Minor...`
 - `📌 DUNGEON: [Critical] handler.js:23 — missing input validation allows injection. Verified by @Warrior and @Rogue.`
 
 **Agents classify severity when pinning to Dungeon:**
@@ -145,9 +145,9 @@ After code review findings are pinned, the Wizard announces browser inspection.
 
 The Wizard closes when agents have exhausted their findings and the Dungeon has all issues classified:
 
-**⚡ WIZARD RULING: APPROVED FOR MERGE** — all Critical/Important fixed, tests pass, requirements met.
+**RULING: APPROVED FOR MERGE** — all Critical/Important fixed, tests pass, requirements met.
 
-**⚡ WIZARD RULING: REJECTED** — specify what must change and which phase to return to.
+**RULING: REJECTED** — specify what must change and which phase to return to.
 
 ## Red Flags
 

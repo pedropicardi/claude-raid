@@ -34,7 +34,7 @@ Before ANY browser action, the agent MUST state exactly what they're testing:
 If the agent cannot clearly state the test subject, the Wizard asks the user:
 
 ```
-⚡ WIZARD → USER: "What specific user flow should we verify in the browser?
+WIZARD → USER: "What specific user flow should we verify in the browser?
 
 Examples:
 - 'User can complete checkout with a credit card'
@@ -54,7 +54,7 @@ The agent investigates auth requirements by reading:
 If auth is required and no credentials exist in `raid.json` under `browser.auth`:
 
 ```
-⚡ WIZARD → USER: "This app requires authentication. I need:
+WIZARD → USER: "This app requires authentication. I need:
   1. Test user credentials (email/password) or a method to create them
   2. Are there different roles to test? (admin, user, guest)
   3. Is there a seed script that creates test users?
@@ -103,7 +103,7 @@ Invoked when `browser.startup` is `null` in `raid.json`. The Wizard assigns one 
    - Seed/migration scripts that must run first
 4. **Identify environment variables** — which need to differ per instance (DB names, ports), which are shared (API keys)
 5. **Test the recipe** — boot on a non-default port, run health check, tear down
-6. **Pin to Dungeon** — `📌 DUNGEON: Startup recipe verified — [full recipe details]`
+6. **Pin to Dungeon** — `DUNGEON: Startup recipe verified — [full recipe details]`
 7. **Write to `raid.json`** — populate `browser.startup`
 
 ### Challengers Attack the Recipe
@@ -183,4 +183,4 @@ If the existing `browser.startup` recipe fails on boot:
 3. Check if dependencies changed (new env vars, new services, port conflicts)
 4. Update the recipe in `raid.json`
 5. Re-test the updated recipe
-6. Pin to Dungeon: `📌 DUNGEON: Startup recipe updated — [reason for change]`
+6. Pin to Dungeon: `DUNGEON: Startup recipe updated — [reason for change]`

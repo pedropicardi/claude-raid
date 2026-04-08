@@ -48,7 +48,7 @@ digraph finishing {
 
 ## Step 1: The Completeness Debate
 
-**📡 DISPATCH:**
+**DISPATCH:**
 
 > **@Warrior**: Review the implementation against the plan. Is every task completed? Every acceptance criterion met? Every test passing? Is anything half-done? Fight @Archer and @Rogue directly on their assessments.
 >
@@ -60,7 +60,7 @@ digraph finishing {
 
 **The agents must fight over this.** If any agent believes the work is incomplete, they present evidence. The other two challenge that claim directly.
 
-⚡ WIZARD RULING: [Complete — proceed | Incomplete — return to Phase 3/4 with specific issues]
+RULING: [Complete — proceed | Incomplete — return to Phase 3/4 with specific issues]
 
 ## Step 2: Final Verification
 
@@ -85,7 +85,7 @@ Additional final checks:
 ## Step 3: Present Options
 
 ```
-⚡ WIZARD RULING: Implementation complete and verified.
+RULING: Implementation complete and verified.
 
 Tests: [N] passing, 0 failures (evidence: [command output])
 
