@@ -190,6 +190,19 @@ describe('init', () => {
     assert.ok(gitignore.includes('.env.raid'));
   });
 
+  it('install returns categorized copy counts', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const result = init.install(cwd);
+    assert.ok(typeof result.counts === 'object', 'should have counts');
+    assert.ok(typeof result.counts.agents === 'number', 'should count agents');
+    assert.ok(typeof result.counts.hooks === 'number', 'should count hooks');
+    assert.ok(typeof result.counts.skills === 'number', 'should count skills');
+    assert.ok(result.counts.agents > 0, 'should have copied agents');
+    assert.ok(result.counts.hooks > 0, 'should have copied hooks');
+    assert.ok(result.counts.skills > 0, 'should have copied skills');
+  });
+
   it('does not duplicate .gitignore entries when comment contains entry substring', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();

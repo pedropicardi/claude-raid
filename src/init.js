@@ -61,6 +61,16 @@ function install(cwd) {
     }
   }
 
+  // Count copied files by category
+  const agentsDir = path.join(claudeDir, 'agents');
+  const hooksDir2 = path.join(claudeDir, 'hooks');
+  const skillsDir = path.join(claudeDir, 'skills');
+  result.counts = {
+    agents: fs.existsSync(agentsDir) ? fs.readdirSync(agentsDir).filter(f => f.endsWith('.md')).length : 0,
+    hooks: fs.existsSync(hooksDir2) ? fs.readdirSync(hooksDir2).filter(f => f.endsWith('.sh')).length : 0,
+    skills: fs.existsSync(skillsDir) ? fs.readdirSync(skillsDir).filter(f => !f.startsWith('.')).length : 0,
+  };
+
   // Generate raid.json (skip if it already exists to preserve user config)
   const raidConfigPath = path.join(claudeDir, 'raid.json');
   if (!fs.existsSync(raidConfigPath)) {
@@ -155,26 +165,69 @@ function install(cwd) {
 
 async function run() {
   const cwd = process.cwd();
+  const { bold, dim } = colors;
+
   console.log('\n' + banner());
   console.log(header('Summoning the Party...') + '\n');
 
   const result = install(cwd);
 
   if (result.alreadyInstalled) {
-    console.log('  The party is already here. Use ' + colors.bold('claude-raid update') + ' to reforge.');
+    console.log('  The party is already here. Use ' + bold('claude-raid update') + ' to reforge.');
     console.log('  Proceeding with re-summon...\n');
   }
 
-  console.log('  Realm detected: ' + colors.bold(result.detected.language));
+  // Detection summary
+  console.log('  Realm detected: ' + bold(result.detected.language));
   if (result.detected.testCommand) {
-    console.log('  Battle cry:     ' + colors.bold(result.detected.testCommand));
+    console.log('  Test command:   ' + bold(result.detected.testCommand));
   }
-  if (result.skipped.length > 0) {
-    console.log('\n  ' + colors.dim('Preserved existing scrolls:'));
-    result.skipped.forEach(f => console.log('    ' + colors.dim('→ ' + path.relative(cwd, f))));
+  if (result.detected.lintCommand) {
+    console.log('  Lint command:   ' + bold(result.detected.lintCommand));
   }
 
+  // Agents
+  console.log('');
+  console.log('  ' + header('Agents') + dim(`                                      ${result.counts.agents} files`));
+  console.log('    Copied wizard.md, warrior.md, archer.md, rogue.md');
+  console.log(dim('    AI teammates that challenge each other\'s work from'));
+  console.log(dim('    competing angles. Start a session with: claude --agent wizard'));
+
+  // Hooks
+  console.log('');
+  console.log('  ' + header('Hooks') + dim(`                                     ${result.counts.hooks} files`));
+  console.log('    Copied ' + bold(`${HOOKS.lifecycle.length} lifecycle hooks`) + ' + ' + bold(`${HOOKS.gates.length} quality gates`));
+  console.log(dim('    Lifecycle hooks manage session state automatically.'));
+  console.log(dim('    Quality gates block bad commits, missing tests, and'));
+  console.log(dim('    placeholder text \u2014 only active during Raid sessions.'));
+
+  // Skills
+  console.log('');
+  console.log('  ' + header('Skills') + dim(`                                ${result.counts.skills} folders`));
+  const skillNames = Object.keys(SKILLS).join(', ');
+  console.log('    ' + dim(skillNames));
+  console.log(dim('    Phase-specific workflows that guide agent behavior.'));
+
+  // Config
+  console.log('');
+  console.log('  ' + header('Config'));
+  console.log('    Generated ' + bold('raid.json') + '          ' + dim('Project settings (editable)'));
+  console.log('    Copied ' + bold('raid-rules.md') + '         ' + dim('17 team rules (editable)'));
+  console.log('    Merged ' + bold('settings.json') + '         ' + dim('Backup at .pre-raid-backup'));
+
+  // Skipped files
+  if (result.skipped.length > 0) {
+    console.log('');
+    console.log('  ' + dim('Preserved existing scrolls:'));
+    result.skipped.forEach(f => console.log('    ' + dim('\u2192 ' + path.relative(cwd, f))));
+  }
+
+  // Setup wizard
   await runSetup();
+
+  // Reference card
+  const { referenceCard } = require('./ui');
+  console.log('\n' + referenceCard() + '\n');
 }
 
 function dryRun(cwd) {

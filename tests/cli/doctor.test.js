@@ -31,10 +31,18 @@ describe('doctor (via setup)', () => {
     assert.strictEqual(typeof result.allOk, 'boolean');
   });
 
-  it('checks include all five IDs', () => {
+  it('heal output includes How It Works and Next Step', () => {
+    const { referenceCard } = require('../../src/ui');
+    const card = referenceCard();
+    assert.ok(card.includes('How It Works'), 'referenceCard should have How It Works');
+    assert.ok(card.includes('Next Step'), 'referenceCard should have Next Step');
+    assert.ok(card.includes('claude --agent wizard'), 'referenceCard should have entry command');
+  });
+
+  it('checks include all seven IDs', () => {
     const home = makeTempDir();
     const result = runChecks({ homedir: home, exec: () => null });
     const ids = result.checks.map(c => c.id);
-    assert.deepStrictEqual(ids, ['node', 'claude', 'teammate-mode', 'split-pane', 'playwright']);
+    assert.deepStrictEqual(ids, ['platform', 'node', 'claude', 'jq', 'teammate-mode', 'split-pane', 'playwright']);
   });
 });
