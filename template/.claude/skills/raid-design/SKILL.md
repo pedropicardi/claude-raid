@@ -109,7 +109,7 @@ Every agent addresses ALL of these from their assigned angle:
 - **Performance** — scale, bottlenecks, complexity
 - **Robustness** — retries, fallbacks, graceful degradation
 - **Reliability** — blast radius of failure, production-readiness
-- **Testability** — meaningful tests, mock strategy, test-friendly design
+- **Testability** — meaningful tests, mock strategy, test-friendly design. When `browser.enabled`: can this feature be E2E tested with Playwright? What user flows need browser verification? Are there loading states, client-side routing, or visual states that unit tests can't catch?
 - **Error handling** — what errors occur, how surfaced, UX of failure
 - **Edge cases** — empty, null, boundary, Unicode, timezones, large payloads
 - **Cascading effects** — blast radius, what else changes

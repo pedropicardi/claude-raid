@@ -60,12 +60,35 @@ Read `.claude/raid.json` for project-specific settings. If absent, use sensible 
 | `project.testCommand` | (none) | Command to run tests |
 | `project.lintCommand` | (none) | Command to run linting |
 | `project.buildCommand` | (none) | Command to build |
+| `project.packageManager` | (auto-detected) | Package manager (npm, pnpm, yarn, bun, uv, poetry) |
+| `project.runCommand` | (auto-detected) | Run command prefix (e.g., `pnpm`, `npm run`) |
+| `project.execCommand` | (auto-detected) | Exec command prefix (e.g., `pnpm dlx`, `npx`) |
 | `paths.specs` | `docs/raid/specs` | Where design docs go |
 | `paths.plans` | `docs/raid/plans` | Where plans go |
 | `paths.worktrees` | `.worktrees` | Where worktrees go |
 | `conventions.fileNaming` | `none` | Naming convention |
 | `conventions.commits` | `conventional` | Commit format |
 | `raid.defaultMode` | `full` | Default mode |
+| `browser.enabled` | `false` | Whether browser testing is active |
+| `browser.framework` | (auto-detected) | Detected framework (next, vite, angular, etc.) |
+| `browser.devCommand` | (auto-detected) | Dev server command |
+| `browser.baseUrl` | (auto-detected) | Base URL for browser tests |
+| `browser.portRange` | `[3001, 3005]` | Port range for isolated agent instances |
+| `browser.playwrightConfig` | `playwright.config.ts` | Playwright config path |
+| `browser.auth` | `null` | Auth config (discovered by agents) |
+| `browser.startup` | `null` | Startup recipe (discovered by agents) |
+
+## Browser Testing
+
+When `browser.enabled` is `true` in `raid.json`, browser testing integrates into the existing workflow:
+
+- **Phase 3 (Implementation):** Browser-facing code uses TDD with Playwright — write `.spec.ts` files as part of RED-GREEN-REFACTOR. Use `raid-browser-playwright`. Challengers boot their own app instances to verify tests independently.
+- **Phase 4 (Review):** After code review, challengers do live adversarial inspection in Chrome — each on their own isolated port. Use `raid-browser-chrome`. Warrior stress-tests, Archer checks visual consistency, Rogue probes security.
+- **Startup discovery:** First time browser testing runs, an agent investigates how to boot the app (dev server, databases, edge workers, env vars) and writes the recipe to `raid.json`. Use `raid-browser`.
+- **Pre-flight:** Before every browser session, agents must state exactly what they're testing (hard gate) and check auth requirements.
+- **Cleanup iron law:** Every boot has a matching cleanup. Leaked processes are never acceptable.
+
+Browser testing is **not a separate workflow** — it extends existing phases. If `browser.enabled` is `false` or absent, all browser-related behavior is skipped.
 
 ## Modes
 
@@ -267,17 +290,23 @@ The Wizard observes 90%, acts 10%. Intervention triggers:
 | `raid-debugging` | Any | Competing hypothesis with direct debate |
 | `raid-verification` | Any | Evidence before completion claims |
 | `raid-git-worktrees` | 3 | Isolated workspace setup |
+| `raid-browser` | 3, 4 | Browser orchestration: startup discovery, boot/cleanup, pre-flight |
+| `raid-browser-playwright` | 3 | Automated browser TDD with Playwright MCP |
+| `raid-browser-chrome` | 4 | Live adversarial Chrome inspection |
 
 ## Hooks Reference
 
+All hooks source `raid-lib.sh` for shared session/config parsing.
+
 | Hook | Event | Active | Purpose |
 |------|-------|--------|---------|
+| `validate-commit.sh` | PreToolUse (Bash) | Always (format), Raid session (tests/verification) | Conventional commits + tests pass + verification evidence |
+| `validate-write-gate.sh` | PreToolUse (Write/Edit) | Raid session only | Phase-aware write gate (design doc before code) |
 | `validate-file-naming.sh` | PostToolUse (Write/Edit) | Always | Enforce naming conventions |
-| `validate-commit-message.sh` | PreToolUse (Bash) | Always | Conventional commits |
-| `validate-tests-pass.sh` | PreToolUse (Bash) | Raid session only | Tests before commits |
-| `validate-phase-gate.sh` | PreToolUse (Write) | Raid session only | Design doc before code |
 | `validate-no-placeholders.sh` | PostToolUse (Write/Edit) | Always | No TBD/TODO in specs/plans |
-| `validate-verification.sh` | PreToolUse (Bash) | Raid session only | Test evidence before completion |
+| `validate-dungeon.sh` | PostToolUse (Write/Edit) | Raid session only | Dungeon discipline enforcement |
+| `validate-browser-cleanup.sh` | PostToolUse (Bash) | Raid session + browser enabled | Warn if browser ports still occupied |
+| `validate-browser-tests-exist.sh` | PreToolUse (Bash) | Raid session + browser enabled | Warn if browser-facing code has no Playwright tests |
 
 ## Commit Convention
 
