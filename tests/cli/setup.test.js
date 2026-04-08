@@ -24,12 +24,30 @@ describe('setup', () => {
     }
   });
 
-  it('node check always passes', () => {
+  it('node check passes for v18+', () => {
+    const home = makeTempDir();
+    const result = runChecks({ homedir: home, exec: () => null, nodeVersion: 'v20.11.0' });
+    const node = result.checks.find(c => c.id === 'node');
+    assert.ok(node.ok);
+    assert.ok(node.detail.includes('v20.11.0'));
+    assert.ok(node.detail.includes('>= 18'));
+  });
+
+  it('node check fails for version below 18', () => {
+    const home = makeTempDir();
+    const result = runChecks({ homedir: home, exec: () => null, nodeVersion: 'v16.20.0' });
+    const node = result.checks.find(c => c.id === 'node');
+    assert.strictEqual(node.ok, false);
+    assert.ok(node.hint);
+    assert.ok(node.detail.includes('upgrade required'));
+  });
+
+  it('node check uses process.version by default', () => {
     const home = makeTempDir();
     const result = runChecks({ homedir: home, exec: () => null });
     const node = result.checks.find(c => c.id === 'node');
     assert.ok(node.ok);
-    assert.ok(node.detail.startsWith('v'));
+    assert.ok(node.detail.includes('v'));
   });
 
   it('claude check fails when not found', () => {
@@ -169,6 +187,22 @@ describe('setup', () => {
     const home = makeTempDir();
     const result = runChecks({ homedir: home, exec: () => null });
     assert.strictEqual(result.allOk, false);
+  });
+
+  it('allOk true when required pass but optional fail', () => {
+    const home = makeTempDir();
+    // No .claude.json (teammate-mode fails) and no tmux/it2 (split-pane fails)
+    // but node and claude pass => allOk should be true
+    const exec = (cmd) => {
+      if (cmd === 'claude --version') return '2.3.1';
+      return null;
+    };
+    const result = runChecks({ homedir: home, exec, nodeVersion: 'v20.0.0' });
+    const tm = result.checks.find(c => c.id === 'teammate-mode');
+    const sp = result.checks.find(c => c.id === 'split-pane');
+    assert.strictEqual(tm.ok, false, 'teammate-mode should fail');
+    assert.strictEqual(sp.ok, false, 'split-pane should fail');
+    assert.strictEqual(result.allOk, true, 'allOk should be true (only required checks matter)');
   });
 
   it('formatChecks renders icons and hints', () => {

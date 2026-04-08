@@ -30,14 +30,35 @@ function versionGte(v, min) {
 
 // --- Constants ---
 
+const MIN_NODE = { major: 18, minor: 0, patch: 0 };
 const MIN_CLAUDE = { major: 2, minor: 1, patch: 32 };
 const VALID_TEAMMATE_MODES = ['tmux', 'in-process', 'auto'];
 
 // --- Check functions (private) ---
 
-function checkNode() {
-  const v = process.version;
-  return { id: 'node', ok: true, label: 'Node.js', detail: v };
+function checkNode(nodeVersion) {
+  const v = nodeVersion || process.version;
+  const ver = parseVersion(v);
+  if (!ver) {
+    return {
+      id: 'node',
+      ok: false,
+      label: 'Node.js',
+      detail: `unknown version: ${v}`,
+      hint: 'Node.js >= 18 is required',
+    };
+  }
+  const ok = versionGte(ver, MIN_NODE);
+  const tag = `v${ver.major}.${ver.minor}.${ver.patch}`;
+  return {
+    id: 'node',
+    ok,
+    label: 'Node.js',
+    detail: ok
+      ? `${tag} (>= ${MIN_NODE.major} required)`
+      : `${tag} — upgrade required (>= ${MIN_NODE.major})`,
+    hint: ok ? undefined : 'Upgrade Node.js to version 18 or later',
+  };
 }
 
 function checkClaude(exec) {
@@ -181,16 +202,19 @@ function runChecks(opts = {}) {
   const homedir = opts.homedir || os.homedir();
   const exec = opts.exec || tryExec;
 
+  const nodeVersion = opts.nodeVersion || undefined;
+
   const checks = [
-    checkNode(),
+    checkNode(nodeVersion),
     checkClaude(exec),
     checkTeammateMode(homedir),
     checkSplitPane(exec),
   ];
 
+  const REQUIRED_IDS = ['node', 'claude'];
   return {
     checks,
-    allOk: checks.every(c => c.ok),
+    allOk: checks.filter(c => REQUIRED_IDS.includes(c.id)).every(c => c.ok),
   };
 }
 
@@ -268,10 +292,11 @@ async function runSetup(opts = {}) {
 
   stdout.write(formatChecks([splitPane]) + '\n');
 
-  // Recalculate allOk
-  allOk = checks.every(c => c.ok);
+  // Recalculate allOk (required checks only: node + claude)
+  const REQUIRED_IDS = ['node', 'claude'];
+  allOk = checks.filter(c => REQUIRED_IDS.includes(c.id)).every(c => c.ok);
 
-  if (allOk) {
+  if (checks.every(c => c.ok)) {
     stdout.write('\nReady\n  Start a Raid: claude --agent wizard\n');
   }
 

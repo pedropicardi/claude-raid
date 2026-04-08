@@ -38,7 +38,10 @@ const REFERENCE_SECTIONS = `
 
 async function run() {
   console.log('\nclaude-raid doctor — Environment & Quick Start\n');
-  await runSetup();
+  const result = await runSetup();
+  if (!result.allOk && !process.stdin.isTTY) {
+    process.exitCode = 1;
+  }
   console.log(REFERENCE_SECTIONS);
 }
 
