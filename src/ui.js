@@ -14,6 +14,8 @@ const colors = {
   red: wrap('31'),
   dim: wrap('90'),
   bold: wrap('1'),
+  boldAmber: wrap('1;33'),
+  boldRed: wrap('1;31'),
 };
 
 function stripAnsi(str) {
@@ -21,42 +23,41 @@ function stripAnsi(str) {
 }
 
 function banner() {
-  const { amber, dim } = colors;
-  const W = 50; // inner width (between ║ markers)
+  const { amber, boldAmber, boldRed, dim } = colors;
+  const rule = amber('  ⚔ ═══════════════════════════════════════════════════════ ⚔');
 
-  function pad(content, width) {
-    const visible = stripAnsi(content).length;
-    const right = width - visible;
-    return content + ' '.repeat(Math.max(0, right));
-  }
-
-  const top = amber(`╔${'═'.repeat(W)}╗`);
-  const bot = amber(`╚${'═'.repeat(W)}╝`);
-  const empty = amber('║') + ' '.repeat(W) + amber('║');
-
-  const artLines = [
-    '    ██████╗  █████╗ ██╗██████╗ ',
-    '    ██╔══██╗██╔══██╗██║██╔══██╗',
-    '    ██████╔╝███████║██║██║  ██║',
-    '    ██╔══██╗██╔══██║██║██║  ██║',
-    '    ██║  ██║██║  ██║██║██████╔╝',
-    '    ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ',
+  const claudeArt = [
+    '      ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗',
+    '     ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝',
+    '     ██║     ██║     ███████║██║   ██║██║  ██║█████╗  ',
+    '     ██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝  ',
+    '     ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗',
+    '      ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝',
   ];
 
-  const tagLines = [
-    '    Adversarial multi-agent warfare',
-    '    for Claude Code',
+  const raidArt = [
+    '              ██████╗  █████╗ ██╗██████╗ ',
+    '              ██╔══██╗██╔══██╗██║██╔══██╗',
+    '              ██████╔╝███████║██║██║  ██║',
+    '              ██╔══██╗██╔══██║██║██║  ██║',
+    '              ██║  ██║██║  ██║██║██████╔╝',
+    '              ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ ',
   ];
 
-  const lines = [top, empty];
-  for (const art of artLines) {
-    lines.push(amber('║') + pad(amber(art), W) + amber('║'));
-  }
-  lines.push(empty);
-  for (const tag of tagLines) {
-    lines.push(amber('║') + pad(dim(tag), W) + amber('║'));
-  }
-  lines.push(empty, bot);
+  const tagline = '      Adversarial multi-agent warfare for Claude Code';
+
+  const lines = [
+    '',
+    rule,
+    '',
+    ...claudeArt.map(l => boldAmber(l)),
+    ...raidArt.map(l => boldRed(l)),
+    '',
+    dim(tagline),
+    '',
+    rule,
+    '',
+  ];
 
   return lines.join('\n');
 }
