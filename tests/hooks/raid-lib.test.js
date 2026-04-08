@@ -36,6 +36,11 @@ function sourceLib(cwd, { stdin } = {}) {
     echo "RAID_COMMIT_MIN_LENGTH=$RAID_COMMIT_MIN_LENGTH"
     echo "RAID_SPECS_PATH=$RAID_SPECS_PATH"
     echo "RAID_PLANS_PATH=$RAID_PLANS_PATH"
+    echo "RAID_BROWSER_ENABLED=$RAID_BROWSER_ENABLED"
+    echo "RAID_BROWSER_PORT_START=$RAID_BROWSER_PORT_START"
+    echo "RAID_BROWSER_PORT_END=$RAID_BROWSER_PORT_END"
+    echo "RAID_BROWSER_EXEC_CMD=$RAID_BROWSER_EXEC_CMD"
+    echo "RAID_BROWSER_PW_CONFIG=$RAID_BROWSER_PW_CONFIG"
   `;
   const result = execSync(`bash -c '${script.replace(/'/g, "'\\''")}'`, {
     cwd,
@@ -175,6 +180,40 @@ describe('raid-lib.sh', () => {
       assert.strictEqual(vars.RAID_SPECS_PATH, 'docs/raid/specs');
       assert.strictEqual(vars.RAID_PLANS_PATH, 'docs/raid/plans');
       assert.strictEqual(vars.RAID_TEST_CMD, '');
+    });
+
+    it('reads browser config from raid.json', () => {
+      const cwd = makeTempDir();
+      fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+      const config = {
+        browser: {
+          enabled: true,
+          portRange: [3001, 3005],
+          playwrightConfig: 'playwright.config.ts',
+        },
+        project: {
+          execCommand: 'pnpm dlx',
+        },
+      };
+      fs.writeFileSync(path.join(cwd, '.claude', 'raid.json'), JSON.stringify(config));
+      const vars = sourceLib(cwd);
+      assert.strictEqual(vars.RAID_BROWSER_ENABLED, 'true');
+      assert.strictEqual(vars.RAID_BROWSER_PORT_START, '3001');
+      assert.strictEqual(vars.RAID_BROWSER_PORT_END, '3005');
+      assert.strictEqual(vars.RAID_BROWSER_EXEC_CMD, 'pnpm dlx');
+      assert.strictEqual(vars.RAID_BROWSER_PW_CONFIG, 'playwright.config.ts');
+    });
+
+    it('defaults browser config when not in raid.json', () => {
+      const cwd = makeTempDir();
+      fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+      fs.writeFileSync(path.join(cwd, '.claude', 'raid.json'), '{}');
+      const vars = sourceLib(cwd);
+      assert.strictEqual(vars.RAID_BROWSER_ENABLED, 'false');
+      assert.strictEqual(vars.RAID_BROWSER_PORT_START, '');
+      assert.strictEqual(vars.RAID_BROWSER_PORT_END, '');
+      assert.strictEqual(vars.RAID_BROWSER_EXEC_CMD, 'npx');
+      assert.strictEqual(vars.RAID_BROWSER_PW_CONFIG, '');
     });
 
     it('parses config even when RAID_ACTIVE=false', () => {

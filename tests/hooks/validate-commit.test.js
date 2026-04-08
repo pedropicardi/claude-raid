@@ -151,4 +151,38 @@ describe('validate-commit.sh', () => {
     assert.strictEqual(result.status, 2);
     assert.ok(result.stderr.toLowerCase().includes('test'), `Expected stderr to mention test, got: ${result.stderr}`);
   });
+
+  it('blocks commit during Raid session when Playwright tests fail', () => {
+    const tmp = setupEnv({
+      raidActive: true,
+      config: {
+        project: { testCommand: 'exit 0', execCommand: 'bash -c' },
+        browser: { enabled: true, playwrightConfig: 'playwright.config.ts' },
+      },
+    });
+    dirs.push(tmp);
+    // Create a fake playwright config so the hook detects it
+    fs.writeFileSync(path.join(tmp, 'playwright.config.ts'), 'export default {}');
+    // The execCommand is 'bash -c', and 'bash -c playwright test' will fail (playwright not installed)
+    // But the hook runs: $RAID_BROWSER_EXEC_CMD playwright test
+    // 'bash -c playwright test' will fail since 'playwright' binary doesn't exist
+    const result = runHook(tmp, 'git commit -m "feat(ui): add browser component for testing"');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.toLowerCase().includes('browser') || result.stderr.toLowerCase().includes('playwright'),
+      `Expected stderr to mention browser/playwright, got: ${result.stderr}`);
+  });
+
+  it('allows commit when browser enabled but no playwright config file', () => {
+    const tmp = setupEnv({
+      raidActive: true,
+      config: {
+        project: { testCommand: 'exit 0' },
+        browser: { enabled: true, playwrightConfig: 'playwright.config.ts' },
+      },
+    });
+    dirs.push(tmp);
+    // No playwright.config.ts file exists — hook should skip browser tests
+    const result = runHook(tmp, 'git commit -m "feat(hooks): add new validation logic"');
+    assert.strictEqual(result.status, 0);
+  });
 });
