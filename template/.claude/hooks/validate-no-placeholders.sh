@@ -1,32 +1,22 @@
 #!/usr/bin/env bash
 # Raid quality gate: blocks placeholder text in specs and plans
 # PostToolUse hook for Write and Edit operations
-# Only checks files within configured specs/plans paths
+# Sources raid-lib.sh for config and input parsing
 set -euo pipefail
 
-INPUT=$(cat)
-FILE_PATH=$(echo "$INPUT" | jq -r '.tool_input.file_path // .tool_input.path // empty')
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+source "$SCRIPT_DIR/raid-lib.sh"
 
-if [ -z "$FILE_PATH" ]; then
+raid_read_input
+
+if [ -z "$RAID_FILE_PATH" ]; then
   exit 0
-fi
-
-RAID_CONFIG=".claude/raid.json"
-
-# Read paths from config (defaults)
-SPECS_PATH="docs/raid/specs"
-PLANS_PATH="docs/raid/plans"
-if [ -f "$RAID_CONFIG" ]; then
-  CONFIGURED_SPECS=$(jq -r '.paths.specs // empty' "$RAID_CONFIG")
-  CONFIGURED_PLANS=$(jq -r '.paths.plans // empty' "$RAID_CONFIG")
-  [ -n "$CONFIGURED_SPECS" ] && SPECS_PATH="$CONFIGURED_SPECS"
-  [ -n "$CONFIGURED_PLANS" ] && PLANS_PATH="$CONFIGURED_PLANS"
 fi
 
 # Only check files in specs or plans directories
 IS_RAID_DOC=false
-case "$FILE_PATH" in
-  "$SPECS_PATH"/*|"$PLANS_PATH"/*) IS_RAID_DOC=true ;;
+case "$RAID_FILE_PATH" in
+  "$RAID_SPECS_PATH"/*|"$RAID_PLANS_PATH"/*) IS_RAID_DOC=true ;;
 esac
 
 if [ "$IS_RAID_DOC" = false ]; then
@@ -35,8 +25,8 @@ fi
 
 # Read the actual file content (tool_output is the tool's response message, not file content)
 CONTENT=""
-if [ -f "$FILE_PATH" ]; then
-  CONTENT=$(cat "$FILE_PATH")
+if [ -f "$RAID_FILE_PATH" ]; then
+  CONTENT=$(cat "$RAID_FILE_PATH")
 fi
 
 if [ -z "$CONTENT" ]; then
@@ -60,7 +50,7 @@ while IFS= read -r line; do
 done <<< "$CONTENT"
 
 if [ -n "$ISSUES" ]; then
-  printf "Raid Placeholder Check:\nBLOCKED: Placeholders found in %s:\n%b\nRemove all placeholders before proceeding.\n" "$FILE_PATH" "$ISSUES" >&2
+  printf "Raid Placeholder Check:\nBLOCKED: Placeholders found in %s:\n%b\nRemove all placeholders before proceeding.\n" "$RAID_FILE_PATH" "$ISSUES" >&2
   exit 2
 fi
 
