@@ -3,6 +3,7 @@
 const fs = require('fs');
 const path = require('path');
 const { mergeSettings } = require('./merge-settings');
+const { detectProject } = require('./detect-project');
 const { banner, header, colors } = require('./ui');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
@@ -85,9 +86,53 @@ function performUpdate(cwd) {
     }
   }
 
+  // Migrate existing raid.json — add missing browser/packageManager fields
+  const raidConfigPath = path.join(claudeDir, 'raid.json');
+  const migratedFields = [];
+  if (fs.existsSync(raidConfigPath)) {
+    let config;
+    try {
+      config = JSON.parse(fs.readFileSync(raidConfigPath, 'utf8'));
+    } catch {
+      config = null;
+    }
+    if (config !== null) {
+      const detected = detectProject(cwd);
+      // Add packageManager fields if missing
+      if (detected.packageManager && config.project && !config.project.packageManager) {
+        config.project.packageManager = detected.packageManager;
+        if (detected.runCommand) config.project.runCommand = detected.runCommand;
+        if (detected.execCommand) config.project.execCommand = detected.execCommand;
+        if (detected.installCommand) config.project.installCommand = detected.installCommand;
+        migratedFields.push('packageManager');
+      }
+      // Add browser section if detected and missing
+      if (detected.browser && !config.browser) {
+        config.browser = {
+          enabled: true,
+          framework: detected.browser.framework,
+          devCommand: detected.browser.devCommand,
+          baseUrl: `http://localhost:${detected.browser.defaultPort}`,
+          defaultPort: detected.browser.defaultPort,
+          portRange: [detected.browser.defaultPort + 1, detected.browser.defaultPort + 5],
+          playwrightConfig: 'playwright.config.ts',
+          auth: null,
+          startup: null,
+        };
+        migratedFields.push('browser');
+      }
+      if (migratedFields.length > 0) {
+        fs.writeFileSync(raidConfigPath, JSON.stringify(config, null, 2) + '\n');
+      }
+    }
+  }
+
   mergeSettings(cwd);
 
   let message = 'The Raid has been updated to the latest version.';
+  if (migratedFields.length > 0) {
+    message += `\nMigrated raid.json: added ${migratedFields.join(', ')}`;
+  }
   if (skippedAgents.length > 0) {
     message += `\nSkipped customized agents: ${skippedAgents.join(', ')}`;
   }
@@ -98,7 +143,7 @@ function performUpdate(cwd) {
     message += '\nUse `claude-raid dismantle` then `claude-raid summon` to reset.';
   }
 
-  return { success: true, message, skippedAgents };
+  return { success: true, message, skippedAgents, migratedFields };
 }
 
 function run() {
