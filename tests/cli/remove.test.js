@@ -120,6 +120,21 @@ describe('remove', () => {
     assert.ok(fs.existsSync(path.join(cwd, '.claude')));
   });
 
+  it('cleans up Dungeon files', () => {
+    remove = require('../../src/remove');
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'raid-rules.md'), 'rules');
+    fs.writeFileSync(path.join(claudeDir, 'raid-dungeon.md'), '# Dungeon');
+    fs.writeFileSync(path.join(claudeDir, 'raid-dungeon-phase-1.md'), '# Phase 1');
+    fs.writeFileSync(path.join(claudeDir, 'raid-dungeon-phase-2.md'), '# Phase 2');
+    remove.performRemove(cwd);
+    assert.ok(!fs.existsSync(path.join(claudeDir, 'raid-dungeon.md')), 'Should remove active Dungeon');
+    assert.ok(!fs.existsSync(path.join(claudeDir, 'raid-dungeon-phase-1.md')), 'Should remove archived Dungeon');
+    assert.ok(!fs.existsSync(path.join(claudeDir, 'raid-dungeon-phase-2.md')), 'Should remove archived Dungeon');
+  });
+
   it('preserves non-empty directories after remove', () => {
     init = require('../../src/init');
     remove = require('../../src/remove');
