@@ -38,7 +38,7 @@ const SINGLE_FILE_DETECTORS = [
   {
     variants: ['angular.json'],
     framework: 'angular',
-    devCommand: (run) => `${run} start`,
+    devCommand: () => 'ng serve',
     defaultPort: 4200,
   },
   {
@@ -77,6 +77,17 @@ const MULTI_FILE_DETECTORS = [
   },
 ];
 
+// Content-checked detectors: file must exist AND contain a marker string
+const CONTENT_DETECTORS = [
+  {
+    file: 'app.py',
+    markers: ['flask', 'Flask'],
+    framework: 'flask',
+    devCommand: () => 'flask run',
+    defaultPort: 5000,
+  },
+];
+
 // Directory+file detectors: the nested path must exist
 const DIR_FILE_DETECTORS = [
   {
@@ -98,6 +109,26 @@ function detectBrowser(cwd, runCommand) {
           devCommand: detector.devCommand(runCommand),
           defaultPort: detector.defaultPort,
         };
+      }
+    }
+  }
+
+  // Check content-based detectors (file must exist and contain marker)
+  for (const detector of CONTENT_DETECTORS) {
+    const filePath = path.join(cwd, detector.file);
+    if (fs.existsSync(filePath)) {
+      try {
+        const content = fs.readFileSync(filePath, 'utf8');
+        if (detector.markers.some(m => content.includes(m))) {
+          return {
+            detected: true,
+            framework: detector.framework,
+            devCommand: detector.devCommand(runCommand),
+            defaultPort: detector.defaultPort,
+          };
+        }
+      } catch {
+        // Unreadable file, skip
       }
     }
   }

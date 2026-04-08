@@ -37,13 +37,18 @@ if [ -f ".claude/raid-session" ]; then
   fi
 fi
 
-# --- Config parsing ---
+# --- Config parsing (single jq call for all config + browser fields) ---
 RAID_TEST_CMD=""
 RAID_NAMING="none"
 RAID_MAX_DEPTH=8
 RAID_COMMIT_MIN_LENGTH=15
 RAID_SPECS_PATH="docs/raid/specs"
 RAID_PLANS_PATH="docs/raid/plans"
+RAID_BROWSER_ENABLED=false
+RAID_BROWSER_PORT_START=""
+RAID_BROWSER_PORT_END=""
+RAID_BROWSER_EXEC_CMD=""
+RAID_BROWSER_PW_CONFIG=""
 
 if [ -f ".claude/raid.json" ]; then
   _config_json=$(jq -r '
@@ -52,7 +57,12 @@ if [ -f ".claude/raid.json" ]; then
     (.conventions.maxDepth // 8),
     (.conventions.commitMinLength // 15),
     (.paths.specs // "docs/raid/specs"),
-    (.paths.plans // "docs/raid/plans")
+    (.paths.plans // "docs/raid/plans"),
+    (.browser.enabled // false),
+    (.browser.portRange[0] // ""),
+    (.browser.portRange[1] // ""),
+    (.project.execCommand // "npx"),
+    (.browser.playwrightConfig // "")
   ' ".claude/raid.json" 2>/dev/null)
 
   if [ $? -eq 0 ] && [ -n "$_config_json" ]; then
@@ -62,35 +72,15 @@ if [ -f ".claude/raid.json" ]; then
     RAID_COMMIT_MIN_LENGTH=$(echo "$_config_json" | sed -n '4p')
     RAID_SPECS_PATH=$(echo "$_config_json" | sed -n '5p')
     RAID_PLANS_PATH=$(echo "$_config_json" | sed -n '6p')
+    RAID_BROWSER_ENABLED=$(echo "$_config_json" | sed -n '7p')
+    RAID_BROWSER_PORT_START=$(echo "$_config_json" | sed -n '8p')
+    RAID_BROWSER_PORT_END=$(echo "$_config_json" | sed -n '9p')
+    RAID_BROWSER_EXEC_CMD=$(echo "$_config_json" | sed -n '10p')
+    RAID_BROWSER_PW_CONFIG=$(echo "$_config_json" | sed -n '11p')
   fi
 fi
 
 export RAID_ACTIVE RAID_PHASE RAID_MODE RAID_CURRENT_AGENT RAID_IMPLEMENTER RAID_TASK
-# --- Browser config parsing ---
-RAID_BROWSER_ENABLED=false
-RAID_BROWSER_PORT_START=""
-RAID_BROWSER_PORT_END=""
-RAID_BROWSER_EXEC_CMD=""
-RAID_BROWSER_PW_CONFIG=""
-
-if [ -f ".claude/raid.json" ]; then
-  _browser_json=$(jq -r '
-    (.browser.enabled // false),
-    (.browser.portRange[0] // ""),
-    (.browser.portRange[1] // ""),
-    (.project.execCommand // "npx"),
-    (.browser.playwrightConfig // "")
-  ' ".claude/raid.json" 2>/dev/null)
-
-  if [ $? -eq 0 ] && [ -n "$_browser_json" ]; then
-    RAID_BROWSER_ENABLED=$(echo "$_browser_json" | sed -n '1p')
-    RAID_BROWSER_PORT_START=$(echo "$_browser_json" | sed -n '2p')
-    RAID_BROWSER_PORT_END=$(echo "$_browser_json" | sed -n '3p')
-    RAID_BROWSER_EXEC_CMD=$(echo "$_browser_json" | sed -n '4p')
-    RAID_BROWSER_PW_CONFIG=$(echo "$_browser_json" | sed -n '5p')
-  fi
-fi
-
 export RAID_TEST_CMD RAID_NAMING RAID_MAX_DEPTH RAID_COMMIT_MIN_LENGTH RAID_SPECS_PATH RAID_PLANS_PATH
 export RAID_BROWSER_ENABLED RAID_BROWSER_PORT_START RAID_BROWSER_PORT_END RAID_BROWSER_EXEC_CMD RAID_BROWSER_PW_CONFIG
 

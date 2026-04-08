@@ -46,10 +46,10 @@ digraph review {
 6. **Browser inspection** — dispatch agents to inspect in Chrome (if `browser.enabled`)
 7. **Observe browser fights** — agents cross-verify findings on separate instances
 8. **Rule on fixes** — Critical and Important must be fixed (code AND browser)
-7. **Verify fixes** — targeted re-attack after fixes (use `raid-verification`)
-8. **Final ruling** — approved or rejected
-9. **Archive Dungeon** — rename to `.claude/raid-dungeon-phase-4.md`
-10. **Transition** — invoke `raid-finishing`
+9. **Verify fixes** — targeted re-attack after fixes (use `raid-verification`)
+10. **Final ruling** — approved or rejected
+11. **Archive Dungeon** — rename to `.claude/raid-dungeon-phase-4.md`
+12. **Transition** — invoke `raid-finishing`
 
 ## Opening the Dungeon
 

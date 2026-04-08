@@ -79,7 +79,7 @@ describe('detectBrowser', () => {
     const result = detectBrowser(cwd, 'npm run');
     assert.strictEqual(result.detected, true);
     assert.strictEqual(result.framework, 'angular');
-    assert.strictEqual(result.devCommand, 'npm run start');
+    assert.strictEqual(result.devCommand, 'ng serve');
     assert.strictEqual(result.defaultPort, 4200);
   });
 
@@ -169,6 +169,23 @@ describe('detectBrowser', () => {
     const cwd = makeTempDir();
     fs.writeFileSync(path.join(cwd, 'webpack.config.js'), 'module.exports = {}');
     const result = detectBrowser(cwd, 'npm run');
+    assert.strictEqual(result, null);
+  });
+
+  it('detects Flask from app.py with Flask import', () => {
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'app.py'), 'from flask import Flask\napp = Flask(__name__)');
+    const result = detectBrowser(cwd, 'python -m');
+    assert.strictEqual(result.detected, true);
+    assert.strictEqual(result.framework, 'flask');
+    assert.strictEqual(result.devCommand, 'flask run');
+    assert.strictEqual(result.defaultPort, 5000);
+  });
+
+  it('does NOT detect Flask from app.py without Flask import', () => {
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'app.py'), 'print("hello")');
+    const result = detectBrowser(cwd, 'python -m');
     assert.strictEqual(result, null);
   });
 
