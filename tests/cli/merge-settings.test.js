@@ -115,6 +115,52 @@ describe('mergeSettings', () => {
     assert.throws(() => mergeSettings(cwd), /invalid JSON/);
   });
 
+  it('wires validate-commit.sh as single Bash PreToolUse hook', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
+    const bashEntry = settings.hooks.PreToolUse.find(e => e.matcher === 'Bash');
+    assert.ok(bashEntry, 'should have a Bash matcher in PreToolUse');
+    assert.strictEqual(bashEntry.hooks.length, 1, 'Bash matcher should have exactly 1 hook');
+    assert.ok(bashEntry.hooks[0].command.includes('validate-commit.sh'));
+  });
+
+  it('wires validate-write-gate.sh as Write PreToolUse hook', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
+    const writeEntry = settings.hooks.PreToolUse.find(e => e.matcher === 'Write');
+    assert.ok(writeEntry, 'should have a Write matcher in PreToolUse');
+    assert.ok(writeEntry.hooks.some(h => h.command.includes('validate-write-gate.sh')));
+  });
+
+  it('wires validate-dungeon.sh in PostToolUse', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
+    assert.ok(settings.hooks.PostToolUse.some(e =>
+      e.hooks && e.hooks.some(h => h.command && h.command.includes('validate-dungeon.sh'))
+    ));
+  });
+
+  it('does not wire old removed hooks', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const json = fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8');
+    assert.ok(!json.includes('validate-commit-message.sh'), 'should not contain validate-commit-message.sh');
+    assert.ok(!json.includes('validate-tests-pass.sh'), 'should not contain validate-tests-pass.sh');
+    assert.ok(!json.includes('validate-verification.sh'), 'should not contain validate-verification.sh');
+    assert.ok(!json.includes('validate-phase-gate.sh'), 'should not contain validate-phase-gate.sh');
+  });
+
   it('removeRaidSettings surgically removes raid entries when no backup exists', () => {
     const { removeRaidSettings } = require('../../src/merge-settings');
     mergeSettings = require('../../src/merge-settings').mergeSettings;
