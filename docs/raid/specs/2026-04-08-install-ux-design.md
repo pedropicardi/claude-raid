@@ -15,6 +15,52 @@ After `npx claude-raid summon`, first-time users don't understand what got insta
 - No new runtime features — this is install-time UX only
 - Zero new dependencies
 
+## Visual Language
+
+**Aesthetic:** Astro/Vite-inspired — clean, colorful, generous whitespace, crafted feel.
+
+**Color palette (ANSI-16, used intentionally):**
+
+| Role | Color | ANSI | Usage |
+|------|-------|------|-------|
+| Primary | Amber/Gold | `33` | Headers, borders, brand elements |
+| Primary bright | Bold Amber | `1;33` | Top of banner, emphasis |
+| Accent | Bold Red | `1;31` | "RAID" wordmark, transition zone |
+| Accent | Red | `31` | Lower banner, warnings |
+| Accent dim | Dim Red | `2;31` | Banner bottom fade |
+| Success | Green | `32` | Checkmarks, completion states |
+| Secondary | Dim gray | `90` | Descriptions, hints, tagline |
+| Emphasis | Bold | `1` | Commands, file names, key values |
+
+**Banner: amber-to-red vertical gradient**
+
+The banner uses a smooth 5-tone gradient flowing top-to-bottom:
+`bold amber → amber → bold red → red → dim red`
+
+```
+Line 1-2:  bold amber (1;33)  — CLAUDE top
+Line 3-5:  amber (33)        — CLAUDE bottom + transition
+Line 6-8:  bold red (1;31)   — CLAUDE/RAID boundary + RAID top
+Line 9-11: red (31)          — RAID middle
+Line 12:   dim red (2;31)    — RAID bottom fade
+```
+
+Rules (⚔ ═══) in amber. Tagline in dim gray.
+
+**Copywriting voice:**
+- Engineer-first, RPG accent. Like a dev tool that happens to have flavor.
+- Short sentences. Active voice. No filler.
+- Thematic words in headers only: "Summoning", "Realm", "Reforge", "Party"
+- Explanations in plain English: "quality gates that block bad commits"
+- Tip/hint tone: helpful colleague, not tutorial narrator
+
+**Design principles:**
+- Vertical flow — one thing at a time, top to bottom
+- Breathing room — blank lines between sections, no walls of text
+- Hierarchy through color — amber = structure, bold = action, dim = context
+- Symbols over words — `✔` not "OK", `→` not "see also", `•` for lists
+- Scannable — glancing at the output should convey the gist in 3 seconds
+
 ## Design
 
 Three changes to the install flow:
