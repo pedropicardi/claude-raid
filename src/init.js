@@ -6,6 +6,7 @@ const { detectProject } = require('./detect-project');
 const { mergeSettings } = require('./merge-settings');
 const { runSetup } = require('./setup');
 const { banner, header, colors } = require('./ui');
+const { AGENTS, HOOKS, SKILLS, CONFIG } = require('./descriptions');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
 
@@ -139,7 +140,8 @@ function install(cwd) {
   ];
   if (fs.existsSync(gitignorePath)) {
     let content = fs.readFileSync(gitignorePath, 'utf8');
-    const toAdd = ignoreEntries.filter(e => !content.includes(e));
+    const lines = content.split('\n').map(l => l.trim());
+    const toAdd = ignoreEntries.filter(e => !lines.includes(e.trim()));
     if (toAdd.length > 0) {
       const sep = content.endsWith('\n') ? '' : '\n';
       fs.appendFileSync(gitignorePath, sep + toAdd.join('\n') + '\n');
@@ -175,4 +177,84 @@ async function run() {
   await runSetup();
 }
 
-module.exports = { install, run };
+function dryRun(cwd) {
+  const detected = detectProject(cwd);
+  const lines = [];
+
+  lines.push(header('Dry Run — nothing will be written') + '\n');
+
+  // Realm
+  lines.push('  Realm detected: ' + colors.bold(detected.language));
+  if (detected.testCommand) {
+    lines.push('  Test command:   ' + colors.bold(detected.testCommand));
+  }
+  if (detected.lintCommand) {
+    lines.push('  Lint command:   ' + colors.bold(detected.lintCommand));
+  }
+  lines.push('');
+
+  // Helper: check if a file already exists
+  const claudeDir = path.join(cwd, '.claude');
+  function tag(relPath) {
+    const full = path.join(claudeDir, relPath);
+    return fs.existsSync(full) ? ' ' + colors.dim('(preserved)') : '';
+  }
+
+  // Agents
+  lines.push(header('Agents') + '\n');
+  for (const [file, desc] of Object.entries(AGENTS)) {
+    lines.push('  ' + colors.bold(file.padEnd(14)) + desc + tag('agents/' + file));
+  }
+  lines.push('');
+
+  // Hooks — Lifecycle
+  lines.push(header('Hooks — Lifecycle') + '\n');
+  for (const h of HOOKS.lifecycle) {
+    lines.push('  ' + colors.bold(h.name.padEnd(28)) + h.desc + tag('hooks/' + h.name));
+  }
+  lines.push('');
+
+  // Hooks — Quality Gates
+  lines.push(header('Hooks — Quality Gates') + '\n');
+  for (const h of HOOKS.gates) {
+    lines.push('  ' + colors.bold(h.name.padEnd(36)) + h.desc + tag('hooks/' + h.name));
+  }
+  lines.push('');
+
+  // Skills
+  lines.push(header('Skills') + '\n');
+  for (const [folder, desc] of Object.entries(SKILLS)) {
+    lines.push('  ' + colors.bold(folder.padEnd(28)) + desc + tag('skills/' + folder));
+  }
+  lines.push('');
+
+  // Config
+  lines.push(header('Config') + '\n');
+  for (const [file, desc] of Object.entries(CONFIG)) {
+    lines.push('  ' + colors.bold(file.padEnd(20)) + desc + tag(file));
+  }
+  lines.push('');
+
+  // .gitignore
+  lines.push(header('.gitignore entries') + '\n');
+  const ignoreEntries = [
+    '.claude/raid-last-test-run',
+    '.claude/raid-session',
+    '.claude/raid-dungeon.md',
+    '.claude/raid-dungeon-phase-*',
+    '.claude/raid-dungeon-backup.md',
+    '.claude/raid-dungeon-phase-*-backup.md',
+    '.claude/vault/.draft/',
+    '.env.raid',
+  ];
+  for (const entry of ignoreEntries) {
+    lines.push('  ' + colors.dim(entry));
+  }
+  lines.push('');
+
+  lines.push('  Run without --dry-run to install.');
+
+  return lines.join('\n');
+}
+
+module.exports = { install, run, dryRun };
