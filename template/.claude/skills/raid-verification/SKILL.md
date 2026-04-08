@@ -53,6 +53,17 @@ This gate applies to EVERY status claim: "tests pass", "bug fixed", "feature com
 | "Feature complete" | All acceptance criteria verified with evidence | Self-assessment without running tests |
 | "Regression test works" | Red-green cycle verified | Test passes once without seeing it fail |
 
+### Browser Verification (when `browser.enabled` in raid.json)
+
+"Tests pass" means BOTH unit and browser tests pass:
+
+| Claim | Requires |
+|---|---|
+| "Tests pass" | Unit test command output: 0 failures AND `{execCommand} playwright test`: 0 failures |
+| "Feature complete" | All acceptance criteria verified WITH browser test evidence |
+
+If the project's test command doesn't include Playwright, the agent MUST run it separately and report both results.
+
 ## Forbidden Phrases Without Evidence
 
 These phrases are NEVER allowed without preceding verification output:

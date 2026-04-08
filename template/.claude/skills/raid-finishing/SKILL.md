@@ -74,6 +74,14 @@ BEFORE presenting options:
    If YES → Proceed with evidence.
 ```
 
+### Browser Verification (when `browser.enabled` in raid.json)
+
+Additional final checks:
+- Full Playwright test suite passes headlessly
+- Verify no leaked processes from prior browser sessions
+- Verify all ports in `browser.portRange` are free (`lsof -i :PORT`)
+- Agents debate: "Are browser tests sufficient for this feature's coverage?"
+
 ## Step 3: Present Options
 
 ```
