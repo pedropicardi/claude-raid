@@ -52,10 +52,14 @@ digraph implementation {
 1. **Read the plan** — extract all tasks, dependencies, ordering
 2. **Read Phase 2 archived Dungeon** — carry forward context
 3. **Set up worktree** — use `raid-git-worktrees` for isolation (optional)
-4. **Create task tracking** — use TaskCreate for every plan task
-5. **Per task:** Assign implementer (rotate), open Dungeon, observe attack, close with ruling
-6. **Track progress** — mark complete only after Wizard ruling per task
-7. **After all tasks** — archive Dungeon, invoke `raid-review`
+4. **Browser setup (if `browser.enabled` in raid.json)**:
+   - Check if `browser.startup` exists — if null, invoke `raid-browser` startup discovery FIRST
+   - Check if Playwright is installed — if not, first task becomes "scaffold Playwright"
+   - Assign port from `browser.portRange` to implementer
+5. **Create task tracking** — use TaskCreate for every plan task
+6. **Per task:** Assign implementer (rotate), open Dungeon, observe attack, close with ruling
+7. **Track progress** — mark complete only after Wizard ruling per task
+8. **After all tasks** — archive Dungeon, invoke `raid-review`
 
 ## The Implementation Gauntlet (per task)
 
@@ -76,6 +80,11 @@ Following `raid-tdd` strictly:
 6. Self-review against acceptance criteria
 7. Commit: `feat(scope): descriptive message`
 
+**Browser tasks (if `browser.enabled` and task involves browser-facing code):**
+- BOOT app on assigned port before browser TDD (invoke `raid-browser`)
+- Use Playwright MCP tools to explore while authoring tests
+- CLEANUP after task is complete (or on failure — cleanup always runs)
+
 Report status: **DONE** | **DONE_WITH_CONCERNS** | **NEEDS_CONTEXT** | **BLOCKED**
 
 ### Step 3: Challengers Attack Directly
@@ -83,10 +92,16 @@ Report status: **DONE** | **DONE_WITH_CONCERNS** | **NEEDS_CONTEXT** | **BLOCKED
 This is where the new model shines. Challengers don't just report to the Wizard — they:
 
 1. **Read ACTUAL CODE** (not the implementer's report — reports lie)
-2. **Challenge the implementer directly:** `⚔️ CHALLENGE: @Warrior, your implementation at handler.js:23 doesn't validate...`
-3. **Build on each other's critiques:** `🔗 BUILDING ON @Archer: Your naming drift finding — the inconsistency also affects the test at...`
-4. **Roast weak implementations:** `🔥 ROAST: @Rogue, you claimed this handles concurrent access but there's no lock at...`
-5. **Pin verified issues to Dungeon:** `📌 DUNGEON: Confirmed issue — handler.js:23 missing validation [verified by @Archer and @Rogue]`
+2. **Challenge the implementer directly:** `CHALLENGE: @Warrior, your implementation at handler.js:23 doesn't validate...`
+3. **Build on each other's critiques:** `BUILDING: @Archer, your naming drift finding — the inconsistency also affects the test at...`
+4. **Challenge weak implementations:** `CHALLENGE: @Rogue, you claimed this handles concurrent access but there's no lock at...`
+5. **Pin verified issues to Dungeon:** `DUNGEON: Confirmed issue — handler.js:23 missing validation [verified by @Archer and @Rogue]`
+
+**Browser verification (if `browser.enabled`):**
+- Challengers can BOOT on their own ports to run Playwright tests independently
+- Verify tests pass without flakiness (run 3x if suspect)
+- Explore the feature manually via Playwright MCP to find gaps the tests missed
+- Each challenger CLEANUPS their own instance when done
 
 **Challengers check:**
 - Spec compliance — does it match the task spec line by line?
@@ -102,11 +117,11 @@ The implementer defends against BOTH challengers simultaneously:
 - Respond to each challenge with evidence or concede immediately
 - Fix conceded issues
 - Re-run all tests
-- Pin resolved issues to Dungeon: `📌 DUNGEON: Resolved — added validation at handler.js:23 [tests pass]`
+- Pin resolved issues to Dungeon: `DUNGEON: Resolved — added validation at handler.js:23 [tests pass]`
 
 ### Step 5: Wizard Closes Task
 
-⚡ WIZARD RULING: Task N [approved | needs fixes]
+RULING: Task N [approved | needs fixes]
 
 The Wizard closes when the Dungeon shows all issues resolved and challengers have no remaining critiques.
 

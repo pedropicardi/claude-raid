@@ -18,6 +18,13 @@ const RAID_HOOKS = {
       hooks: [
         { type: 'command', command: `bash .claude/hooks/validate-file-naming.sh ${RAID_HOOK_MARKER}` },
         { type: 'command', command: `bash .claude/hooks/validate-no-placeholders.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-dungeon.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+    {
+      matcher: 'Bash',
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/validate-browser-cleanup.sh ${RAID_HOOK_MARKER}` },
       ],
     },
   ],
@@ -25,15 +32,64 @@ const RAID_HOOKS = {
     {
       matcher: 'Bash',
       hooks: [
-        { type: 'command', command: `bash .claude/hooks/validate-commit-message.sh ${RAID_HOOK_MARKER}` },
-        { type: 'command', command: `bash .claude/hooks/validate-tests-pass.sh ${RAID_HOOK_MARKER}` },
-        { type: 'command', command: `bash .claude/hooks/validate-verification.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-commit.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-browser-tests-exist.sh ${RAID_HOOK_MARKER}` },
       ],
     },
     {
-      matcher: 'Write',
+      matcher: 'Write|Edit',
       hooks: [
-        { type: 'command', command: `bash .claude/hooks/validate-phase-gate.sh ${RAID_HOOK_MARKER}` },
+        { type: 'command', command: `bash .claude/hooks/validate-write-gate.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  SessionStart: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-session-start.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  SessionEnd: [
+    {
+      matcher: 'prompt_input_exit|clear',
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-session-end.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  TeammateIdle: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-teammate-idle.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  TaskCreated: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-task-created.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  TaskCompleted: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-task-completed.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  Stop: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-stop.sh ${RAID_HOOK_MARKER}` },
+      ],
+    },
+  ],
+  PreCompact: [
+    {
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/raid-pre-compact.sh ${RAID_HOOK_MARKER}` },
       ],
     },
   ],
@@ -97,7 +153,7 @@ function removeRaidSettings(cwd) {
     settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
   } catch {
     throw new Error(
-      'Your .claude/settings.json contains invalid JSON. Please fix it before running claude-raid remove.'
+      'Your .claude/settings.json contains invalid JSON. Please fix it before running claude-raid dismantle.'
     );
   }
 

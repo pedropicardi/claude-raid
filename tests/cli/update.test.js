@@ -23,7 +23,7 @@ describe('update', () => {
     const cwd = makeTempDir();
     const result = update.performUpdate(cwd);
     assert.strictEqual(result.success, false);
-    assert.ok(result.message.includes('not installed'));
+    assert.ok(result.message.includes('No party found'));
   });
 
   it('updates unmodified template files', () => {
@@ -37,7 +37,7 @@ describe('update', () => {
     assert.ok(content.includes('Raid Team Rules'));
   });
 
-  it('does not touch raid.json', () => {
+  it('does not remove existing custom fields from raid.json', () => {
     init = require('../../src/init');
     update = require('../../src/update');
     const cwd = makeTempDir();
@@ -47,6 +47,69 @@ describe('update', () => {
     update.performUpdate(cwd);
     const content = fs.readFileSync(configPath, 'utf8');
     assert.ok(content.includes('"custom"'));
+  });
+
+  it('adds browser config to existing raid.json when framework detected', () => {
+    init = require('../../src/init');
+    update = require('../../src/update');
+    const cwd = makeTempDir();
+    // Create project files that trigger browser detection
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ name: 'test-app', scripts: { test: 'jest', dev: 'next dev' } }));
+    fs.writeFileSync(path.join(cwd, 'next.config.js'), 'module.exports = {}');
+    fs.writeFileSync(path.join(cwd, 'pnpm-lock.yaml'), '');
+    init.install(cwd);
+    const configPath = path.join(cwd, '.claude', 'raid.json');
+    // Manually remove the browser section
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    delete config.browser;
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+    // Verify browser is gone
+    assert.ok(!JSON.parse(fs.readFileSync(configPath, 'utf8')).browser);
+    update.performUpdate(cwd);
+    const updated = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    assert.ok(updated.browser, 'browser section should be re-added');
+    assert.strictEqual(updated.browser.enabled, true);
+    assert.ok(updated.browser.framework, 'browser framework should be set');
+  });
+
+  it('adds packageManager to existing raid.json when missing', () => {
+    init = require('../../src/init');
+    update = require('../../src/update');
+    const cwd = makeTempDir();
+    // Create project with pnpm lock file
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ name: 'test-app', scripts: { test: 'jest' } }));
+    fs.writeFileSync(path.join(cwd, 'pnpm-lock.yaml'), '');
+    init.install(cwd);
+    const configPath = path.join(cwd, '.claude', 'raid.json');
+    // Manually remove packageManager from project section
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    delete config.project.packageManager;
+    delete config.project.runCommand;
+    delete config.project.execCommand;
+    delete config.project.installCommand;
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+    update.performUpdate(cwd);
+    const updated = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    assert.ok(updated.project.packageManager, 'packageManager should be re-added');
+    assert.strictEqual(updated.project.packageManager, 'pnpm');
+  });
+
+  it('does not overwrite existing browser config', () => {
+    init = require('../../src/init');
+    update = require('../../src/update');
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ name: 'test-app', scripts: { test: 'jest', dev: 'next dev' } }));
+    fs.writeFileSync(path.join(cwd, 'next.config.js'), 'module.exports = {}');
+    init.install(cwd);
+    const configPath = path.join(cwd, '.claude', 'raid.json');
+    // Modify browser.baseUrl to a custom value
+    const config = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    if (!config.browser) config.browser = { enabled: true, framework: 'next', baseUrl: 'http://localhost:9999', defaultPort: 9999, portRange: [10000, 10004], playwrightConfig: 'playwright.config.ts', auth: null, startup: null };
+    config.browser.baseUrl = 'http://localhost:9999';
+    fs.writeFileSync(configPath, JSON.stringify(config, null, 2) + '\n');
+    update.performUpdate(cwd);
+    const updated = JSON.parse(fs.readFileSync(configPath, 'utf8'));
+    assert.strictEqual(updated.browser.baseUrl, 'http://localhost:9999', 'custom baseUrl should be preserved');
   });
 
   it('skips customized agent files', () => {

@@ -3,6 +3,8 @@
 const fs = require('fs');
 const path = require('path');
 const { mergeSettings } = require('./merge-settings');
+const { detectProject } = require('./detect-project');
+const { banner, header, colors } = require('./ui');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
 
@@ -34,7 +36,7 @@ function performUpdate(cwd) {
   const skippedAgents = [];
 
   if (!fs.existsSync(path.join(claudeDir, 'raid-rules.md'))) {
-    return { success: false, message: 'The Raid is not installed. Run `claude-raid init` first.', skippedAgents };
+    return { success: false, message: 'No party found. Run `claude-raid summon` first.', skippedAgents };
   }
 
   // Update agents — skip if user has customized them
@@ -84,9 +86,53 @@ function performUpdate(cwd) {
     }
   }
 
+  // Migrate existing raid.json — add missing browser/packageManager fields
+  const raidConfigPath = path.join(claudeDir, 'raid.json');
+  const migratedFields = [];
+  if (fs.existsSync(raidConfigPath)) {
+    let config;
+    try {
+      config = JSON.parse(fs.readFileSync(raidConfigPath, 'utf8'));
+    } catch {
+      config = null;
+    }
+    if (config !== null) {
+      const detected = detectProject(cwd);
+      // Add packageManager fields if missing
+      if (detected.packageManager && config.project && !config.project.packageManager) {
+        config.project.packageManager = detected.packageManager;
+        if (detected.runCommand) config.project.runCommand = detected.runCommand;
+        if (detected.execCommand) config.project.execCommand = detected.execCommand;
+        if (detected.installCommand) config.project.installCommand = detected.installCommand;
+        migratedFields.push('packageManager');
+      }
+      // Add browser section if detected and missing
+      if (detected.browser && !config.browser) {
+        config.browser = {
+          enabled: true,
+          framework: detected.browser.framework,
+          devCommand: detected.browser.devCommand,
+          baseUrl: `http://localhost:${detected.browser.defaultPort}`,
+          defaultPort: detected.browser.defaultPort,
+          portRange: [detected.browser.defaultPort + 1, detected.browser.defaultPort + 5],
+          playwrightConfig: 'playwright.config.ts',
+          auth: null,
+          startup: null,
+        };
+        migratedFields.push('browser');
+      }
+      if (migratedFields.length > 0) {
+        fs.writeFileSync(raidConfigPath, JSON.stringify(config, null, 2) + '\n');
+      }
+    }
+  }
+
   mergeSettings(cwd);
 
   let message = 'The Raid has been updated to the latest version.';
+  if (migratedFields.length > 0) {
+    message += `\nMigrated raid.json: added ${migratedFields.join(', ')}`;
+  }
   if (skippedAgents.length > 0) {
     message += `\nSkipped customized agents: ${skippedAgents.join(', ')}`;
   }
@@ -94,17 +140,28 @@ function performUpdate(cwd) {
     message += '\nSkipped customized raid-rules.md';
   }
   if (skippedAgents.length > 0 || skippedRules) {
-    message += '\nUse `claude-raid remove` then `claude-raid init` to reset.';
+    message += '\nUse `claude-raid dismantle` then `claude-raid summon` to reset.';
   }
 
-  return { success: true, message, skippedAgents };
+  return { success: true, message, skippedAgents, migratedFields };
 }
 
 function run() {
   const cwd = process.cwd();
-  console.log('\nclaude-raid — Updating The Raid\n');
+  console.log('\n' + banner());
+  console.log(header('Reforging the Arsenal...') + '\n');
+
   const result = performUpdate(cwd);
-  console.log(result.message);
+
+  if (!result.success) {
+    console.log('  ' + colors.red('✖') + ' No party found. Run ' + colors.bold('claude-raid summon') + ' first.');
+    return;
+  }
+
+  console.log('  ' + colors.green('✔') + ' The party\'s arsenal has been reforged.');
+  if (result.skippedAgents.length > 0) {
+    console.log('  ' + colors.dim('Preserved customized warriors: ' + result.skippedAgents.join(', ')));
+  }
 }
 
 module.exports = { performUpdate, run };

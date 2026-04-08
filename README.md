@@ -1,6 +1,25 @@
 # claude-raid
 
-**Adversarial multi-agent development system for [Claude Code](https://claude.ai/code).**
+```ansi
+[33m  ⚔ ═══════════════════════════════════════════════════════ ⚔[0m
+
+[1;33m      ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗[0m
+[1;33m     ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝[0m
+[1;33m     ██║     ██║     ███████║██║   ██║██║  ██║█████╗  [0m
+[1;33m     ██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝  [0m
+[1;33m     ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗[0m
+[1;33m      ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝[0m
+[1;31m              ██████╗  █████╗ ██╗██████╗ [0m
+[1;31m              ██╔══██╗██╔══██╗██║██╔══██╗[0m
+[1;31m              ██████╔╝███████║██║██║  ██║[0m
+[1;31m              ██╔══██╗██╔══██║██║██║  ██║[0m
+[1;31m              ██║  ██║██║  ██║██║██████╔╝[0m
+[1;31m              ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝ [0m
+
+[90m      Adversarial multi-agent warfare for Claude Code[0m
+
+[33m  ⚔ ═══════════════════════════════════════════════════════ ⚔[0m
+```
 
 Four agents -- Wizard, Warrior, Archer, Rogue -- work through a strict 4-phase workflow where every decision, implementation, and review is stress-tested by competing agents who learn from each other's mistakes and push every finding to its edges.
 
@@ -8,19 +27,41 @@ Adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vi
 
 ---
 
-## Quick Start
+## Summon the Party
 
 ```bash
-npx claude-raid init
+npx claude-raid summon
+```
+
+The installer auto-detects your realm (project type), copies agents, skills, and hooks into `.claude/`, and walks you through environment setup -- all in one command.
+
+Then start a Raid:
+
+```bash
 claude --agent wizard
 ```
 
-That's it. The installer auto-detects your project type, generates configuration, and merges with your existing Claude Code setup. Nothing is overwritten.
+That's it. Describe your task and the Wizard takes over.
 
-For split-pane mode (recommended for watching agents interact):
+### Prerequisites
+
+The setup wizard checks these automatically during `summon`:
+
+| Requirement | Why | Auto-configured? |
+|---|---|---|
+| **Claude Code** v2.1.32+ | Agent teams support | No -- install/update manually |
+| **Node.js** 18+ | Runs the installer | No -- install manually |
+| **teammateMode** in `~/.claude.json` | Display mode for agent sessions | Yes -- wizard prompts you |
+| **tmux** or **iTerm2** | Split-pane mode (optional) | No -- install manually |
+
+`jq` is required for hooks (pre-installed on macOS, `apt install jq` on Linux).
+
+The experimental agent teams flag (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS`) is set automatically in your project's `.claude/settings.json` during install.
+
+Diagnose your environment anytime:
 
 ```bash
-claude --agent wizard --teammate-mode tmux
+npx claude-raid heal
 ```
 
 ## How It Works
@@ -40,7 +81,7 @@ Phase 2: PLAN             Agents decompose the design into tasks.
                           Agreed tasks pinned to the Dungeon.
 
 Phase 3: IMPLEMENTATION   One agent implements each task. The others attack
-                          directly — and attack each other's reviews too.
+                          directly -- and attack each other's reviews too.
                           TDD enforced. Every task earns approval.
 
 Phase 4: REVIEW           Independent reviews, then agents fight over findings
@@ -188,7 +229,7 @@ Edit this file to add project-specific rules. Updates via `claude-raid update` w
 
 ## Configuration
 
-`npx claude-raid init` auto-detects your project and generates `.claude/raid.json`:
+`claude-raid summon` auto-detects your realm and generates `.claude/raid.json`:
 
 ```json
 {
@@ -242,15 +283,20 @@ Commands are auto-detected from your project files (e.g., `scripts.test` in `pac
 | `conventions.maxDepth` | `8` | Maximum file nesting depth |
 | `raid.defaultMode` | `full` | Default mode: `full`, `skirmish`, `scout` |
 
-## CLI Commands
+## Commands
 
-```bash
-npx claude-raid init      # Install into current project
-npx claude-raid update    # Update agents, skills, hooks (preserves raid.json)
-npx claude-raid remove    # Uninstall and restore original settings
-```
+| Command | What it does |
+|---|---|
+| `claude-raid summon` | Summon the party into this realm |
+| `claude-raid update` | Reforge the party's arsenal |
+| `claude-raid dismantle` | Dismantle the camp and retreat |
+| `claude-raid heal` | Diagnose wounds and prepare for battle |
 
-### `init`
+> Old names (`init`, `remove`, `doctor`) still work as aliases.
+
+### `summon`
+
+Summons the full Raid party into your project.
 
 - Creates `.claude/` if absent
 - Auto-detects project type and generates `raid.json`
@@ -258,31 +304,45 @@ npx claude-raid remove    # Uninstall and restore original settings
 - Merges settings into existing `settings.json` (with backup)
 - Makes hooks executable
 - Adds session files to `.gitignore`
+- Runs the setup wizard to check and configure prerequisites
 - **Never overwrites** existing files with the same name
 
 ### `update`
 
-- Overwrites hooks, skills, and `raid-rules.md` with latest versions
-- **Skips customized agents** (warns you which ones were preserved)
-- Does **not** touch `raid.json` (your project config)
-- Re-runs settings merge to add any new hooks
+Reforges the party's weapons and armor with the latest version.
 
-### `remove`
+- Overwrites hooks, skills, and `raid-rules.md` with latest versions
+- **Skips customized agents** (warns you which warriors were preserved)
+- Does **not** touch `raid.json` (your realm config stays intact)
+- Re-runs settings merge to pick up new hooks
+
+### `dismantle`
+
+Dismantles the camp and restores your realm to its former state.
 
 - Removes all Raid agents, hooks, skills, and config files
 - Restores `settings.json` from backup (if backup exists)
 - Preserves non-Raid files in `.claude/`
 
+### `heal`
+
+Diagnoses wounds and prepares the party for battle.
+
+- Checks Node.js, Claude Code, teammateMode, and split-pane support
+- Offers to fix missing configuration interactively
+- Shows Quick Start, Controls, and Raid Modes reference
+- Exits with code 1 in CI when required checks fail
+
 ## What Gets Installed
 
 ```
 .claude/
-├── raid.json                        # Project config (auto-generated, editable)
+├── raid.json                        # Realm config (auto-generated, editable)
 ├── raid-rules.md                    # Team rules (editable)
 ├── settings.json                    # Merged with existing (backup at .pre-raid-backup)
 ├── agents/
-│   ├── wizard.md                    # Lead coordinator
-│   ├── warrior.md                   # Aggressive explorer
+│   ├── wizard.md                    # Dungeon master
+│   ├── warrior.md                   # Aggressive stress-tester
 │   ├── archer.md                    # Precision pattern-seeker
 │   └── rogue.md                     # Adversarial assumption-destroyer
 ├── hooks/
@@ -317,12 +377,6 @@ The Raid is a tool in your toolkit, not your project's operating system.
 - **Session-scoped hooks** -- workflow hooks only activate during Raid sessions (`.claude/raid-session`), never during normal coding
 - **Clean removal** restores your original `settings.json` from backup
 - **Zero npm dependencies** -- pure Node.js stdlib, fast `npx` cold-start
-
-## Requirements
-
-- [Claude Code](https://claude.ai/code) v2.1.32+
-- Node.js 18+ (for installation only -- the installed files are language-agnostic)
-- `jq` (for hooks -- pre-installed on macOS, available via `apt install jq` on Linux)
 
 ## Inherited from Superpowers
 

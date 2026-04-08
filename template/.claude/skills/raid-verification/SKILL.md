@@ -53,6 +53,17 @@ This gate applies to EVERY status claim: "tests pass", "bug fixed", "feature com
 | "Feature complete" | All acceptance criteria verified with evidence | Self-assessment without running tests |
 | "Regression test works" | Red-green cycle verified | Test passes once without seeing it fail |
 
+### Browser Verification (when `browser.enabled` in raid.json)
+
+"Tests pass" means BOTH unit and browser tests pass:
+
+| Claim | Requires |
+|---|---|
+| "Tests pass" | Unit test command output: 0 failures AND `{execCommand} playwright test`: 0 failures |
+| "Feature complete" | All acceptance criteria verified WITH browser test evidence |
+
+If the project's test command doesn't include Playwright, the agent MUST run it separately and report both results.
+
 ## Forbidden Phrases Without Evidence
 
 These phrases are NEVER allowed without preceding verification output:
@@ -74,7 +85,7 @@ The implementer's claim is NOT sufficient. Challengers verify AND cross-check ea
 1. **Implementer verifies** — runs tests, reports with evidence (command + output)
 2. **Challenger 1 verifies independently** — runs same tests, confirms output matches
 3. **Challenger 2 verifies adversarially** — runs tests PLUS tries to break it with edge cases
-4. **Challengers cross-check each other:** `@Archer, you said tests pass but did you run the full suite or just the changed files?` / `🔗 BUILDING ON @Warrior: Your verification missed the integration test at...`
+4. **Challengers cross-check each other:** `@Archer, you said tests pass but did you run the full suite or just the changed files?` / `BUILDING: @Warrior, your verification missed the integration test at...`
 
 Only after all required verifications confirm — and challengers have cross-checked each other — does the Wizard accept.
 

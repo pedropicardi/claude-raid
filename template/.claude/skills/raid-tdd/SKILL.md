@@ -78,6 +78,42 @@ Run: test command from `.claude/raid.json`
 - Keep tests green throughout — run after every change
 - Refactor the TESTS too, not just the implementation
 
+## Browser-Aware TDD (when `browser.enabled` in raid.json)
+
+### Deciding Test Type
+
+Before writing the test, decide: is this a unit test or a browser test?
+
+| Write Browser Test | Write Unit Test Only |
+|---|---|
+| New user-facing flow (signup, checkout) | Pure utility function |
+| UI interaction (drag-drop, modal, form) | API endpoint logic |
+| Client-side routing / navigation | Data transformation |
+| Visual state changes (loading, error, empty) | Business rule validation |
+| Integration between frontend and API | Database queries |
+
+- **If both:** Write the unit test FIRST, then the browser test
+- **State your reasoning** — challengers will attack this decision
+- **When unsure:** Write the browser test. Better to have it and not need it.
+
+### Browser TDD Cycle
+
+Follow the same RED-GREEN-REFACTOR discipline but with Playwright:
+
+1. **RED:** Write `.spec.ts` with user behavior assertions + console/network checks
+2. **Verify RED:** Run `{execCommand} playwright test` — must fail for the RIGHT reason
+3. **GREEN:** Implement feature → test passes
+4. **Verify GREEN:** Run FULL suite (unit + browser) → all green
+5. **REFACTOR:** Clean up → re-run all
+
+Use `raid-browser-playwright` for detailed guidance. Invoke `raid-browser` for pre-flight and boot.
+
+### "Tests pass" = Unit AND Browser Tests
+
+When claiming tests pass, both must pass:
+- Unit: test command from `raid.json`
+- Browser: `{execCommand} playwright test`
+
 ## Adversarial Test Review
 
 After TDD cycle, challengers attack the TESTS directly — and build on each other's critiques:
@@ -89,9 +125,15 @@ After TDD cycle, challengers attack the TESTS directly — and build on each oth
 5. **Would this catch a regression?** If someone changes the implementation next month, does this test catch the break?
 
 **Challengers interact directly:**
-- `⚔️ CHALLENGE: @Warrior, your test at line 15 only validates the happy path — here's an input that passes with a broken implementation: ...`
-- `🔗 BUILDING ON @Archer: Your edge case finding — the same gap exists in the error path test at line 32...`
-- `🔥 ROAST: @Rogue, you claimed the test is implementation-dependent but renaming the internal method doesn't break it — here's proof: ...`
+- `CHALLENGE: @Warrior, your test at line 15 only validates the happy path — here's an input that passes with a broken implementation: ...`
+- `BUILDING: @Archer, your edge case finding — the same gap exists in the error path test at line 32...`
+- `CHALLENGE: @Rogue, you claimed the test is implementation-dependent but renaming the internal method doesn't break it — here's proof: ...`
+
+**Browser-specific attacks (when `browser.enabled`):**
+
+6. **This is a user-facing feature but you only wrote unit tests — where's the browser test?** If the user interacts with it in a browser, it needs a browser test.
+7. **Your browser test checks the DOM but doesn't assert on console errors or network health.** Infrastructure assertions are mandatory.
+8. **You tested at desktop width only — what about mobile?** Responsive behavior is Important severity.
 
 **Challengers don't just report to the Wizard — they fight each other over test quality.**
 

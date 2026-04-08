@@ -76,7 +76,7 @@ Create `.claude/raid-dungeon.md`:
 
 ## Dispatch for Decomposition
 
-**📡 DISPATCH:**
+**DISPATCH:**
 
 > **@Warrior**: Decompose into tasks. Focus on structural ordering — what MUST be built first? Hard dependencies? Critical path? Include tests for every task. Challenge @Archer and @Rogue's decompositions directly. Pin agreed tasks to Dungeon.
 >
@@ -84,7 +84,7 @@ Create `.claude/raid-dungeon.md`:
 >
 > **@Rogue**: Decompose into tasks. Focus on hidden complexity — which tasks are deceptively hard? Where will the implementer guess wrong? Which tests miss the failure path? Challenge @Warrior and @Archer directly. Pin agreed tasks to Dungeon.
 >
-> **All**: Read the Phase 1 archived Dungeon for design knowledge. Interact directly. Build on each other's decompositions. Pin agreed tasks with `📌 DUNGEON:`. Escalate to me with `🆘 WIZARD:` only when genuinely stuck.
+> **All**: Read the Phase 1 archived Dungeon for design knowledge. Interact directly. Build on each other's decompositions. Pin agreed tasks with `DUNGEON:`. Escalate to me with `WIZARD:` only when genuinely stuck.
 
 ## Collaborative Compliance Testing (Agent-Driven)
 
@@ -108,6 +108,17 @@ After independent decomposition, agents fight directly over the plan:
 - "Implement minimal code to pass" — step
 - "Run tests to verify pass" — step
 - "Commit" — step
+
+### Browser Test Tasks (when `browser.enabled` in raid.json)
+
+When a task involves browser-facing code, the plan must include browser test steps alongside unit tests:
+- "Write failing Playwright test (`tests/e2e/<feature>.spec.ts`)" — step
+- "Run `{execCommand} playwright test` to verify it fails" — step
+- "Implement the feature" — step
+- "Run Playwright test to verify it passes" — step
+- "Run full suite (unit + browser) to verify no regressions" — step
+
+Not every task needs a browser test. Include them for user-facing flows, UI interactions, client-side routing, and visual state changes. State reasoning — challengers will attack this decision.
 
 ## Task Structure
 
@@ -154,7 +165,7 @@ After writing the complete plan:
 2. **Placeholder scan:** Search for TBD, TODO, vague descriptions, missing code. Fix them.
 3. **Type/name consistency:** Do types, method signatures, property names match across ALL tasks?
 4. **File structure consistency:** Do all file paths follow the project's conventions?
-5. **Test quality:** Does every task have tests? Do tests cover failure paths?
+5. **Test quality:** Does every task have tests? Do tests cover failure paths? When `browser.enabled`: do browser-facing tasks include Playwright tests?
 6. **Ordering:** Can each task be built and committed independently without breaking the build?
 
 Fix issues inline. If a spec requirement has no task, add the task.
@@ -170,4 +181,4 @@ Fix issues inline. If a spec requirement has no task, add the task.
 | "Tests can be added later" | TDD means tests are in the plan. No test = no task. |
 | "The naming will be consistent enough" | Check it explicitly. Naming drift is the #1 source of bugs. |
 
-**Terminal state:** ⚡ WIZARD RULING: Plan approved. Commit. Archive Dungeon. Invoke `raid-implementation`.
+**Terminal state:** RULING: Plan approved. Commit. Archive Dungeon. Invoke `raid-implementation`.

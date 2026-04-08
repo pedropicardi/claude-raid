@@ -103,7 +103,7 @@ describe('mergeSettings', () => {
     const raidHooks = settings.hooks.PostToolUse.filter(h =>
       h.hooks && h.hooks.some(hh => hh.command && hh.command.includes('validate-'))
     );
-    assert.strictEqual(raidHooks.length, 1);
+    assert.strictEqual(raidHooks.length, 2);
   });
 
   it('throws on invalid JSON in existing settings.json', () => {
@@ -113,6 +113,65 @@ describe('mergeSettings', () => {
     fs.mkdirSync(claudeDir, { recursive: true });
     fs.writeFileSync(path.join(claudeDir, 'settings.json'), '{invalid json,}');
     assert.throws(() => mergeSettings(cwd), /invalid JSON/);
+  });
+
+  it('wires validate-commit.sh as single Bash PreToolUse hook', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
+    const bashEntry = settings.hooks.PreToolUse.find(e => e.matcher === 'Bash');
+    assert.ok(bashEntry, 'should have a Bash matcher in PreToolUse');
+    assert.strictEqual(bashEntry.hooks.length, 2, 'Bash matcher should have 2 hooks');
+    assert.ok(bashEntry.hooks[0].command.includes('validate-commit.sh'));
+    assert.ok(bashEntry.hooks[1].command.includes('validate-browser-tests-exist.sh'));
+  });
+
+  it('wires validate-write-gate.sh as Write|Edit PreToolUse hook', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
+    const writeEntry = settings.hooks.PreToolUse.find(e => e.matcher === 'Write|Edit');
+    assert.ok(writeEntry, 'should have a Write|Edit matcher in PreToolUse');
+    assert.ok(writeEntry.hooks.some(h => h.command.includes('validate-write-gate.sh')));
+  });
+
+  it('wires validate-dungeon.sh in PostToolUse', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
+    assert.ok(settings.hooks.PostToolUse.some(e =>
+      e.hooks && e.hooks.some(h => h.command && h.command.includes('validate-dungeon.sh'))
+    ));
+  });
+
+  it('does not wire old removed hooks', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const json = fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8');
+    assert.ok(!json.includes('validate-commit-message.sh'), 'should not contain validate-commit-message.sh');
+    assert.ok(!json.includes('validate-tests-pass.sh'), 'should not contain validate-tests-pass.sh');
+    assert.ok(!json.includes('validate-verification.sh'), 'should not contain validate-verification.sh');
+    assert.ok(!json.includes('validate-phase-gate.sh'), 'should not contain validate-phase-gate.sh');
+  });
+
+  it('registers lifecycle hook events', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
+    const events = Object.keys(settings.hooks);
+    for (const evt of ['SessionStart', 'SessionEnd', 'TeammateIdle', 'TaskCreated', 'TaskCompleted', 'Stop', 'PreCompact']) {
+      assert.ok(events.includes(evt), `Missing hook event: ${evt}`);
+    }
   });
 
   it('removeRaidSettings surgically removes raid entries when no backup exists', () => {

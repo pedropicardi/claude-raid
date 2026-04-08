@@ -1,0 +1,26 @@
+{
+  "project": {
+    "name": "claude-raid",
+    "language": "javascript",
+    "packageManager": "npm",
+    "runCommand": "npm run",
+    "execCommand": "npx",
+    "installCommand": "npm install",
+    "testCommand": "npm test",
+    "lintCommand": "",
+    "buildCommand": ""
+  },
+  "paths": {
+    "specs": "docs/raid/specs",
+    "plans": "docs/raid/plans",
+    "worktrees": ".worktrees"
+  },
+  "conventions": {
+    "fileNaming": "none",
+    "commits": "conventional",
+    "maxDepth": 12
+  },
+  "raid": {
+    "defaultMode": "full"
+  }
+}

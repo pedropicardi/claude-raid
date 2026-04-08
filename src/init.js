@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const { detectProject } = require('./detect-project');
 const { mergeSettings } = require('./merge-settings');
+const { runSetup } = require('./setup');
+const { banner, header, colors } = require('./ui');
 
 const TEMPLATE_DIR = path.join(__dirname, '..', 'template', '.claude');
 
@@ -65,6 +67,10 @@ function install(cwd) {
       project: {
         name: detected.name || path.basename(cwd),
         language: detected.language,
+        packageManager: detected.packageManager || undefined,
+        runCommand: detected.runCommand || undefined,
+        execCommand: detected.execCommand || undefined,
+        installCommand: detected.installCommand || undefined,
         testCommand: detected.testCommand || '',
         lintCommand: detected.lintCommand || '',
         buildCommand: detected.buildCommand || '',
@@ -80,8 +86,39 @@ function install(cwd) {
       },
       raid: {
         defaultMode: 'full',
+        vault: {
+          path: '.claude/vault',
+          enabled: true,
+        },
+        lifecycle: {
+          autoSessionManagement: true,
+          teammateNudge: true,
+          taskValidation: true,
+          completionGate: true,
+          phaseTransitionConfirm: true,
+          compactBackup: true,
+          testWindowMinutes: 10,
+        },
       },
     };
+    Object.keys(raidConfig.project).forEach(key => {
+      if (raidConfig.project[key] === undefined) {
+        delete raidConfig.project[key];
+      }
+    });
+    if (detected.browser) {
+      raidConfig.browser = {
+        enabled: true,
+        framework: detected.browser.framework,
+        devCommand: detected.browser.devCommand,
+        baseUrl: `http://localhost:${detected.browser.defaultPort}`,
+        defaultPort: detected.browser.defaultPort,
+        portRange: [detected.browser.defaultPort + 1, detected.browser.defaultPort + 5],
+        playwrightConfig: 'playwright.config.ts',
+        auth: null,
+        startup: null,
+      };
+    }
     fs.writeFileSync(raidConfigPath, JSON.stringify(raidConfig, null, 2) + '\n');
   }
 
@@ -90,7 +127,16 @@ function install(cwd) {
 
   // Add raid-last-test-run to .gitignore
   const gitignorePath = path.join(cwd, '.gitignore');
-  const ignoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session', '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*'];
+  const ignoreEntries = [
+    '.claude/raid-last-test-run',
+    '.claude/raid-session',
+    '.claude/raid-dungeon.md',
+    '.claude/raid-dungeon-phase-*',
+    '.claude/raid-dungeon-backup.md',
+    '.claude/raid-dungeon-phase-*-backup.md',
+    '.claude/vault/.draft/',
+    '.env.raid',
+  ];
   if (fs.existsSync(gitignorePath)) {
     let content = fs.readFileSync(gitignorePath, 'utf8');
     const toAdd = ignoreEntries.filter(e => !content.includes(e));
@@ -105,34 +151,28 @@ function install(cwd) {
   return result;
 }
 
-function run() {
+async function run() {
   const cwd = process.cwd();
-  console.log('\nclaude-raid — Installing The Raid\n');
+  console.log('\n' + banner());
+  console.log(header('Summoning the Party...') + '\n');
 
   const result = install(cwd);
 
   if (result.alreadyInstalled) {
-    console.log('The Raid is already installed. Use `claude-raid update` to update.');
-    console.log('Proceeding with re-install...\n');
+    console.log('  The party is already here. Use ' + colors.bold('claude-raid update') + ' to reforge.');
+    console.log('  Proceeding with re-summon...\n');
   }
 
-  console.log(`Detected: ${result.detected.language}`);
+  console.log('  Realm detected: ' + colors.bold(result.detected.language));
   if (result.detected.testCommand) {
-    console.log(`Test command: ${result.detected.testCommand}`);
+    console.log('  Battle cry:     ' + colors.bold(result.detected.testCommand));
   }
   if (result.skipped.length > 0) {
-    console.log(`\nSkipped (existing files):`);
-    result.skipped.forEach(f => console.log(`  - ${path.relative(cwd, f)}`));
+    console.log('\n  ' + colors.dim('Preserved existing scrolls:'));
+    result.skipped.forEach(f => console.log('    ' + colors.dim('→ ' + path.relative(cwd, f))));
   }
 
-  console.log(`
-The Raid is installed.
-
-  Configuration:  .claude/raid.json (edit to customize)
-  Team rules:     .claude/raid-rules.md (editable)
-
-  Run 'claude-raid doctor' for setup guide and environment check.
-`);
+  await runSetup();
 }
 
 module.exports = { install, run };

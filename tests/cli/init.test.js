@@ -109,6 +109,14 @@ describe('init', () => {
     assert.ok(gitignore.includes('.claude/raid-dungeon-phase-*'), 'Should include raid-dungeon-phase-*');
   });
 
+  it('install returns result without running setup (setup is async in run())', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const result = init.install(cwd);
+    assert.ok(result.detected);
+    assert.ok(!result.setupResult);
+  });
+
   it('does not overwrite existing raid.json on re-install', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
@@ -118,5 +126,67 @@ describe('init', () => {
     init.install(cwd);
     const content = fs.readFileSync(configPath, 'utf8');
     assert.ok(content.includes('"custom"'));
+  });
+
+  it('generates raid.json with packageManager fields', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ scripts: { test: 'jest' } }));
+    fs.writeFileSync(path.join(cwd, 'pnpm-lock.yaml'), '');
+    init.install(cwd);
+    const config = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8'));
+    assert.strictEqual(config.project.packageManager, 'pnpm');
+    assert.strictEqual(config.project.runCommand, 'pnpm');
+    assert.strictEqual(config.project.execCommand, 'pnpm dlx');
+    assert.strictEqual(config.project.installCommand, 'pnpm add');
+  });
+
+  it('generates raid.json with browser section when framework detected', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ scripts: { test: 'vitest' } }));
+    fs.writeFileSync(path.join(cwd, 'pnpm-lock.yaml'), '');
+    fs.writeFileSync(path.join(cwd, 'next.config.js'), 'module.exports = {}');
+    init.install(cwd);
+    const config = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8'));
+    assert.strictEqual(config.browser.enabled, true);
+    assert.strictEqual(config.browser.framework, 'next');
+    assert.strictEqual(config.browser.devCommand, 'pnpm dev');
+    assert.strictEqual(config.browser.defaultPort, 3000);
+    assert.strictEqual(config.browser.baseUrl, 'http://localhost:3000');
+    assert.deepStrictEqual(config.browser.portRange, [3001, 3005]);
+    assert.strictEqual(config.browser.playwrightConfig, 'playwright.config.ts');
+    assert.strictEqual(config.browser.auth, null);
+    assert.strictEqual(config.browser.startup, null);
+  });
+
+  it('omits browser section when no framework detected', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'package.json'), JSON.stringify({ scripts: { test: 'jest' } }));
+    init.install(cwd);
+    const config = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8'));
+    assert.strictEqual(config.browser, undefined);
+  });
+
+  it('generates raid.json with vault and lifecycle config', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const config = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8'));
+    assert.ok(config.raid.vault, 'vault section should exist');
+    assert.strictEqual(config.raid.vault.enabled, true);
+    assert.strictEqual(config.raid.vault.path, '.claude/vault');
+    assert.ok(config.raid.lifecycle, 'lifecycle section should exist');
+    assert.strictEqual(config.raid.lifecycle.autoSessionManagement, true);
+    assert.strictEqual(config.raid.lifecycle.testWindowMinutes, 10);
+  });
+
+  it('adds .env.raid to .gitignore', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const gitignore = fs.readFileSync(path.join(cwd, '.gitignore'), 'utf8');
+    assert.ok(gitignore.includes('.env.raid'));
   });
 });

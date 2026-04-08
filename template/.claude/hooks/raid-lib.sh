@@ -1,0 +1,168 @@
+#!/usr/bin/env bash
+# raid-lib.sh — Shared library sourced by all Raid hooks
+# Parses session state and config, exports RAID_* variables and utility functions.
+# Performance: max 2 jq calls (session + config).
+
+# --- Session parsing ---
+RAID_ACTIVE=false
+RAID_PHASE=""
+RAID_MODE=""
+RAID_CURRENT_AGENT=""
+RAID_IMPLEMENTER=""
+RAID_TASK=""
+
+if [ -f ".claude/raid-session" ]; then
+  _session_json=$(jq -r '
+    .phase // "",
+    .mode // "",
+    .currentAgent // "",
+    .implementer // "",
+    .task // ""
+  ' ".claude/raid-session" 2>/dev/null)
+
+  _jq_rc=$?
+  if [ "$_jq_rc" -eq 0 ] && [ -n "$_session_json" ]; then
+    RAID_ACTIVE=true
+    RAID_PHASE=$(echo "$_session_json" | sed -n '1p')
+    RAID_MODE=$(echo "$_session_json" | sed -n '2p')
+    RAID_CURRENT_AGENT=$(echo "$_session_json" | sed -n '3p')
+    RAID_IMPLEMENTER=$(echo "$_session_json" | sed -n '4p')
+    RAID_TASK=$(echo "$_session_json" | sed -n '5p')
+  else
+    RAID_ACTIVE=false
+    # Only warn if file has content (empty file is a transient state during phase transitions)
+    if [ -s ".claude/raid-session" ]; then
+      echo "raid-lib: warning: .claude/raid-session contains invalid JSON" >&2
+    fi
+  fi
+fi
+
+# --- Config parsing (single jq call for config + browser + lifecycle fields) ---
+RAID_TEST_CMD=""
+RAID_NAMING="none"
+RAID_MAX_DEPTH=8
+RAID_COMMIT_MIN_LENGTH=15
+RAID_SPECS_PATH="docs/raid/specs"
+RAID_PLANS_PATH="docs/raid/plans"
+RAID_BROWSER_ENABLED=false
+RAID_BROWSER_PORT_START=""
+RAID_BROWSER_PORT_END=""
+RAID_BROWSER_EXEC_CMD=""
+RAID_BROWSER_PW_CONFIG=""
+RAID_VAULT_ENABLED=true
+RAID_VAULT_PATH=".claude/vault"
+RAID_LIFECYCLE_SESSION=true
+RAID_LIFECYCLE_NUDGE=true
+RAID_LIFECYCLE_TASK_VALIDATION=true
+RAID_LIFECYCLE_COMPLETION_GATE=true
+RAID_LIFECYCLE_PHASE_CONFIRM=true
+RAID_LIFECYCLE_COMPACT_BACKUP=true
+RAID_LIFECYCLE_TEST_WINDOW=10
+
+if [ -f ".claude/raid.json" ]; then
+  _config_json=$(jq -r '
+    (.project.testCommand // ""),
+    (.conventions.fileNaming // "none"),
+    (.conventions.maxDepth // 8),
+    (.conventions.commitMinLength // 15),
+    (.paths.specs // "docs/raid/specs"),
+    (.paths.plans // "docs/raid/plans"),
+    (.browser.enabled // false),
+    (.browser.portRange[0] // ""),
+    (.browser.portRange[1] // ""),
+    (.project.execCommand // "npx"),
+    (.browser.playwrightConfig // ""),
+    (if .raid.vault.enabled == null then true else .raid.vault.enabled end),
+    (.raid.vault.path // ".claude/vault"),
+    (if .raid.lifecycle.autoSessionManagement == null then true else .raid.lifecycle.autoSessionManagement end),
+    (if .raid.lifecycle.teammateNudge == null then true else .raid.lifecycle.teammateNudge end),
+    (if .raid.lifecycle.taskValidation == null then true else .raid.lifecycle.taskValidation end),
+    (if .raid.lifecycle.completionGate == null then true else .raid.lifecycle.completionGate end),
+    (if .raid.lifecycle.phaseTransitionConfirm == null then true else .raid.lifecycle.phaseTransitionConfirm end),
+    (if .raid.lifecycle.compactBackup == null then true else .raid.lifecycle.compactBackup end),
+    (.raid.lifecycle.testWindowMinutes // 10)
+  ' ".claude/raid.json" 2>/dev/null)
+
+  if [ $? -eq 0 ] && [ -n "$_config_json" ]; then
+    RAID_TEST_CMD=$(echo "$_config_json" | sed -n '1p')
+    RAID_NAMING=$(echo "$_config_json" | sed -n '2p')
+    RAID_MAX_DEPTH=$(echo "$_config_json" | sed -n '3p')
+    RAID_COMMIT_MIN_LENGTH=$(echo "$_config_json" | sed -n '4p')
+    RAID_SPECS_PATH=$(echo "$_config_json" | sed -n '5p')
+    RAID_PLANS_PATH=$(echo "$_config_json" | sed -n '6p')
+    RAID_BROWSER_ENABLED=$(echo "$_config_json" | sed -n '7p')
+    RAID_BROWSER_PORT_START=$(echo "$_config_json" | sed -n '8p')
+    RAID_BROWSER_PORT_END=$(echo "$_config_json" | sed -n '9p')
+    RAID_BROWSER_EXEC_CMD=$(echo "$_config_json" | sed -n '10p')
+    RAID_BROWSER_PW_CONFIG=$(echo "$_config_json" | sed -n '11p')
+    RAID_VAULT_ENABLED=$(echo "$_config_json" | sed -n '12p')
+    RAID_VAULT_PATH=$(echo "$_config_json" | sed -n '13p')
+    RAID_LIFECYCLE_SESSION=$(echo "$_config_json" | sed -n '14p')
+    RAID_LIFECYCLE_NUDGE=$(echo "$_config_json" | sed -n '15p')
+    RAID_LIFECYCLE_TASK_VALIDATION=$(echo "$_config_json" | sed -n '16p')
+    RAID_LIFECYCLE_COMPLETION_GATE=$(echo "$_config_json" | sed -n '17p')
+    RAID_LIFECYCLE_PHASE_CONFIRM=$(echo "$_config_json" | sed -n '18p')
+    RAID_LIFECYCLE_COMPACT_BACKUP=$(echo "$_config_json" | sed -n '19p')
+    RAID_LIFECYCLE_TEST_WINDOW=$(echo "$_config_json" | sed -n '20p')
+  fi
+fi
+
+export RAID_ACTIVE RAID_PHASE RAID_MODE RAID_CURRENT_AGENT RAID_IMPLEMENTER RAID_TASK
+export RAID_TEST_CMD RAID_NAMING RAID_MAX_DEPTH RAID_COMMIT_MIN_LENGTH RAID_SPECS_PATH RAID_PLANS_PATH
+export RAID_BROWSER_ENABLED RAID_BROWSER_PORT_START RAID_BROWSER_PORT_END RAID_BROWSER_EXEC_CMD RAID_BROWSER_PW_CONFIG
+export RAID_VAULT_ENABLED RAID_VAULT_PATH
+export RAID_LIFECYCLE_SESSION RAID_LIFECYCLE_NUDGE RAID_LIFECYCLE_TASK_VALIDATION
+export RAID_LIFECYCLE_COMPLETION_GATE RAID_LIFECYCLE_PHASE_CONFIRM RAID_LIFECYCLE_COMPACT_BACKUP
+export RAID_LIFECYCLE_TEST_WINDOW
+
+# --- Utility functions ---
+
+# Read stdin JSON from Claude hook input. Sets RAID_FILE_PATH and RAID_COMMAND.
+raid_read_input() {
+  local _input
+  _input=$(cat)
+  RAID_FILE_PATH=$(echo "$_input" | jq -r '.tool_input.file_path // .tool_input.path // empty')
+  RAID_COMMAND=$(echo "$_input" | jq -r '.tool_input.command // empty')
+  export RAID_FILE_PATH RAID_COMMAND
+}
+
+# Returns 0 if file is production code (not test, doc, config, or .claude).
+raid_is_production_file() {
+  local file="$1"
+  case "$file" in
+    tests/*|test/*|*.test.*|*.spec.*|*_test.*|*_spec.*) return 1 ;;
+    docs/*|*.md) return 1 ;;
+    .claude/*|*.json|*.yml|*.yaml|*.toml|*.lock) return 1 ;;
+    *.config.*|*.rc|.gitignore|Makefile|Dockerfile) return 1 ;;
+  esac
+  return 0
+}
+
+# Print message to stderr and exit 2 (block the action).
+raid_block() {
+  printf "%s\n" "$*" >&2
+  exit 2
+}
+
+# Print message to stderr and exit 0 (warn but allow).
+raid_warn() {
+  printf "%s\n" "$*" >&2
+  exit 0
+}
+
+# Read stdin JSON from Claude lifecycle hook input. Sets RAID_HOOK_INPUT as raw JSON.
+raid_read_lifecycle_input() {
+  RAID_HOOK_INPUT=$(cat)
+  export RAID_HOOK_INPUT
+}
+
+# Count Vault entries by counting table rows in index.md
+raid_vault_count() {
+  local index="$RAID_VAULT_PATH/index.md"
+  if [ ! -f "$index" ]; then
+    echo 0
+    return
+  fi
+  # Count lines that start with | and contain a date (YYYY-MM-DD), skip header
+  grep -cE '^\| [0-9]{4}-' "$index" 2>/dev/null || echo 0
+}

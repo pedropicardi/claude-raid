@@ -92,7 +92,7 @@ Create `.claude/raid-dungeon.md`:
 
 Each agent gets the same objective but a different starting angle. After dispatch, the Wizard goes silent.
 
-**📡 DISPATCH:**
+**DISPATCH:**
 
 > **@Warrior**: Explore from the data/infrastructure side. What are the hard technical constraints? What schemas, migrations, APIs are needed? What breaks if we get this wrong? Find the structural load-bearing walls. Challenge @Archer and @Rogue's findings directly. Pin verified findings to the Dungeon.
 >
@@ -100,7 +100,7 @@ Each agent gets the same objective but a different starting angle. After dispatc
 >
 > **@Rogue**: Explore from the failure/adversarial side. What assumptions about inputs, state, timing, availability? Build failure scenarios. What does a malicious user do? What does a slow network do? What does concurrent access do? Challenge @Warrior and @Archer's findings directly. Pin verified findings to the Dungeon.
 >
-> **All**: Read the Dungeon. Build on each other's discoveries. Challenge everything. Pin only what survives. Escalate to me with `🆘 WIZARD:` only when genuinely stuck.
+> **All**: Read the Dungeon. Build on each other's discoveries. Challenge everything. Pin only what survives. Escalate to me with `WIZARD:` only when genuinely stuck.
 
 ## What Agents Must Cover
 
@@ -109,7 +109,7 @@ Every agent addresses ALL of these from their assigned angle:
 - **Performance** — scale, bottlenecks, complexity
 - **Robustness** — retries, fallbacks, graceful degradation
 - **Reliability** — blast radius of failure, production-readiness
-- **Testability** — meaningful tests, mock strategy, test-friendly design
+- **Testability** — meaningful tests, mock strategy, test-friendly design. When `browser.enabled`: can this feature be E2E tested with Playwright? What user flows need browser verification? Are there loading states, client-side routing, or visual states that unit tests can't catch?
 - **Error handling** — what errors occur, how surfaced, UX of failure
 - **Edge cases** — empty, null, boundary, Unicode, timezones, large payloads
 - **Cascading effects** — blast radius, what else changes
@@ -124,12 +124,12 @@ Every agent addresses ALL of these from their assigned angle:
 Agents interact DIRECTLY — @Name addressing, building, challenging, roasting:
 1. Present findings with EVIDENCE (file paths, docs, concrete examples)
 2. Challenge other agents DIRECTLY with COUNTER-EVIDENCE (not opinions)
-3. Build on each other's discoveries — 🔗 BUILDING ON @Name:
+3. Build on each other's discoveries — BUILDING: with independent verification
 4. Go to the EDGES — push every finding to its extreme
 5. LEARN from each other — incorporate discoveries into your model
-6. Pin verified findings — 📌 DUNGEON: only after surviving challenge
-7. Roast weak analysis — 🔥 ROAST: with evidence, not insults
-8. Escalate to Wizard — 🆘 WIZARD: only when genuinely stuck
+6. Pin verified findings — DUNGEON: only after surviving challenge
+7. Challenge weak analysis — back every challenge with your own independent evidence
+8. Escalate to Wizard — WIZARD: only when genuinely stuck
 ```
 
 **The goal is not to tear each other down. The goal is to forge the strongest design by testing it from every angle. The Dungeon captures what survived.**
@@ -144,7 +144,7 @@ The Wizard closes when the Dungeon has sufficient verified findings — enough D
 - Agents are converging — new findings are variations, not revelations
 - Shared Knowledge section has the foundational truths the design needs
 
-**⚡ WIZARD RULING:** Synthesize from Dungeon evidence. Propose 2-3 approaches. Recommend one. Archive Dungeon.
+**RULING:** Synthesize from Dungeon evidence. Propose 2-3 approaches. Recommend one. Archive Dungeon.
 
 ## Spec Self-Review
 
@@ -183,7 +183,7 @@ Save to: specs path from `.claude/raid.json` (default: `docs/raid/specs/YYYY-MM-
 ## Testing Strategy
 ## Edge Cases
 ## Future Considerations (NOT building now, designing to accommodate)
-## ⚡ WIZARD RULING
+## RULING
 ```
 
 ## Red Flags — Thoughts That Signal Violations
@@ -205,4 +205,4 @@ If the team is stuck on a fundamental design choice after genuine direct debate:
 2. Let the human decide
 3. Never ask the human to resolve something the team should handle
 
-**Terminal state:** ⚡ WIZARD RULING: Design approved. Commit. Archive Dungeon. Invoke `raid-implementation-plan`.
+**Terminal state:** RULING: Design approved. Commit. Archive Dungeon. Invoke `raid-implementation-plan`.
