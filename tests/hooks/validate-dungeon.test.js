@@ -92,7 +92,7 @@ describe('validate-dungeon.sh', () => {
   });
 
   it('allows valid pinned entry with evidence', () => {
-    const content = '# Dungeon\n\n📌 DUNGEON: Found critical architecture flaw in the authentication module that bypasses token validation entirely\n';
+    const content = '# Dungeon\n\n📌 DUNGEON: Found critical architecture flaw in the authentication module that bypasses token validation entirely — verified by @Warrior and @Archer\n';
     const tmp = setupEnv({
       session: { phase: 'design' },
       dungeonFile: '.claude/raid-dungeon.md',
@@ -158,7 +158,7 @@ describe('validate-dungeon.sh', () => {
     const content = [
       '# Dungeon',
       '',
-      '📌 DUNGEON: Found critical architecture flaw in the authentication module that bypasses token validation entirely',
+      '📌 DUNGEON: Found critical architecture flaw in the authentication module — verified by @Warrior and @Rogue',
       '⚠️ UNRESOLVED: The caching layer does not invalidate properly on user deletion events in the system',
       '✅ RESOLVED: Fixed the race condition in the WebSocket handler that caused duplicate message delivery',
       '📋 TASK: Clean up the temporary migration scripts and remove deprecated API endpoints from the codebase',
