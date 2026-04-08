@@ -65,13 +65,19 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     const updateResult = update.performUpdate(cwd);
     assert.ok(updateResult.success);
 
-    // raid-rules.md should be overwritten (template file)
+    // raid-rules.md should be preserved when customized
     const rules = fs.readFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'utf8');
-    assert.ok(rules.includes('Raid Team Rules'));
+    assert.strictEqual(rules, 'modified by user');
+    assert.ok(updateResult.message.includes('raid-rules.md'));
 
     // raid.json should NOT be overwritten (user config)
     const config = fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8');
     assert.ok(config.includes('"custom"'));
+
+    // RE-INSTALL should preserve raid.json
+    init.install(cwd);
+    const configAfterReinstall = fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8');
+    assert.ok(configAfterReinstall.includes('"custom"'), 'raid.json should be preserved on re-install');
 
     // REMOVE
     remove.performRemove(cwd);
@@ -82,6 +88,11 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-protocol')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-rules.md')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid.json')));
+
+    // Empty raid directories cleaned up
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'agents')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'hooks')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'skills')));
 
     // Settings restored from backup
     const restored = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));

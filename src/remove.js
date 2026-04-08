@@ -19,6 +19,13 @@ function rmDirSafe(dirPath) {
   try { fs.rmSync(dirPath, { recursive: true }); } catch {}
 }
 
+function rmDirIfEmpty(dirPath) {
+  try {
+    const entries = fs.readdirSync(dirPath);
+    if (entries.length === 0) fs.rmdirSync(dirPath);
+  } catch {}
+}
+
 function performRemove(cwd) {
   const claudeDir = path.join(cwd, '.claude');
 
@@ -38,11 +45,30 @@ function performRemove(cwd) {
     rmDirSafe(path.join(claudeDir, 'skills', skill));
   }
 
+  // Clean up empty directories
+  rmDirIfEmpty(path.join(claudeDir, 'agents'));
+  rmDirIfEmpty(path.join(claudeDir, 'hooks'));
+  rmDirIfEmpty(path.join(claudeDir, 'skills'));
+
   rmSafe(path.join(claudeDir, 'raid-rules.md'));
   rmSafe(path.join(claudeDir, 'raid.json'));
   rmSafe(path.join(claudeDir, 'raid-last-test-run'));
+  rmSafe(path.join(claudeDir, 'raid-session'));
 
   removeRaidSettings(cwd);
+
+  // Clean .gitignore entries
+  const gitignorePath = path.join(cwd, '.gitignore');
+  const raidIgnoreEntries = ['.claude/raid-last-test-run', '.claude/raid-session'];
+  if (fs.existsSync(gitignorePath)) {
+    const lines = fs.readFileSync(gitignorePath, 'utf8').split('\n');
+    const filtered = lines.filter(line => !raidIgnoreEntries.includes(line.trim()));
+    // Remove trailing blank lines caused by removal
+    while (filtered.length > 0 && filtered[filtered.length - 1] === '') {
+      filtered.pop();
+    }
+    fs.writeFileSync(gitignorePath, filtered.join('\n') + '\n');
+  }
 
   return { success: true };
 }

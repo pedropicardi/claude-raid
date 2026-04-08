@@ -14,7 +14,7 @@ function filesAreEqual(pathA, pathB) {
   }
 }
 
-function copyForceRecursive(src, dest, skipped) {
+function copyForceRecursive(src, dest) {
   if (!fs.existsSync(src)) return;
   const entries = fs.readdirSync(src, { withFileTypes: true });
   for (const entry of entries) {
@@ -22,7 +22,7 @@ function copyForceRecursive(src, dest, skipped) {
     const destPath = path.join(dest, entry.name);
     if (entry.isDirectory()) {
       fs.mkdirSync(destPath, { recursive: true });
-      copyForceRecursive(srcPath, destPath, skipped);
+      copyForceRecursive(srcPath, destPath);
     } else {
       fs.copyFileSync(srcPath, destPath);
     }
@@ -60,13 +60,20 @@ function performUpdate(cwd) {
     const dest = path.join(claudeDir, subdir);
     if (fs.existsSync(src)) {
       fs.mkdirSync(dest, { recursive: true });
-      copyForceRecursive(src, dest, []);
+      copyForceRecursive(src, dest);
     }
   }
 
+  // Update raid-rules.md — skip if user has customized it
   const rulesSrc = path.join(TEMPLATE_DIR, 'raid-rules.md');
+  const rulesDest = path.join(claudeDir, 'raid-rules.md');
+  let skippedRules = false;
   if (fs.existsSync(rulesSrc)) {
-    fs.copyFileSync(rulesSrc, path.join(claudeDir, 'raid-rules.md'));
+    if (fs.existsSync(rulesDest) && !filesAreEqual(rulesSrc, rulesDest)) {
+      skippedRules = true;
+    } else {
+      fs.copyFileSync(rulesSrc, rulesDest);
+    }
   }
 
   const hooksDir = path.join(claudeDir, 'hooks');
@@ -82,7 +89,12 @@ function performUpdate(cwd) {
   let message = 'The Raid has been updated to the latest version.';
   if (skippedAgents.length > 0) {
     message += `\nSkipped customized agents: ${skippedAgents.join(', ')}`;
-    message += '\nUse `claude-raid remove` then `claude-raid init` to reset agents.';
+  }
+  if (skippedRules) {
+    message += '\nSkipped customized raid-rules.md';
+  }
+  if (skippedAgents.length > 0 || skippedRules) {
+    message += '\nUse `claude-raid remove` then `claude-raid init` to reset.';
   }
 
   return { success: true, message, skippedAgents };

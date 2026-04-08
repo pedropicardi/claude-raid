@@ -58,32 +58,32 @@ function install(cwd) {
     }
   }
 
-  // Generate raid.json
-  const raidConfig = {
-    project: {
-      name: detected.name || path.basename(cwd),
-      language: detected.language,
-      testCommand: detected.testCommand || '',
-      lintCommand: detected.lintCommand || '',
-      buildCommand: detected.buildCommand || '',
-    },
-    paths: {
-      specs: 'docs/raid/specs',
-      plans: 'docs/raid/plans',
-      worktrees: '.worktrees',
-    },
-    conventions: {
-      fileNaming: 'none',
-      commits: 'conventional',
-    },
-    raid: {
-      defaultMode: 'full',
-    },
-  };
-  fs.writeFileSync(
-    path.join(claudeDir, 'raid.json'),
-    JSON.stringify(raidConfig, null, 2) + '\n'
-  );
+  // Generate raid.json (skip if it already exists to preserve user config)
+  const raidConfigPath = path.join(claudeDir, 'raid.json');
+  if (!fs.existsSync(raidConfigPath)) {
+    const raidConfig = {
+      project: {
+        name: detected.name || path.basename(cwd),
+        language: detected.language,
+        testCommand: detected.testCommand || '',
+        lintCommand: detected.lintCommand || '',
+        buildCommand: detected.buildCommand || '',
+      },
+      paths: {
+        specs: 'docs/raid/specs',
+        plans: 'docs/raid/plans',
+        worktrees: '.worktrees',
+      },
+      conventions: {
+        fileNaming: 'none',
+        commits: 'conventional',
+      },
+      raid: {
+        defaultMode: 'full',
+      },
+    };
+    fs.writeFileSync(raidConfigPath, JSON.stringify(raidConfig, null, 2) + '\n');
+  }
 
   // Merge settings
   mergeSettings(cwd);
@@ -95,7 +95,8 @@ function install(cwd) {
     let content = fs.readFileSync(gitignorePath, 'utf8');
     const toAdd = ignoreEntries.filter(e => !content.includes(e));
     if (toAdd.length > 0) {
-      fs.appendFileSync(gitignorePath, '\n' + toAdd.join('\n') + '\n');
+      const sep = content.endsWith('\n') ? '' : '\n';
+      fs.appendFileSync(gitignorePath, sep + toAdd.join('\n') + '\n');
     }
   } else {
     fs.writeFileSync(gitignorePath, ignoreEntries.join('\n') + '\n');
@@ -125,16 +126,12 @@ function run() {
   }
 
   console.log(`
-The Raid is installed. Start with:
+The Raid is installed.
 
-  claude --agent wizard
+  Configuration:  .claude/raid.json (edit to customize)
+  Team rules:     .claude/raid-rules.md (editable)
 
-Or with tmux split panes:
-
-  claude --agent wizard --teammate-mode tmux
-
-Configuration: .claude/raid.json (edit to customize)
-Team rules: .claude/raid-rules.md (editable)
+  Run 'claude-raid doctor' for setup guide and environment check.
 `);
 }
 

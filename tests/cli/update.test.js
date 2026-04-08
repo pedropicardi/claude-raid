@@ -26,12 +26,11 @@ describe('update', () => {
     assert.ok(result.message.includes('not installed'));
   });
 
-  it('updates template files', () => {
+  it('updates unmodified template files', () => {
     init = require('../../src/init');
     update = require('../../src/update');
     const cwd = makeTempDir();
     init.install(cwd);
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'old content');
     const result = update.performUpdate(cwd);
     assert.strictEqual(result.success, true);
     const content = fs.readFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'utf8');
@@ -48,5 +47,31 @@ describe('update', () => {
     update.performUpdate(cwd);
     const content = fs.readFileSync(configPath, 'utf8');
     assert.ok(content.includes('"custom"'));
+  });
+
+  it('skips customized agent files', () => {
+    init = require('../../src/init');
+    update = require('../../src/update');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const agentPath = path.join(cwd, '.claude', 'agents', 'wizard.md');
+    fs.writeFileSync(agentPath, 'my custom wizard');
+    const result = update.performUpdate(cwd);
+    assert.ok(result.skippedAgents.includes('wizard.md'));
+    const content = fs.readFileSync(agentPath, 'utf8');
+    assert.strictEqual(content, 'my custom wizard');
+  });
+
+  it('skips customized raid-rules.md', () => {
+    init = require('../../src/init');
+    update = require('../../src/update');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'my custom rules');
+    const result = update.performUpdate(cwd);
+    assert.strictEqual(result.success, true);
+    assert.ok(result.message.includes('raid-rules.md'));
+    const content = fs.readFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'utf8');
+    assert.strictEqual(content, 'my custom rules');
   });
 });

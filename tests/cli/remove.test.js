@@ -80,4 +80,56 @@ describe('remove', () => {
     remove.performRemove(cwd);
     assert.ok(fs.existsSync(path.join(claudeDir, 'my-custom-file.md')));
   });
+
+  it('removes raid entries from .gitignore', () => {
+    init = require('../../src/init');
+    remove = require('../../src/remove');
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, '.gitignore'), 'node_modules\n');
+    init.install(cwd);
+    const beforeContent = fs.readFileSync(path.join(cwd, '.gitignore'), 'utf8');
+    assert.ok(beforeContent.includes('.claude/raid-last-test-run'));
+    remove.performRemove(cwd);
+    const afterContent = fs.readFileSync(path.join(cwd, '.gitignore'), 'utf8');
+    assert.ok(!afterContent.includes('.claude/raid-last-test-run'));
+    assert.ok(!afterContent.includes('.claude/raid-session'));
+    assert.ok(afterContent.includes('node_modules'));
+  });
+
+  it('removes raid-session file', () => {
+    init = require('../../src/init');
+    remove = require('../../src/remove');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-session'), 'active');
+    remove.performRemove(cwd);
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-session')));
+  });
+
+  it('cleans up empty raid directories', () => {
+    init = require('../../src/init');
+    remove = require('../../src/remove');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    remove.performRemove(cwd);
+    // Raid-only directories should be removed when empty
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'agents')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'hooks')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'skills')));
+    // .claude itself should still exist (may contain user files)
+    assert.ok(fs.existsSync(path.join(cwd, '.claude')));
+  });
+
+  it('preserves non-empty directories after remove', () => {
+    init = require('../../src/init');
+    remove = require('../../src/remove');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    // Add a user file to agents dir
+    fs.writeFileSync(path.join(cwd, '.claude', 'agents', 'my-agent.md'), 'custom');
+    remove.performRemove(cwd);
+    // agents/ should remain because it has a user file
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'agents')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'agents', 'my-agent.md')));
+  });
 });

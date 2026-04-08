@@ -99,4 +99,15 @@ describe('init', () => {
     const result = init.install(cwd);
     assert.ok(result.alreadyInstalled);
   });
+
+  it('does not overwrite existing raid.json on re-install', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const configPath = path.join(cwd, '.claude', 'raid.json');
+    fs.writeFileSync(configPath, '{"custom": "user-config"}');
+    init.install(cwd);
+    const content = fs.readFileSync(configPath, 'utf8');
+    assert.ok(content.includes('"custom"'));
+  });
 });

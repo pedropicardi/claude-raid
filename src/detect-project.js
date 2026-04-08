@@ -41,15 +41,19 @@ const DETECTORS = [
     file: 'pyproject.toml',
     language: 'python',
     detect(cwd) {
-      const content = fs.readFileSync(path.join(cwd, 'pyproject.toml'), 'utf8');
-      const usesPoetry = content.includes('[tool.poetry]');
-      return {
-        language: 'python',
-        testCommand: usesPoetry ? 'poetry run pytest' : 'pytest',
-        lintCommand: usesPoetry ? 'poetry run ruff check .' : 'ruff check .',
-        buildCommand: usesPoetry ? 'poetry build' : 'python -m build',
-        name: path.basename(cwd),
-      };
+      try {
+        const content = fs.readFileSync(path.join(cwd, 'pyproject.toml'), 'utf8');
+        const usesPoetry = content.includes('[tool.poetry]');
+        return {
+          language: 'python',
+          testCommand: usesPoetry ? 'poetry run pytest' : 'pytest',
+          lintCommand: usesPoetry ? 'poetry run ruff check .' : 'ruff check .',
+          buildCommand: usesPoetry ? 'poetry build' : 'python -m build',
+          name: path.basename(cwd),
+        };
+      } catch {
+        return { language: 'python', testCommand: 'pytest', lintCommand: 'ruff check .', buildCommand: 'python -m build', name: path.basename(cwd) };
+      }
     },
   },
   {

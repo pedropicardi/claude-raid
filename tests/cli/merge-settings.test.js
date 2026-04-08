@@ -105,4 +105,38 @@ describe('mergeSettings', () => {
     );
     assert.strictEqual(raidHooks.length, 1);
   });
+
+  it('throws on invalid JSON in existing settings.json', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'settings.json'), '{invalid json,}');
+    assert.throws(() => mergeSettings(cwd), /invalid JSON/);
+  });
+
+  it('removeRaidSettings surgically removes raid entries when no backup exists', () => {
+    const { removeRaidSettings } = require('../../src/merge-settings');
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    mergeSettings(cwd);
+    // Delete the backup to force surgical removal path
+    const backupPath = path.join(claudeDir, 'settings.json.pre-raid-backup');
+    if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
+    removeRaidSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
+    assert.strictEqual(settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS, undefined);
+    assert.ok(!settings.hooks || Object.keys(settings.hooks).length === 0);
+  });
+
+  it('removeRaidSettings throws on invalid JSON when no backup exists', () => {
+    const { removeRaidSettings } = require('../../src/merge-settings');
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'settings.json'), '{corrupt}');
+    assert.throws(() => removeRaidSettings(cwd), /invalid JSON/);
+  });
 });

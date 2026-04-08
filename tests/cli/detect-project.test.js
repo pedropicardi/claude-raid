@@ -73,4 +73,15 @@ describe('detectProject', () => {
     assert.ok(Array.isArray(result.detected));
     assert.ok(result.detected.length >= 2);
   });
+
+  it('handles unreadable pyproject.toml gracefully', () => {
+    const cwd = makeTempDir();
+    fs.writeFileSync(path.join(cwd, 'pyproject.toml'), '');
+    fs.chmodSync(path.join(cwd, 'pyproject.toml'), 0o000);
+    const result = detectProject(cwd);
+    assert.strictEqual(result.language, 'python');
+    assert.strictEqual(result.testCommand, 'pytest');
+    // Restore permissions for cleanup
+    fs.chmodSync(path.join(cwd, 'pyproject.toml'), 0o644);
+  });
 });

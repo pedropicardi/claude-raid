@@ -52,7 +52,13 @@ function mergeSettings(cwd) {
     if (!fs.existsSync(backupPath)) {
       fs.copyFileSync(settingsPath, backupPath);
     }
-    existing = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    try {
+      existing = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+    } catch {
+      throw new Error(
+        'Your existing .claude/settings.json contains invalid JSON. Please fix it before running claude-raid.'
+      );
+    }
   }
 
   existing.env = { ...(existing.env || {}), ...RAID_ENV };
@@ -86,7 +92,14 @@ function removeRaidSettings(cwd) {
 
   if (!fs.existsSync(settingsPath)) return;
 
-  const settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+  let settings;
+  try {
+    settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
+  } catch {
+    throw new Error(
+      'Your .claude/settings.json contains invalid JSON. Please fix it before running claude-raid remove.'
+    );
+  }
 
   if (settings.env) {
     delete settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS;
