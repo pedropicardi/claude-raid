@@ -34,7 +34,7 @@ cat > .claude/raid-session <<ENDJSON
 {
   "sessionId": "$SESSION_ID",
   "startedAt": "$(date -u +%Y-%m-%dT%H:%M:%SZ)",
-  "phase": 1
+  "phase": "design"
 }
 ENDJSON
 

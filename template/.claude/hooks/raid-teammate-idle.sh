@@ -14,5 +14,8 @@ if [ "$RAID_LIFECYCLE_NUDGE" != "true" ]; then
   exit 0
 fi
 
-echo "Unclaimed tasks remain on the board. Pick up the next available task and report your plan before starting." >&2
+raid_read_lifecycle_input
+TEAMMATE=$(echo "$RAID_HOOK_INPUT" | jq -r '.teammate_name // "Agent"')
+
+echo "$TEAMMATE: Unclaimed tasks remain on the board. Pick up the next available task and report your plan before starting." >&2
 exit 2

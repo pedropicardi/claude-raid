@@ -83,7 +83,7 @@ describe('raid-session-start.sh', () => {
     assert.ok(fs.existsSync(sessionFile));
     const session = JSON.parse(fs.readFileSync(sessionFile, 'utf8'));
     assert.strictEqual(session.sessionId, 'test-123');
-    assert.strictEqual(session.phase, 1);
+    assert.strictEqual(session.phase, 'design');
   });
 
   it('does nothing for non-wizard agent types', () => {
@@ -97,11 +97,11 @@ describe('raid-session-start.sh', () => {
   it('skips on resume when session exists', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-session'), '{"phase":2}');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-session'), '{"phase":"plan"}');
     const result = runHook('raid-session-start.sh', { source: 'resume', agent_type: 'wizard', session_id: 'test-789' }, cwd);
     assert.strictEqual(result.exitCode, 0);
     const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
-    assert.strictEqual(session.phase, 2); // Not overwritten
+    assert.strictEqual(session.phase, 'plan'); // Not overwritten
   });
 
   it('outputs additionalContext when Vault has entries', () => {
@@ -132,7 +132,7 @@ describe('raid-session-start.sh', () => {
 });
 
 function writeSession(cwd, sessionData = {}) {
-  const data = { phase: 1, mode: 'full', currentAgent: 'wizard', ...sessionData };
+  const data = { phase: 'design', mode: 'full', currentAgent: 'wizard', ...sessionData };
   fs.writeFileSync(path.join(cwd, '.claude', 'raid-session'), JSON.stringify(data));
 }
 
@@ -376,30 +376,30 @@ describe('raid-stop.sh', () => {
   it('detects phase transition and outputs additionalContext', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
-    writeSession(cwd, { phase: 1, mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\n## Phase 2 — Implementation\n\nSome content here.');
+    writeSession(cwd, { phase: 'design', mode: 'full' });
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\n## Phase: plan\n\nSome content here.');
     const result = runHook('raid-stop.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
     assert.ok(result.stdout.includes('additionalContext'));
-    assert.ok(result.stdout.includes('Phase 1'));
-    assert.ok(result.stdout.includes('Phase 2'));
+    assert.ok(result.stdout.includes('design'));
+    assert.ok(result.stdout.includes('plan'));
   });
 
-  it('updates raid-session with new phase number', () => {
+  it('updates raid-session with new phase name', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
-    writeSession(cwd, { phase: 1, mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Phase 2 content');
+    writeSession(cwd, { phase: 'design', mode: 'full' });
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Phase: plan content');
     runHook('raid-stop.sh', {}, cwd);
     const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
-    assert.strictEqual(session.phase, 2);
+    assert.strictEqual(session.phase, 'plan');
   });
 
   it('does nothing when phase unchanged', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
-    writeSession(cwd, { phase: 2, mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Phase 2 content');
+    writeSession(cwd, { phase: 'plan', mode: 'full' });
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Phase: plan content');
     const result = runHook('raid-stop.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
     assert.strictEqual(result.stdout.trim(), '');
