@@ -224,7 +224,6 @@ function runChecks(opts = {}) {
     checkSplitPane(exec),
   ];
 
-
   return {
     checks,
     allOk: checks.filter(c => REQUIRED_IDS.includes(c.id)).every(c => c.ok),

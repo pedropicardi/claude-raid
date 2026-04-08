@@ -97,7 +97,7 @@ function removeRaidSettings(cwd) {
     settings = JSON.parse(fs.readFileSync(settingsPath, 'utf8'));
   } catch {
     throw new Error(
-      'Your .claude/settings.json contains invalid JSON. Please fix it before running claude-raid remove.'
+      'Your .claude/settings.json contains invalid JSON. Please fix it before running claude-raid dismantle.'
     );
   }
 

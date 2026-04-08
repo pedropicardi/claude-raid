@@ -23,7 +23,7 @@ describe('update', () => {
     const cwd = makeTempDir();
     const result = update.performUpdate(cwd);
     assert.strictEqual(result.success, false);
-    assert.ok(result.message.includes('not installed'));
+    assert.ok(result.message.includes('No party found'));
   });
 
   it('updates unmodified template files', () => {

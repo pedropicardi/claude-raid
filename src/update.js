@@ -35,7 +35,7 @@ function performUpdate(cwd) {
   const skippedAgents = [];
 
   if (!fs.existsSync(path.join(claudeDir, 'raid-rules.md'))) {
-    return { success: false, message: 'The Raid is not installed. Run `claude-raid init` first.', skippedAgents };
+    return { success: false, message: 'No party found. Run `claude-raid summon` first.', skippedAgents };
   }
 
   // Update agents — skip if user has customized them
@@ -95,7 +95,7 @@ function performUpdate(cwd) {
     message += '\nSkipped customized raid-rules.md';
   }
   if (skippedAgents.length > 0 || skippedRules) {
-    message += '\nUse `claude-raid remove` then `claude-raid init` to reset.';
+    message += '\nUse `claude-raid dismantle` then `claude-raid summon` to reset.';
   }
 
   return { success: true, message, skippedAgents };
