@@ -284,3 +284,133 @@ describe('raid-pre-compact.sh', () => {
     assert.strictEqual(result.stdout.trim(), '');
   });
 });
+
+describe('raid-session-end.sh', () => {
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = null;
+  });
+
+  function setupWithGit() {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 1, mode: 'full' });
+    execSync('git init && git add -A && git commit -m "init" --allow-empty', { cwd, stdio: 'pipe', env: { ...process.env, GIT_AUTHOR_NAME: 'test', GIT_AUTHOR_EMAIL: 'test@test.com', GIT_COMMITTER_NAME: 'test', GIT_COMMITTER_EMAIL: 'test@test.com' } });
+    return cwd;
+  }
+
+  it('generates Vault draft directory with quest.md from active session', () => {
+    const cwd = setupWithGit();
+    const result = runHook('raid-session-end.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    const draftDir = path.join(cwd, '.claude', 'vault', '.draft');
+    assert.ok(fs.existsSync(draftDir), 'draft directory should exist');
+    const questFile = path.join(draftDir, 'quest.md');
+    assert.ok(fs.existsSync(questFile), 'quest.md should exist');
+    const content = fs.readFileSync(questFile, 'utf8');
+    assert.ok(content.includes('# Quest'));
+    assert.ok(content.includes('**Mode:** full'));
+    assert.ok(content.includes('VAULT:MACHINE'));
+  });
+
+  it('copies spec file to draft when specs exist', () => {
+    const cwd = setupWithGit();
+    const specsDir = path.join(cwd, 'docs', 'raid', 'specs');
+    fs.mkdirSync(specsDir, { recursive: true });
+    fs.writeFileSync(path.join(specsDir, 'my-spec.md'), '# Spec Content');
+    const result = runHook('raid-session-end.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    const draftSpec = path.join(cwd, '.claude', 'vault', '.draft', 'spec.md');
+    assert.ok(fs.existsSync(draftSpec), 'spec.md should be copied to draft');
+    assert.strictEqual(fs.readFileSync(draftSpec, 'utf8'), '# Spec Content');
+  });
+
+  it('copies Dungeon phase archives to draft', () => {
+    const cwd = setupWithGit();
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1.md'), '# Phase 1');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon-phase-2.md'), '# Phase 2');
+    const result = runHook('raid-session-end.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    const phasesDir = path.join(cwd, '.claude', 'vault', '.draft', 'dungeon-phases');
+    assert.ok(fs.existsSync(path.join(phasesDir, 'raid-dungeon-phase-1.md')));
+    assert.ok(fs.existsSync(path.join(phasesDir, 'raid-dungeon-phase-2.md')));
+  });
+
+  it('cleans up session artifacts', () => {
+    const cwd = setupWithGit();
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-last-test-run'), '12345');
+    const result = runHook('raid-session-end.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-session')), 'raid-session should be removed');
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon.md')), 'raid-dungeon.md should be removed');
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-last-test-run')), 'raid-last-test-run should be removed');
+  });
+
+  it('outputs additionalContext with persist/forget instructions', () => {
+    const cwd = setupWithGit();
+    const result = runHook('raid-session-end.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.ok(result.stdout.includes('additionalContext'));
+    assert.ok(result.stdout.includes('persist'));
+    assert.ok(result.stdout.includes('forget'));
+  });
+
+  it('does nothing when no active session', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    execSync('git init && git add -A && git commit -m "init" --allow-empty', { cwd, stdio: 'pipe', env: { ...process.env, GIT_AUTHOR_NAME: 'test', GIT_AUTHOR_EMAIL: 'test@test.com', GIT_COMMITTER_NAME: 'test', GIT_COMMITTER_EMAIL: 'test@test.com' } });
+    // No writeSession — no active session
+    const result = runHook('raid-session-end.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'vault', '.draft')));
+  });
+});
+
+describe('raid-stop.sh', () => {
+  afterEach(() => {
+    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
+    tmpDir = null;
+  });
+
+  it('detects phase transition and outputs additionalContext', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 1, mode: 'full' });
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\n## Phase 2 — Implementation\n\nSome content here.');
+    const result = runHook('raid-stop.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.ok(result.stdout.includes('additionalContext'));
+    assert.ok(result.stdout.includes('Phase 1'));
+    assert.ok(result.stdout.includes('Phase 2'));
+  });
+
+  it('updates raid-session with new phase number', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 1, mode: 'full' });
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Phase 2 content');
+    runHook('raid-stop.sh', {}, cwd);
+    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+    assert.strictEqual(session.phase, 2);
+  });
+
+  it('does nothing when phase unchanged', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 2, mode: 'full' });
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Phase 2 content');
+    const result = runHook('raid-stop.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.strictEqual(result.stdout.trim(), '');
+  });
+
+  it('does nothing when no Dungeon file exists', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 1, mode: 'full' });
+    const result = runHook('raid-stop.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.strictEqual(result.stdout.trim(), '');
+  });
+});
