@@ -9,10 +9,10 @@
   "bugs": "https://github.com/pedropicardi/claude-raid/issues",
   "repository": {
     "type": "git",
-    "url": "https://github.com/pedropicardi/claude-raid.git"
+    "url": "git+https://github.com/pedropicardi/claude-raid.git"
   },
   "bin": {
-    "claude-raid": "./bin/cli.js"
+    "claude-raid": "bin/cli.js"
   },
   "files": [
     "bin/",
