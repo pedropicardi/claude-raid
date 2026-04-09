@@ -216,4 +216,22 @@ describe('validate-write-gate.sh', () => {
     const result = runHook(tmp, '.claude/raid-dungeon.md');
     assert.strictEqual(result.status, 0);
   });
+
+  it('blocks writes to protected file via .. path traversal', () => {
+    const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: 'A', implementer: 'A' } });
+    dirs.push(tmp);
+    // Do NOT use path.join — it resolves .. before the path reaches the hook
+    const traversalPath = tmp + '/src/../.claude/raid-session';
+    const result = runHook(tmp, traversalPath);
+    assert.strictEqual(result.status, 2, 'Should block .. traversal to protected file');
+    assert.ok(result.stderr.includes('protected'), `Expected stderr to mention protected, got: ${result.stderr}`);
+  });
+
+  it('blocks writes to protected file via double-slash path', () => {
+    const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: 'A', implementer: 'A' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, tmp + '//.claude/raid-session');
+    assert.strictEqual(result.status, 2, 'Should block double-slash path to protected file');
+    assert.ok(result.stderr.includes('protected'), `Expected stderr to mention protected, got: ${result.stderr}`);
+  });
 });

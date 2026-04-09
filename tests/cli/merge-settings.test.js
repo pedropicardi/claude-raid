@@ -115,7 +115,7 @@ describe('mergeSettings', () => {
     assert.throws(() => mergeSettings(cwd), /invalid JSON/);
   });
 
-  it('wires validate-commit.sh as single Bash PreToolUse hook', () => {
+  it('wires Bash PreToolUse hooks including bash-writes gate', () => {
     mergeSettings = require('../../src/merge-settings').mergeSettings;
     const cwd = makeTempDir();
     fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
@@ -123,9 +123,10 @@ describe('mergeSettings', () => {
     const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
     const bashEntry = settings.hooks.PreToolUse.find(e => e.matcher === 'Bash');
     assert.ok(bashEntry, 'should have a Bash matcher in PreToolUse');
-    assert.strictEqual(bashEntry.hooks.length, 2, 'Bash matcher should have 2 hooks');
-    assert.ok(bashEntry.hooks[0].command.includes('validate-commit.sh'));
-    assert.ok(bashEntry.hooks[1].command.includes('validate-browser-tests-exist.sh'));
+    assert.strictEqual(bashEntry.hooks.length, 3, 'Bash matcher should have 3 hooks');
+    assert.ok(bashEntry.hooks[0].command.includes('validate-bash-writes.sh'));
+    assert.ok(bashEntry.hooks[1].command.includes('validate-commit.sh'));
+    assert.ok(bashEntry.hooks[2].command.includes('validate-browser-tests-exist.sh'));
   });
 
   it('wires validate-write-gate.sh as Write|Edit PreToolUse hook', () => {

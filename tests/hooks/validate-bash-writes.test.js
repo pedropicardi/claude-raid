@@ -175,12 +175,37 @@ describe('validate-bash-writes.sh', () => {
     assert.strictEqual(result.status, 2);
   });
 
-  // --- Implementation phase: production writes allowed ---
+  // --- Implementation phase: implementer check ---
 
-  it('allows redirect to production file during implementation phase', () => {
+  it('allows implementer to write production file via Bash during implementation', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
-    writeSession(cwd, { phase: 'implementation' });
+    writeSession(cwd, { phase: 'implementation', currentAgent: 'warrior', implementer: 'warrior' });
+    const result = runHook(cwd, 'echo "code" > src/handler.js');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('blocks non-implementer from writing production file via Bash during implementation', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'implementation', currentAgent: 'rogue', implementer: 'warrior' });
+    const result = runHook(cwd, 'echo "code" > src/handler.js');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.includes('warrior'), `Expected implementer name, got: ${result.stderr}`);
+  });
+
+  it('skips implementer check in scout mode', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'implementation', mode: 'scout', currentAgent: 'rogue', implementer: 'warrior' });
+    const result = runHook(cwd, 'echo "code" > src/handler.js');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('allows Bash production writes when no implementer set', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'implementation', currentAgent: 'warrior', implementer: '' });
     const result = runHook(cwd, 'echo "code" > src/handler.js');
     assert.strictEqual(result.status, 0);
   });
