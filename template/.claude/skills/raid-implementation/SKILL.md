@@ -8,7 +8,7 @@ description: "Phase 3 of Raid protocol. Wizard assigns implementer and opens tas
 One builds, two attack — and the attackers attack each other's reviews too. Every implementation earns its approval through direct adversarial pressure.
 
 <HARD-GATE>
-Do NOT implement without an approved plan (except Scout mode). Do NOT skip TDD. Do NOT let any implementation pass unchallenged. Do NOT use subagents. Use `raid-tdd` skill for all test-driven development. Use `raid-verification` before any completion claims.
+Do NOT implement without an approved plan (except Scout mode). Do NOT skip TDD. Do NOT let any implementation pass unchallenged. Agents communicate via SendMessage — do not spawn subagents. Use `raid-tdd` skill for all test-driven development. Use `raid-verification` before any completion claims.
 </HARD-GATE>
 
 ## Mode Behavior
@@ -57,7 +57,12 @@ digraph implementation {
    - Check if Playwright is installed — if not, first task becomes "scaffold Playwright"
    - Assign port from `browser.portRange` to implementer
 5. **Create task tracking** — use TaskCreate for every plan task
-6. **Per task:** Assign implementer (rotate), open Dungeon, observe attack, close with ruling
+6. **Per task:**
+   - Assign implementer via `TaskUpdate(taskId="N", owner="warrior")`
+   - Notify via `SendMessage(to="warrior", message="Task N is yours. TDD enforced.")`
+   - Alert challengers: `SendMessage(to="archer", message="Warrior implementing Task N. Stand by to challenge.")`
+   - Observe messages (auto-delivered) + Dungeon updates
+   - Close with ruling via SendMessage to all agents
 7. **Track progress** — mark complete only after Wizard ruling per task
 8. **After all tasks** — archive Dungeon, invoke `raid-review`
 
@@ -67,7 +72,15 @@ digraph implementation {
 
 One agent implements. Others prepare to attack. **Rotate the implementer** across tasks.
 
-Phase 3 uses a single continuous Dungeon (`.claude/raid-dungeon.md`) across all tasks — unlike Phases 1 and 2 which each get their own Dungeon that is archived on close. The Wizard announces each task assignment clearly within the running Dungeon.
+Assign via task list and notify via SendMessage:
+```
+TaskUpdate(taskId="N", owner="warrior")
+SendMessage(to="warrior", message="Task N is yours. TDD enforced. Commit when green. Report status when done.")
+SendMessage(to="archer", message="Warrior is implementing Task N. Challenge when they report done.")
+SendMessage(to="rogue", message="Warrior is implementing Task N. Challenge when they report done.")
+```
+
+Phase 3 uses a single continuous Dungeon (`.claude/raid-dungeon.md`) across all tasks. The Wizard announces each task assignment via SendMessage.
 
 ### Step 2: Implementer Executes (TDD)
 
@@ -89,7 +102,7 @@ Report status: **DONE** | **DONE_WITH_CONCERNS** | **NEEDS_CONTEXT** | **BLOCKED
 
 ### Step 3: Challengers Attack Directly
 
-This is where the new model shines. Challengers don't just report to the Wizard — they:
+Challengers work in their own tmux panes. They communicate directly with the implementer and each other via SendMessage:
 
 1. **Read ACTUAL CODE** (not the implementer's report — reports lie)
 2. **Challenge the implementer directly:** `CHALLENGE: @Warrior, your implementation at handler.js:23 doesn't validate...`
@@ -121,9 +134,14 @@ The implementer defends against BOTH challengers simultaneously:
 
 ### Step 5: Wizard Closes Task
 
-RULING: Task N [approved | needs fixes]
+Broadcast the ruling:
+```
+SendMessage(to="warrior", message="RULING: Task N [approved | needs fixes].")
+SendMessage(to="archer", message="RULING: Task N [approved | needs fixes].")
+SendMessage(to="rogue", message="RULING: Task N [approved | needs fixes].")
+```
 
-The Wizard closes when the Dungeon shows all issues resolved and challengers have no remaining critiques.
+The Wizard closes when messages + Dungeon show all issues resolved and challengers have no remaining critiques.
 
 ## Handling Implementer Status
 

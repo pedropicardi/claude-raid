@@ -8,7 +8,7 @@ description: "MUST use at the start of any Raid session. Establishes the 4-phase
 The canonical workflow for all Raid operations. Every feature, bugfix, refactor follows this sequence.
 
 <HARD-GATE>
-Do NOT skip phases. Do NOT let a single agent work unchallenged (except in Scout mode). Do NOT proceed without a Wizard ruling. No subagents — agent teams only.
+Do NOT skip phases. Do NOT let a single agent work unchallenged (except in Scout mode). Do NOT proceed without a Wizard ruling. Agents communicate via SendMessage — do not spawn subagents.
 </HARD-GATE>
 
 ## Session Lifecycle
@@ -20,7 +20,8 @@ digraph session {
   "Create .claude/raid-session" -> "Assess task complexity";
   "Assess task complexity" -> "Recommend mode";
   "Recommend mode" -> "Human confirms mode?";
-  "Human confirms mode?" -> "Begin Phase 1" [label="yes"];
+  "Human confirms mode?" -> "Create team + spawn agents" [label="yes"];
+  "Create team + spawn agents" -> "Begin Phase 1";
   "Human confirms mode?" -> "Recommend mode" [label="override"];
   "Begin Phase 1" -> "Phase 1: Design (raid-design)";
   "Phase 1: Design (raid-design)" -> "Phase 2: Plan (raid-implementation-plan)";
@@ -33,8 +34,8 @@ digraph session {
 }
 ```
 
-**On session start:** Create `.claude/raid-session` to activate workflow hooks.
-**On session end:** Remove `.claude/raid-session`, remove `.claude/raid-dungeon.md` and all `.claude/raid-dungeon-phase-*.md` files.
+**On session start:** Create `.claude/raid-session` to activate workflow hooks. After mode approval, create team with `TeamCreate` and spawn agents — each gets their own tmux pane.
+**On session end:** Send shutdown to teammates, remove `.claude/raid-session`, remove all Dungeon files.
 
 Hooks that enforce workflow discipline (phase-gate, test-pass, verification) only fire when `.claude/raid-session` exists.
 
@@ -46,6 +47,27 @@ Hooks that enforce workflow discipline (phase-gate, test-pass, verification) onl
 | **Warrior** | Aggressive explorer, stress-tests to destruction, builds on team findings | Red |
 | **Archer** | Precise pattern-seeker, finds hidden connections and drift, traces ripple effects | Green |
 | **Rogue** | Adversarial assumption-destroyer, constructs attack scenarios, weaponizes findings | Orange |
+
+## Team Spawning
+
+After mode approval, the Wizard creates the team and spawns agents:
+
+```
+TeamCreate(team_name="raid-{mode}-{slug}")
+Agent(subagent_type="warrior", team_name="raid-...", name="warrior")
+Agent(subagent_type="archer", team_name="raid-...", name="archer")  # Full Raid + Skirmish
+Agent(subagent_type="rogue", team_name="raid-...", name="rogue")    # Full Raid only
+```
+
+Each agent gets its own tmux pane. Agents stay alive for the entire session — they go idle between turns and wake up when they receive a message.
+
+**Communication:**
+- `SendMessage(to="warrior", message="...")` — direct message
+- Agents message each other directly: `SendMessage(to="archer", ...)`
+- The Dungeon is still the shared knowledge artifact for durable findings
+- The task list (`TaskCreate`/`TaskUpdate`) handles work coordination
+
+**User access:** The user can click into any agent's tmux pane and interact directly. User instructions override all agents.
 
 ## Team Rules
 
@@ -177,7 +199,7 @@ Every phase follows the open/close bookend model:
 
 ```dot
 digraph phase_pattern {
-  "Wizard opens (quest + angles + Dungeon)" -> "Agents self-organize";
+  "Wizard opens (quest + angles + Dungeon via SendMessage)" -> "Agents self-organize in own panes";
   "Agents self-organize" -> "Agents explore, challenge, roast, build";
   "Agents explore, challenge, roast, build" -> "Agents pin findings to Dungeon";
   "Agents pin findings to Dungeon" -> "Intervention needed?" [shape=diamond];
@@ -208,7 +230,7 @@ digraph phase_pattern {
 
 | Signal | Who | Meaning | Goes to Dungeon? |
 |--------|-----|---------|------------------|
-| `DISPATCH:` | Wizard | Opening a phase, assigning angles | No (phase opening) |
+| `DISPATCH:` | Wizard | Opening a phase via SendMessage, assigning angles | No (phase opening) |
 | `REDIRECT:` | Wizard | Brief course correction — one sentence, then silence | No |
 | `RULING:` | Wizard | Phase over, binding decision | Ruling archived with Dungeon |
 | `@Name, ...` | Any agent | Direct address to specific agent | No |

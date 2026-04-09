@@ -38,11 +38,12 @@ npx claude-raid summon
 # Preview what gets installed (no changes made)
 npx claude-raid summon --dry-run
 
-# Start a Raid
+# Start a tmux session, then start the Raid
+tmux new-session -s raid
 claude --agent wizard
 ```
 
-Describe your task. The Wizard assesses complexity, recommends a mode, and opens the first phase. That's it.
+Each agent gets its own tmux pane. You can click into any pane to talk directly to that agent. Describe your task and the Wizard takes over.
 
 ### Prerequisites
 
@@ -50,8 +51,11 @@ Describe your task. The Wizard assesses complexity, recommends a mode, and opens
 |---|---|---|
 | **Node.js** 18+ | Runs the installer | No |
 | **Claude Code** v2.1.32+ | Agent teams support | No |
+| **tmux** | Multi-pane agent display | No — `brew install tmux` |
 | **jq** | Hook config parsing | Pre-installed on macOS |
-| **teammateMode** | Agent display mode | Yes (wizard prompts) |
+| **teammateMode** | Set to `tmux` in `~/.claude.json` | Yes (wizard prompts) |
+
+**tmux is required for the multi-pane experience.** Each agent runs in its own pane so you can observe and interact with them independently. Without tmux, agents run in-process (single pane, cycle with Shift+Down).
 
 The setup wizard checks all of these during `summon` and offers to fix what it can.
 
@@ -402,6 +406,16 @@ Checks Node.js, Claude Code, jq, teammateMode, and split-pane support. Offers to
 
 ## Controls
 
+**tmux pane navigation (recommended):**
+
+| Action | How |
+|---|---|
+| **Switch to agent pane** | Click the pane, or `Ctrl+B` then arrow key |
+| **Talk to an agent** | Click their pane and type |
+| **View all agents** | All panes visible simultaneously |
+
+**In-process mode (no tmux):**
+
 | Shortcut | Action |
 |---|---|
 | **Shift+Down** | Cycle through teammates |
@@ -409,7 +423,17 @@ Checks Node.js, Claude Code, jq, teammateMode, and split-pane support. Offers to
 | **Escape** | Interrupt a teammate's turn |
 | **Ctrl+T** | Toggle the shared task list |
 
-In split-pane mode (tmux/iTerm2), click a pane to interact directly with a specific agent.
+### Starting a Raid session
+
+```bash
+# Always start tmux first for multi-pane
+tmux new-session -s raid
+
+# Then start the Wizard inside tmux
+claude --agent wizard
+```
+
+The Wizard creates a team and spawns agents — each gets its own tmux pane automatically. If you're not inside tmux, agents fall back to in-process mode (single pane).
 
 ---
 

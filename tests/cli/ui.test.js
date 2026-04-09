@@ -185,7 +185,14 @@ describe('ui', () => {
       assert.ok(output.includes('claude --agent wizard'), 'should contain entry command');
     });
 
-    it('contains controls section', () => {
+    it('contains tmux instructions', () => {
+      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
+      const output = referenceCard();
+      assert.ok(output.includes('tmux new-session'), 'should contain tmux start command');
+      assert.ok(output.includes('Click pane'), 'should contain tmux pane navigation');
+    });
+
+    it('contains in-process controls fallback', () => {
       const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
       const output = referenceCard();
       assert.ok(output.includes('Shift+Down'), 'should contain Shift+Down');

@@ -190,8 +190,8 @@ async function run() {
   console.log('');
   console.log('  ' + header('Agents') + dim(`                                      ${result.counts.agents} files`));
   console.log('    Copied wizard.md, warrior.md, archer.md, rogue.md');
-  console.log(dim('    AI teammates that challenge each other\'s work from'));
-  console.log(dim('    competing angles. Start a session with: claude --agent wizard'));
+  console.log(dim('    Each agent gets its own tmux pane. Start with:'));
+  console.log(dim('    tmux new-session -s raid && claude --agent wizard'));
 
   // Hooks
   console.log('');

@@ -8,7 +8,7 @@ description: "Phase 1 of Raid protocol. Wizard opens the Dungeon, agents explore
 Turn ideas into battle-tested designs through agent-driven adversarial exploration.
 
 <HARD-GATE>
-Do NOT write any code, scaffold any project, or take any implementation action until the Wizard has approved the design and it is committed to git. All assigned agents participate. No subagents.
+Do NOT write any code, scaffold any project, or take any implementation action until the Wizard has approved the design and it is committed to git. All assigned agents participate. Agents communicate via SendMessage — do not spawn subagents.
 </HARD-GATE>
 
 ## Mode Behavior
@@ -55,8 +55,13 @@ Complete in order:
 4. **Research dependencies** — API surface, versioning, compatibility, known issues. Read docs COMPLETELY.
 5. **Ask clarifying questions** — one at a time to the human, eliminate every ambiguity
 6. **Open the Dungeon** — create `.claude/raid-dungeon.md` with Phase 1 header, quest, mode
-7. **Dispatch with angles** — give each agent their angle, then go silent
-8. **Observe the fight** — agents explore, challenge, build, roast, and pin findings to Dungeon. Intervene only on triggers.
+7. **Dispatch with angles** — send each agent their angle via SendMessage, then go silent:
+   ```
+   SendMessage(to="warrior", message="DISPATCH: [quest]. Your angle: [X]...")
+   SendMessage(to="archer", message="DISPATCH: [quest]. Your angle: [Y]...")
+   SendMessage(to="rogue", message="DISPATCH: [quest]. Your angle: [Z]...")
+   ```
+8. **Observe** — agents explore in their own panes, challenge each other via SendMessage, and pin findings to Dungeon. You receive messages automatically. Intervene only on protocol violations.
 9. **Close the phase** — when Dungeon has sufficient verified findings to form 2-3 approaches
 10. **Synthesize approaches** — propose 2-3 approaches from Dungeon evidence, with trade-offs and recommendation
 11. **Present design** — in sections scaled to complexity, get human approval per section
