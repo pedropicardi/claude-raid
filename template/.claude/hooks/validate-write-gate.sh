@@ -22,8 +22,24 @@ fi
 # Hooks and Wizard use Bash-level operations (jq redirect, rm) for these files,
 # so blocking Write/Edit doesn't break legitimate callers.
 _protected_file="${RAID_FILE_PATH}"
-if [[ "$_protected_file" == /* ]]; then
-  _protected_file="${_protected_file#"$PWD"/}"
+# Normalize: resolve .., //, symlinks on PWD, then strip prefix (prevents traversal bypasses)
+if [[ "$_protected_file" != /* ]]; then
+  _protected_file="$PWD/$_protected_file"
+fi
+_protected_file=$(echo "$_protected_file" | sed 's|//\{1,\}|/|g' | while read -r _p; do
+  while echo "$_p" | grep -q '/[^/][^/]*/\.\./'; do
+    _p=$(echo "$_p" | sed 's|/[^/][^/]*/\.\./|/|')
+  done
+  echo "$_p"
+done)
+# Strip PWD prefix — try both logical and physical PWD (macOS: /var → /private/var)
+_physical_pwd=$(cd "$PWD" && pwd -P)
+_protected_file="${_protected_file#"$PWD"/}"
+_protected_file="${_protected_file#"$_physical_pwd"/}"
+# Also resolve /private prefix mismatch: input may use /var but shell resolves to /private/var
+if [[ "$_protected_file" == /* ]] && [[ -n "$_physical_pwd" ]]; then
+  _logical_pwd="${_physical_pwd#/private}"
+  _protected_file="${_protected_file#"$_logical_pwd"/}"
 fi
 case "$_protected_file" in
   .claude/raid-session|.claude/raid-last-test-run)
