@@ -19,7 +19,6 @@ const HOOKS = {
     { name: 'raid-pre-compact.sh',    desc: 'Backs up Dungeon before message compaction' },
     { name: 'raid-task-created.sh',   desc: 'Validates task subjects are meaningful' },
     { name: 'raid-task-completed.sh', desc: 'Blocks task completion without test evidence' },
-    { name: 'raid-teammate-idle.sh',  desc: 'Nudges idle agents to participate' },
   ],
   gates: [
     { name: 'validate-commit.sh',              desc: 'Enforces conventional commits + test gate' },

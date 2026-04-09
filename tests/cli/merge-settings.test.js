@@ -170,7 +170,7 @@ describe('mergeSettings', () => {
     mergeSettings(cwd);
     const settings = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'settings.json'), 'utf8'));
     const events = Object.keys(settings.hooks);
-    for (const evt of ['SessionStart', 'SessionEnd', 'TeammateIdle', 'TaskCreated', 'TaskCompleted', 'Stop', 'PreCompact']) {
+    for (const evt of ['SessionStart', 'SessionEnd', 'TaskCreated', 'TaskCompleted', 'Stop', 'PreCompact']) {
       assert.ok(events.includes(evt), `Missing hook event: ${evt}`);
     }
   });

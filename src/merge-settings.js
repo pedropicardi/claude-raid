@@ -59,14 +59,7 @@ const RAID_HOOKS = {
       ],
     },
   ],
-  TeammateIdle: [
-    {
-      hooks: [
-        { type: 'command', command: `bash .claude/hooks/raid-teammate-idle.sh ${RAID_HOOK_MARKER}` },
-      ],
-    },
-  ],
-  TaskCreated: [
+TaskCreated: [
     {
       hooks: [
         { type: 'command', command: `bash .claude/hooks/raid-task-created.sh ${RAID_HOOK_MARKER}` },

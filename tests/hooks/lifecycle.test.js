@@ -154,38 +154,6 @@ function writeSession(cwd, sessionData = {}) {
   fs.writeFileSync(path.join(cwd, '.claude', 'raid-session'), JSON.stringify(data));
 }
 
-describe('raid-teammate-idle.sh', () => {
-  afterEach(() => {
-    if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
-    tmpDir = null;
-  });
-
-  it('exits 0 with additionalContext nudge when session active', () => {
-    const cwd = setup();
-    writeRaidConfig(cwd);
-    writeSession(cwd);
-    const result = runHook('raid-teammate-idle.sh', { teammate_name: 'warrior' }, cwd);
-    assert.strictEqual(result.exitCode, 0);
-    assert.ok(result.stdout.includes('additionalContext'), 'should output additionalContext');
-    assert.ok(result.stdout.includes('warrior') || result.stdout.includes('Unclaimed'), 'should mention agent or tasks');
-  });
-
-  it('exits 0 when no active session', () => {
-    const cwd = setup();
-    writeRaidConfig(cwd);
-    const result = runHook('raid-teammate-idle.sh', {}, cwd);
-    assert.strictEqual(result.exitCode, 0);
-  });
-
-  it('exits 0 when nudge disabled', () => {
-    const cwd = setup();
-    writeRaidConfig(cwd, { lifecycle: { teammateNudge: false } });
-    writeSession(cwd);
-    const result = runHook('raid-teammate-idle.sh', {}, cwd);
-    assert.strictEqual(result.exitCode, 0);
-  });
-});
-
 describe('raid-task-created.sh', () => {
   afterEach(() => {
     if (tmpDir) fs.rmSync(tmpDir, { recursive: true, force: true });
