@@ -210,4 +210,14 @@ If the team is stuck on a fundamental design choice after genuine direct debate:
 2. Let the human decide
 3. Never ask the human to resolve something the team should handle
 
-**Terminal state:** RULING: Design approved. Commit. Archive Dungeon. Invoke `raid-implementation-plan`.
+---
+
+## Phase Transition
+
+When the design is approved and committed:
+
+1. Archive the Dungeon: rename `.claude/raid-dungeon.md` to `.claude/raid-dungeon-phase-1.md`
+2. Update `.claude/raid-session` phase to `"plan"`
+3. **Load the `raid-implementation-plan` skill now and begin Phase 2.**
+
+Do not wait. Do not ask. The next action after committing the design doc is loading the next skill.

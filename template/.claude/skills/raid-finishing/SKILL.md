@@ -128,4 +128,13 @@ Remove ALL Dungeon artifacts:
 | "Merge without testing the merged result" | Merges introduce conflicts. Always test after merge. |
 | "Leave the Dungeon files, they might be useful" | Clean up. Session artifacts don't belong in the repo. |
 
-**Terminal state:** Choice executed. All Dungeon files removed. `.claude/raid-session` removed. Session over.
+---
+
+## Session Complete
+
+When the chosen option is executed:
+
+1. Remove all Dungeon files (`.claude/raid-dungeon*.md`)
+2. Remove `.claude/raid-session`
+3. Send shutdown to all teammates
+4. **Session is over. No further skills to load.**

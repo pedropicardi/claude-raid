@@ -64,6 +64,30 @@ function runHook(tmpDir, command) {
   }
 }
 
+/**
+ * Run the hook using a temp file for input (avoids shell quoting issues with complex commands).
+ */
+function runHookViaFile(tmpDir, command) {
+  const input = JSON.stringify({ tool_input: { command } });
+  const inputFile = path.join(tmpDir, '.hook-input.json');
+  fs.writeFileSync(inputFile, input);
+  const hookPath = path.join(tmpDir, '.claude', 'hooks', 'validate-commit.sh');
+  // Capture stderr to a file so we can read it even on exit 0
+  const stderrFile = path.join(tmpDir, '.hook-stderr.log');
+  try {
+    execSync(`cat "${inputFile}" | bash "${hookPath}" 2>"${stderrFile}"`, {
+      cwd: tmpDir,
+      encoding: 'utf8',
+      stdio: ['pipe', 'pipe', 'pipe'],
+    });
+    const stderr = fs.existsSync(stderrFile) ? fs.readFileSync(stderrFile, 'utf8') : '';
+    return { status: 0, stderr };
+  } catch (err) {
+    const stderr = fs.existsSync(stderrFile) ? fs.readFileSync(stderrFile, 'utf8') : (err.stderr || '');
+    return { status: err.status, stderr };
+  }
+}
+
 function cleanup(dir) {
   fs.rmSync(dir, { recursive: true, force: true });
 }
@@ -184,6 +208,64 @@ describe('validate-commit.sh', () => {
     // No playwright.config.ts file exists — hook should skip browser tests
     const result = runHook(tmp, 'git commit -m "feat(hooks): add new validation logic"');
     assert.strictEqual(result.status, 0);
+  });
+
+  it('allows valid conventional commit via heredoc syntax', () => {
+    const tmp = setupEnv();
+    dirs.push(tmp);
+    const heredocCmd = [
+      'git commit -m "$(cat <<\'EOF\'',
+      'feat(hooks): add consolidated commit validation logic',
+      '',
+      'Co-Authored-By: Claude <noreply@anthropic.com>',
+      'EOF',
+      ')"',
+    ].join('\n');
+    const result = runHookViaFile(tmp, heredocCmd);
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('does not false-positive on heredoc content containing git commit words', () => {
+    const tmp = setupEnv();
+    dirs.push(tmp);
+    // A command that writes a file containing "git commit" — NOT a git commit command
+    const cmd = [
+      "cat <<'EOF' > instructions.md",
+      'To save your work, run git commit -m "your message"',
+      'EOF',
+    ].join('\n');
+    const result = runHookViaFile(tmp, cmd);
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('warns when commit message cannot be extracted from -m flag', () => {
+    const tmp = setupEnv();
+    dirs.push(tmp);
+    // git commit with -m but message is a subshell — can't be extracted
+    const result = runHookViaFile(tmp, 'git commit -m $(generate_message)');
+    // Should exit 0 (allow) but with a warning on stderr
+    assert.strictEqual(result.status, 0);
+    assert.ok(result.stderr.includes('Could not extract'), `Expected warning about extraction, got: ${result.stderr}`);
+  });
+
+  it('writes timestamp atomically with no temp file remaining', () => {
+    const tmp = setupEnv({
+      raidActive: true,
+      config: { project: { testCommand: 'exit 0' } },
+    });
+    dirs.push(tmp);
+    const result = runHook(tmp, 'git commit -m "feat(hooks): add new validation logic here"');
+    assert.strictEqual(result.status, 0);
+
+    // Timestamp file should exist with valid numeric content
+    const tsFile = path.join(tmp, '.claude', 'raid-last-test-run');
+    assert.ok(fs.existsSync(tsFile), 'Expected raid-last-test-run to be written');
+    const content = fs.readFileSync(tsFile, 'utf8').trim();
+    assert.ok(/^\d+$/.test(content), `Expected numeric timestamp, got: ${content}`);
+
+    // No temp file should remain after atomic write
+    const tmpFile = path.join(tmp, '.claude', 'raid-last-test-run.tmp');
+    assert.ok(!fs.existsSync(tmpFile), 'Temp file .raid-last-test-run.tmp should not remain after atomic write');
   });
 
   it('blocks completion commit when timestamp file is corrupted (non-numeric)', () => {

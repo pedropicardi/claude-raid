@@ -3,4 +3,11 @@ node_modules/
 *.log
 *.tgz
 .claude/
+.claude/raid-last-test-run
+.claude/raid-session
+.claude/raid-dungeon.md
+.claude/raid-dungeon-phase-*
+.claude/raid-dungeon-backup.md
+.claude/raid-dungeon-phase-*-backup.md
+.claude/vault/.draft/
 .env.raid

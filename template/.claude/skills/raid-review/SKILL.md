@@ -159,4 +159,14 @@ The Wizard closes when agents have exhausted their findings and the Dungeon has 
 | "The tests pass, so it works" | Tests prove what they test. What DON'T they test? |
 | "Let's skip re-review of the fixes" | Fixes introduce new bugs. Always re-attack. |
 
-**Terminal state:** Archive Dungeon. Invoke `raid-finishing`.
+---
+
+## Phase Transition
+
+When the RULING is APPROVED FOR MERGE:
+
+1. Archive the Dungeon: rename `.claude/raid-dungeon.md` to `.claude/raid-dungeon-phase-4.md`
+2. Update `.claude/raid-session` phase to `"finishing"`
+3. **Load the `raid-finishing` skill now and begin Finishing.**
+
+Do not wait. Do not ask. The next action after approving for merge is loading the next skill.

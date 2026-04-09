@@ -247,7 +247,7 @@ describe('raid-task-completed.sh', () => {
   it('allows completion when test ran recently', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
-    writeSession(cwd);
+    writeSession(cwd, { phase: 'implementation' });
     const now = Math.floor(Date.now() / 1000);
     fs.writeFileSync(path.join(cwd, '.claude', 'raid-last-test-run'), String(now));
     const result = runHook('raid-task-completed.sh', {}, cwd);
@@ -257,7 +257,7 @@ describe('raid-task-completed.sh', () => {
   it('blocks when no test run file', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
-    writeSession(cwd);
+    writeSession(cwd, { phase: 'implementation' });
     const result = runHook('raid-task-completed.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 2);
     assert.ok(result.stderr.includes('No test run recorded'));
@@ -266,12 +266,52 @@ describe('raid-task-completed.sh', () => {
   it('blocks when test run is too old', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
-    writeSession(cwd);
+    writeSession(cwd, { phase: 'implementation' });
     const twentyMinsAgo = Math.floor(Date.now() / 1000) - (20 * 60);
     fs.writeFileSync(path.join(cwd, '.claude', 'raid-last-test-run'), String(twentyMinsAgo));
     const result = runHook('raid-task-completed.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 2);
     assert.ok(result.stderr.includes('minutes ago'));
+  });
+
+  it('allows completion in design phase without test run', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'design' });
+    const result = runHook('raid-task-completed.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+  });
+
+  it('allows completion in plan phase without test run', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'plan' });
+    const result = runHook('raid-task-completed.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+  });
+
+  it('still blocks in implementation phase without test run', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'implementation' });
+    const result = runHook('raid-task-completed.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 2);
+  });
+
+  it('still blocks in review phase without test run', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'review' });
+    const result = runHook('raid-task-completed.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 2);
+  });
+
+  it('still blocks in finishing phase without test run', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd, { phase: 'finishing' });
+    const result = runHook('raid-task-completed.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 2);
   });
 });
 
@@ -392,71 +432,30 @@ describe('raid-stop.sh', () => {
     tmpDir = null;
   });
 
-  it('detects phase transition and outputs additionalContext', () => {
+  it('exits 0 with no output when session active', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     writeSession(cwd, { phase: 'design', mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\n<!-- RAID_PHASE: plan -->\n\nSome content here.');
     const result = runHook('raid-stop.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
-    assert.ok(result.stdout.includes('additionalContext'));
-    assert.ok(result.stdout.includes('design'));
-    assert.ok(result.stdout.includes('plan'));
+    assert.strictEqual(result.stdout.trim(), '');
   });
 
-  it('updates raid-session with new phase name', () => {
+  it('exits 0 when no active session', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    const result = runHook('raid-stop.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    assert.strictEqual(result.stdout.trim(), '');
+  });
+
+  it('does not modify raid-session', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     writeSession(cwd, { phase: 'design', mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '<!-- RAID_PHASE: plan -->');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\nSome content.');
     runHook('raid-stop.sh', {}, cwd);
     const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
-    assert.strictEqual(session.phase, 'plan');
-  });
-
-  it('does nothing when phase unchanged', () => {
-    const cwd = setup();
-    writeRaidConfig(cwd);
-    writeSession(cwd, { phase: 'plan', mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '<!-- RAID_PHASE: plan -->');
-    const result = runHook('raid-stop.sh', {}, cwd);
-    assert.strictEqual(result.exitCode, 0);
-    assert.strictEqual(result.stdout.trim(), '');
-  });
-
-  it('ignores casual phase mentions in Dungeon text', () => {
-    const cwd = setup();
-    writeRaidConfig(cwd);
-    writeSession(cwd, { phase: 'design', mode: 'full' });
-    // Text mentions "plan" casually but no structured phase marker
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\nBack in the design phase we discussed the plan for implementation.');
-    const result = runHook('raid-stop.sh', {}, cwd);
-    assert.strictEqual(result.exitCode, 0);
-    // Should NOT detect a phase transition
-    assert.strictEqual(result.stdout.trim(), '', 'should not detect transition from casual mention');
-    // Session should still be design
-    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
     assert.strictEqual(session.phase, 'design');
-  });
-
-  it('detects structured RAID_PHASE marker', () => {
-    const cwd = setup();
-    writeRaidConfig(cwd);
-    writeSession(cwd, { phase: 'design', mode: 'full' });
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon\n\n<!-- RAID_PHASE: plan -->\n\nSome content here.');
-    const result = runHook('raid-stop.sh', {}, cwd);
-    assert.strictEqual(result.exitCode, 0);
-    assert.ok(result.stdout.includes('additionalContext'));
-    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
-    assert.strictEqual(session.phase, 'plan');
-  });
-
-  it('does nothing when no Dungeon file exists', () => {
-    const cwd = setup();
-    writeRaidConfig(cwd);
-    writeSession(cwd, { phase: 1, mode: 'full' });
-    const result = runHook('raid-stop.sh', {}, cwd);
-    assert.strictEqual(result.exitCode, 0);
-    assert.strictEqual(result.stdout.trim(), '');
   });
 });

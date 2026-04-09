@@ -14,15 +14,8 @@ if [ "$RAID_LIFECYCLE_NUDGE" != "true" ]; then
   exit 0
 fi
 
-raid_read_lifecycle_input
-TEAMMATE=$(echo "$RAID_HOOK_INPUT" | jq -r '.teammate_name // "Agent"')
-
-cat <<ENDJSON
-{
-  "hookSpecificOutput": {
-    "hookEventName": "TeammateIdle",
-    "additionalContext": "$TEAMMATE: Unclaimed tasks remain on the board. Pick up the next available task and report your plan before starting."
-  }
-}
-ENDJSON
+# Idle hook intentionally disabled.
+# The Wizard dispatches agents via SendMessage. Agents should be still
+# and quiet between phases, waiting for the Wizard's DISPATCH command.
+# Automated nudging contradicts the "Wizard opens, agents wait" model.
 exit 0

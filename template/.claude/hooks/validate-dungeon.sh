@@ -31,17 +31,32 @@ if [ ! -f "$RAID_FILE_PATH" ]; then
 fi
 
 issues=""
+current_section="unknown"
 
 while IFS= read -r line; do
   # Skip empty lines
   [ -z "$line" ] && continue
 
-  # Skip header lines (lines starting with #)
+  # Track current section from ### headers
+  case "$line" in
+    "### Discoveries"*) current_section="discoveries"; continue ;;
+    "### Active Battles"*) current_section="battles"; continue ;;
+    "### Resolved"*) current_section="resolved"; continue ;;
+    "### Shared Knowledge"*) current_section="shared"; continue ;;
+    "### Escalations"*) current_section="escalations"; continue ;;
+  esac
+
+  # Skip all header lines (lines starting with #)
   case "$line" in
     \#*) continue ;;
   esac
 
-  # Layer 1: Format check — must have a recognized prefix
+  # Freeform sections — no prefix enforcement
+  case "$current_section" in
+    resolved|shared|escalations) continue ;;
+  esac
+
+  # Layer 1: Format check — must have a recognized prefix (Discoveries + Active Battles only)
   has_prefix=false
   entry_type=""
   content_after_prefix=""

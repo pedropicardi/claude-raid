@@ -185,4 +185,14 @@ The Wizard closes when messages + Dungeon show all issues resolved and challenge
 - **Agent repeatedly blocked:** The plan may need revision.
 - **Tests can't be written:** The design may not be testable. Return to Phase 1.
 
-**Terminal state:** All tasks approved. Archive Dungeon. Invoke `raid-review`.
+---
+
+## Phase Transition
+
+When all tasks are approved and committed:
+
+1. Archive the Dungeon: rename `.claude/raid-dungeon.md` to `.claude/raid-dungeon-phase-3.md`
+2. Update `.claude/raid-session` phase to `"review"`
+3. **Load the `raid-review` skill now and begin Phase 4.**
+
+Do not wait. Do not ask. The next action after all implementation tasks pass is loading the next skill.
