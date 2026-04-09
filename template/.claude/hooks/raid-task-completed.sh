@@ -14,6 +14,11 @@ if [ "$RAID_LIFECYCLE_COMPLETION_GATE" != "true" ]; then
   exit 0
 fi
 
+# Design and plan phases have no code to test — skip test-run requirement
+case "${RAID_PHASE:-}" in
+  design|plan) exit 0 ;;
+esac
+
 TEST_RUN_FILE=".claude/raid-last-test-run"
 
 if [ ! -f "$TEST_RUN_FILE" ]; then

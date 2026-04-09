@@ -35,18 +35,4 @@ STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 jq -n --arg sid "$SESSION_ID" --arg ts "$STARTED_AT" --arg mode "$MODE" \
   '{ sessionId: $sid, startedAt: $ts, phase: "design", mode: $mode }' > .claude/raid-session
 
-# Check Vault for past quests
-VAULT_COUNT=$(raid_vault_count)
-
-if [ "$VAULT_COUNT" -gt 0 ] && [ "$RAID_VAULT_ENABLED" = "true" ]; then
-  cat <<ENDJSON
-{
-  "hookSpecificOutput": {
-    "hookEventName": "SessionStart",
-    "additionalContext": "The Vault contains $VAULT_COUNT past quest(s). Ask the human if the party should consult the Vault before beginning this quest."
-  }
-}
-ENDJSON
-fi
-
 exit 0

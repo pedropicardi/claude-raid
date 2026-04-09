@@ -124,12 +124,12 @@ describe('validate-write-gate.sh', () => {
     assert.strictEqual(result.status, 0);
   });
 
-  it('warns instead of blocking during review in skirmish mode', () => {
+  it('blocks production writes during review in skirmish mode', () => {
     const tmp = setupEnv({ session: { phase: 'review', mode: 'skirmish' } });
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
-    assert.strictEqual(result.status, 0);
-    assert.ok(result.stderr.includes('review'), `Expected stderr warning to mention review, got: ${result.stderr}`);
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.includes('review'), `Expected stderr to mention review, got: ${result.stderr}`);
   });
 
   it('allows production writes during implementation when no implementer set', () => {
@@ -168,5 +168,52 @@ describe('validate-write-gate.sh', () => {
     const result = runHook(tmp, 'src/index.js');
     assert.strictEqual(result.status, 2);
     assert.ok(result.stderr.toLowerCase().includes('finishing'), `Expected stderr to mention finishing, got: ${result.stderr}`);
+  });
+
+  it('blocks production files on unknown phase (fail-closed)', () => {
+    const tmp = setupEnv({ session: { phase: 'xyzzy', mode: 'full' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, 'src/index.js');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.toLowerCase().includes('unknown'), `Expected stderr to mention unknown, got: ${result.stderr}`);
+  });
+
+  it('warns on empty phase during session bootstrap', () => {
+    const tmp = setupEnv({ session: { phase: '', mode: 'full' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, 'src/index.js');
+    // Empty phase allows writes with warning during bootstrap
+    assert.strictEqual(result.status, 0);
+    assert.ok(result.stderr.includes('bootstrap') || result.stderr.includes('empty'), `Expected stderr bootstrap warning, got: ${result.stderr}`);
+  });
+
+  it('blocks writes to .claude/raid-session during active session', () => {
+    const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: 'A', implementer: 'A' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-session');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.includes('protected'), `Expected stderr to mention protected, got: ${result.stderr}`);
+  });
+
+  it('blocks writes to .claude/raid-last-test-run during active session', () => {
+    const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: 'A', implementer: 'A' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-last-test-run');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.includes('protected'), `Expected stderr to mention protected, got: ${result.stderr}`);
+  });
+
+  it('allows writes to .claude/raid-session when no active session', () => {
+    const tmp = setupEnv(); // no session
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-session');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('allows writes to other .claude files during active session', () => {
+    const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: 'A', implementer: 'A' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-dungeon.md');
+    assert.strictEqual(result.status, 0);
   });
 });

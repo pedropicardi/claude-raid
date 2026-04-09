@@ -181,4 +181,14 @@ Fix issues inline. If a spec requirement has no task, add the task.
 | "Tests can be added later" | TDD means tests are in the plan. No test = no task. |
 | "The naming will be consistent enough" | Check it explicitly. Naming drift is the #1 source of bugs. |
 
-**Terminal state:** RULING: Plan approved. Commit. Archive Dungeon. Invoke `raid-implementation`.
+---
+
+## Phase Transition
+
+When the plan is approved and committed:
+
+1. Archive the Dungeon: rename `.claude/raid-dungeon.md` to `.claude/raid-dungeon-phase-2.md`
+2. Update `.claude/raid-session` phase to `"implementation"`
+3. **Load the `raid-implementation` skill now and begin Phase 3.**
+
+Do not wait. Do not ask. The next action after committing the plan doc is loading the next skill.

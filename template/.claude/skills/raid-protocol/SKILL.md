@@ -181,6 +181,8 @@ The Dungeon (`.claude/raid-dungeon.md`) is the team's shared knowledge board. It
 - Key decisions and their reasoning
 - Escalation points and Wizard responses
 
+**Verification requirement:** Pinned entries (`DUNGEON:`) must reference at least 2 agents who independently verified the finding. The hook enforces this as a format check — but the requirement is substantive, not cosmetic. Pinning a finding with agent names who did not actually verify it is a protocol violation. The Wizard will remove fraudulent pins and redirect the offending agent.
+
 **What stays in conversation only:**
 - Back-and-forth of challenges and roasts
 - Exploratory thinking and hypotheses

@@ -45,8 +45,12 @@ if [ "$RAID_NAMING" != "none" ]; then
   esac
 fi
 
-# Check 3: Directory depth
-DEPTH=$(echo "$RAID_FILE_PATH" | awk -F'/' '{print NF}')
+# Check 3: Directory depth (normalize absolute paths to relative first)
+_depth_path="$RAID_FILE_PATH"
+if [[ "$_depth_path" == /* ]]; then
+  _depth_path="${_depth_path#"$PWD"/}"
+fi
+DEPTH=$(echo "$_depth_path" | awk -F'/' '{print NF}')
 if [ "$DEPTH" -gt "$RAID_MAX_DEPTH" ]; then
   ISSUES="${ISSUES}STRUCTURE: File at depth $DEPTH ($RAID_FILE_PATH). Maximum is $RAID_MAX_DEPTH.\n"
 fi

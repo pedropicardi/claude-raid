@@ -197,4 +197,90 @@ describe('validate-dungeon.sh', () => {
     const result = runHook(tmp, '.claude/raid-dungeon.md');
     assert.strictEqual(result.status, 0);
   });
+
+  it('allows freeform text under ### Resolved section', () => {
+    const content = [
+      '# Dungeon',
+      '### Discoveries',
+      '📌 DUNGEON: Found critical architecture flaw in the authentication module that bypasses token validation — verified by @Warrior and @Archer',
+      '### Resolved',
+      '- The race condition was fixed by adding a mutex lock around the shared state',
+      '- Warrior conceded after Archer showed the lock ordering was correct',
+    ].join('\n') + '\n';
+    const tmp = setupEnv({
+      session: { phase: 'design' },
+      dungeonFile: '.claude/raid-dungeon.md',
+      dungeonContent: content,
+    });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-dungeon.md');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('allows freeform text under ### Shared Knowledge section', () => {
+    const content = [
+      '# Dungeon',
+      '### Shared Knowledge',
+      '- The test suite uses node:test runner, not jest',
+      '- All hooks source raid-lib.sh for shared config',
+    ].join('\n') + '\n';
+    const tmp = setupEnv({
+      session: { phase: 'design' },
+      dungeonFile: '.claude/raid-dungeon.md',
+      dungeonContent: content,
+    });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-dungeon.md');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('allows freeform text under ### Escalations section', () => {
+    const content = [
+      '# Dungeon',
+      '### Escalations',
+      'WIZARD: Need clarification on whether the browser hook should block or warn',
+    ].join('\n') + '\n';
+    const tmp = setupEnv({
+      session: { phase: 'design' },
+      dungeonFile: '.claude/raid-dungeon.md',
+      dungeonContent: content,
+    });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-dungeon.md');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('still blocks unrecognized prefixes under ### Discoveries', () => {
+    const content = [
+      '# Dungeon',
+      '### Discoveries',
+      'This line has no valid prefix and should be blocked',
+    ].join('\n') + '\n';
+    const tmp = setupEnv({
+      session: { phase: 'design' },
+      dungeonFile: '.claude/raid-dungeon.md',
+      dungeonContent: content,
+    });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-dungeon.md');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.includes('prefix'), `Expected stderr to mention prefix, got: ${result.stderr}`);
+  });
+
+  it('still blocks unrecognized prefixes under ### Active Battles', () => {
+    const content = [
+      '# Dungeon',
+      '### Active Battles',
+      'Random text without a prefix here',
+    ].join('\n') + '\n';
+    const tmp = setupEnv({
+      session: { phase: 'design' },
+      dungeonFile: '.claude/raid-dungeon.md',
+      dungeonContent: content,
+    });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/raid-dungeon.md');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.includes('prefix'), `Expected stderr to mention prefix, got: ${result.stderr}`);
+  });
 });

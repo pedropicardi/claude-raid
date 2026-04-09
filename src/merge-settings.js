@@ -32,6 +32,7 @@ const RAID_HOOKS = {
     {
       matcher: 'Bash',
       hooks: [
+        { type: 'command', command: `bash .claude/hooks/validate-bash-writes.sh ${RAID_HOOK_MARKER}` },
         { type: 'command', command: `bash .claude/hooks/validate-commit.sh ${RAID_HOOK_MARKER}` },
         { type: 'command', command: `bash .claude/hooks/validate-browser-tests-exist.sh ${RAID_HOOK_MARKER}` },
       ],

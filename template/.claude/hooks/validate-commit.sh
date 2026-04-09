@@ -10,8 +10,8 @@ source "$SCRIPT_DIR/raid-lib.sh"
 
 raid_read_input
 
-# Only check git commit commands
-if ! echo "$RAID_COMMAND" | grep -qE 'git commit'; then
+# Only check git commit commands (match command position, not heredoc content)
+if ! echo "$RAID_COMMAND" | grep -qE '(^|;|&&|\|\|)\s*git\s+commit\b'; then
   exit 0
 fi
 
@@ -26,13 +26,21 @@ if echo "$RAID_COMMAND" | grep -qE -- '-m '; then
   fi
 fi
 
-# Try heredoc pattern
+# Try heredoc pattern: extract delimiter, then capture content between delimiters
 if [ -z "$MSG" ]; then
-  MSG=$(echo "$RAID_COMMAND" | sed -n 's/.*cat <<.*//;n;s/^ *//;p' | head -1)
+  _heredoc_delim=$(echo "$RAID_COMMAND" | grep -oE "<<-?'?\"?([A-Za-z_]+)'?\"?" | head -1 | sed "s/<<-\?['\"]*//" | sed "s/['\"]//g" || true)
+  if [ -n "$_heredoc_delim" ]; then
+    # Extract lines between the heredoc open and the closing delimiter
+    MSG=$(echo "$RAID_COMMAND" | sed -n "/<<.*${_heredoc_delim}/,/^[[:space:]]*${_heredoc_delim}/{ /<<.*${_heredoc_delim}/d; /^[[:space:]]*${_heredoc_delim}/d; p; }" | head -1 | sed 's/^[[:space:]]*//' || true)
+  fi
 fi
 
-# If no message found (editor mode), allow
+# If no message found (editor mode or unparseable), warn but allow
 if [ -z "$MSG" ]; then
+  # Check if this looks like a commit with a message we couldn't parse
+  if echo "$RAID_COMMAND" | grep -qE -- '-m |<<'; then
+    raid_warn "COMMIT: Could not extract commit message for validation."
+  fi
   exit 0
 fi
 
@@ -87,9 +95,9 @@ if [ "$RAID_ACTIVE" = "true" ] && [ -n "$RAID_TEST_CMD" ]; then
     fi
   fi
 
-  # Write timestamp on success (only when ALL tests pass — unit AND browser)
+  # Write timestamp atomically (only when ALL tests pass — unit AND browser)
   mkdir -p .claude
-  date +%s > .claude/raid-last-test-run
+  date +%s > .claude/raid-last-test-run.tmp && mv .claude/raid-last-test-run.tmp .claude/raid-last-test-run
 fi
 
 # ============================================================
@@ -107,7 +115,7 @@ if [ "$RAID_ACTIVE" = "true" ]; then
 
   if [ "$HAS_COMPLETION" = "true" ]; then
     TIMESTAMP_FILE=".claude/raid-last-test-run"
-    MAX_AGE=600
+    MAX_AGE=$(( ${RAID_LIFECYCLE_TEST_WINDOW:-10} * 60 ))
 
     if [ ! -f "$TIMESTAMP_FILE" ]; then
       raid_block "VERIFICATION: Commit claims completion but no test run evidence found. Run tests before claiming work is complete."

@@ -18,6 +18,19 @@ if [ "$RAID_ACTIVE" = "false" ]; then
   exit 0
 fi
 
+# Protect enforcement-critical files from direct agent writes.
+# Hooks and Wizard use Bash-level operations (jq redirect, rm) for these files,
+# so blocking Write/Edit doesn't break legitimate callers.
+_protected_file="${RAID_FILE_PATH}"
+if [[ "$_protected_file" == /* ]]; then
+  _protected_file="${_protected_file#"$PWD"/}"
+fi
+case "$_protected_file" in
+  .claude/raid-session|.claude/raid-last-test-run)
+    raid_block "File '${_protected_file}' is protected. It is managed by hooks and the Wizard."
+    ;;
+esac
+
 # Non-production files (docs, tests, config, .claude) are always allowed
 if ! raid_is_production_file "$RAID_FILE_PATH"; then
   exit 0
@@ -44,17 +57,17 @@ case "${RAID_PHASE:-}" in
     exit 0
     ;;
   review)
-    if [ "$RAID_MODE" = "skirmish" ]; then
-      raid_warn "Read-only phase (review). File fixes go through implementation."
-    else
-      raid_block "Read-only phase (review). File fixes go through implementation."
-    fi
+    raid_block "Read-only phase (review). File fixes go through implementation."
     ;;
   finishing)
     raid_block "Finishing phase. No new code."
     ;;
+  "")
+    # Empty phase during session bootstrap — allow with warning
+    raid_warn "Session active but phase is empty — allowing writes during bootstrap."
+    ;;
   *)
-    # Unknown or empty phase — fail open
-    exit 0
+    # Unknown phase — fail closed
+    raid_block "Unknown phase '${RAID_PHASE}'. Cannot determine write permissions."
     ;;
 esac
