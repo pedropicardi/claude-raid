@@ -288,6 +288,27 @@ echo "RAID_COMMAND=$RAID_COMMAND"
       assert.strictEqual(lines[4], 'YES', 'lib/utils.ts should be production');
     });
 
+    it('raid_is_production_file normalizes absolute paths', () => {
+      const cwd = makeTempDir();
+      fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });
+      const script = `
+        cd "${cwd}"
+        source "${RAID_LIB}"
+        if raid_is_production_file "${cwd}/.claude/raid-session"; then echo "YES"; else echo "NO"; fi
+        if raid_is_production_file "${cwd}/tests/app.test.js"; then echo "YES"; else echo "NO"; fi
+        if raid_is_production_file "${cwd}/src/app.js"; then echo "YES"; else echo "NO"; fi
+      `;
+      const result = execSync(`bash -c '${script.replace(/'/g, "'\\''")}'`, {
+        cwd,
+        encoding: 'utf8',
+        timeout: 5000,
+      });
+      const lines = result.trim().split('\n');
+      assert.strictEqual(lines[0], 'NO', 'absolute .claude/raid-session should not be production');
+      assert.strictEqual(lines[1], 'NO', 'absolute tests/app.test.js should not be production');
+      assert.strictEqual(lines[2], 'YES', 'absolute src/app.js should be production');
+    });
+
     it('raid_session_set updates a single field in raid-session', () => {
       const cwd = makeTempDir();
       fs.mkdirSync(path.join(cwd, '.claude'), { recursive: true });

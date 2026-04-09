@@ -129,6 +129,10 @@ raid_read_input() {
 # Returns 0 if file is production code (not test, doc, config, or .claude).
 raid_is_production_file() {
   local file="$1"
+  # Normalize absolute paths to relative (Claude passes absolute paths)
+  if [[ "$file" == /* ]]; then
+    file="${file#"$PWD"/}"
+  fi
   case "$file" in
     tests/*|test/*|*.test.*|*.spec.*|*_test.*|*_spec.*) return 1 ;;
     docs/*|*.md) return 1 ;;
