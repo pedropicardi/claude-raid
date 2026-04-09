@@ -10,6 +10,20 @@ const versionCheck = require('../src/version-check');
 const showUpdateNotice = versionCheck.start();
 
 const COMMANDS = {
+  // Sync local with remote after CI version bump
+  sync: async () => {
+    const { execSync } = require('child_process');
+    console.log('\n' + banner());
+    console.log(header('Syncing with remote...') + '\n');
+    try {
+      execSync('git pull origin main', { stdio: 'inherit' });
+      console.log('');
+      return require('../src/init').run();
+    } catch (err) {
+      console.error('  ' + colors.red('Pull failed. Resolve conflicts first.'));
+      process.exit(1);
+    }
+  },
   // Primary commands
   summon: () => {
     if (process.argv.includes('--dry-run')) {
@@ -43,6 +57,7 @@ if (!command || !COMMANDS[command]) {
     ['update',    'Reforge the party\'s arsenal'],
     ['dismantle', 'Dismantle the camp and retreat'],
     ['heal',      'Diagnose wounds and prepare for battle'],
+    ['sync',      'Pull latest from remote + re-summon'],
   ];
   for (const [name, desc] of cmds) {
     console.log('    ' + colors.bold(name.padEnd(12)) + desc);
