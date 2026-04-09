@@ -2,7 +2,7 @@ node_modules/
 .DS_Store
 *.log
 *.tgz
-.claude/
+/.claude/
 .claude/raid-last-test-run
 .claude/raid-session
 .claude/raid-dungeon.md

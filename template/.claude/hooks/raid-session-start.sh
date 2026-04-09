@@ -35,4 +35,12 @@ STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 jq -n --arg sid "$SESSION_ID" --arg ts "$STARTED_AT" --arg mode "$MODE" \
   '{ sessionId: $sid, startedAt: $ts, phase: "design", mode: $mode }' > .claude/raid-session
 
+# Offer Vault context if entries exist
+if [ "$RAID_VAULT_ENABLED" = "true" ]; then
+  VAULT_COUNT=$(raid_vault_count)
+  if [ "$VAULT_COUNT" -gt 0 ] 2>/dev/null; then
+    echo "{\"additionalContext\": \"${VAULT_COUNT} past quest(s) in Vault at ${RAID_VAULT_PATH}/index.md — review for prior decisions and patterns.\"}"
+  fi
+fi
+
 exit 0
