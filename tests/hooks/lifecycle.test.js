@@ -162,6 +162,17 @@ describe('raid-session-start.sh', () => {
     assert.ok(!result.stdout.includes('additionalContext'));
   });
 
+  it('creates phases, spoils, and spoils/tasks subdirectories in quest dir', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    runHook('raid-session-start.sh', { source: 'startup', agent_type: 'wizard', session_id: 'test-123' }, cwd);
+    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+    const questDir = path.join(cwd, session.questDir);
+    assert.ok(fs.existsSync(path.join(questDir, 'phases')), 'phases/ should exist');
+    assert.ok(fs.existsSync(path.join(questDir, 'spoils')), 'spoils/ should exist');
+    assert.ok(fs.existsSync(path.join(questDir, 'spoils', 'tasks')), 'spoils/tasks/ should exist');
+  });
+
   it('exits 0 silently when lifecycle disabled', () => {
     const cwd = setup();
     writeRaidConfig(cwd, { lifecycle: { autoSessionManagement: false } });

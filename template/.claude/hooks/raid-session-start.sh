@@ -52,6 +52,8 @@ jq -n --arg sid "$SESSION_ID" --arg ts "$STARTED_AT" --arg mode "$MODE" \
 
 # Create quest directory
 mkdir -p "$QUEST_DIR"
+mkdir -p "$QUEST_DIR/phases"
+mkdir -p "$QUEST_DIR/spoils/tasks"
 
 # Offer Vault context if entries exist
 if [ "$RAID_VAULT_ENABLED" = "true" ]; then
