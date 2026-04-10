@@ -128,14 +128,10 @@ while IFS= read -r line; do
     fi
   fi
 
-  # Layer 3: Phase consistency
-  if [ "$entry_type" = "TASK" ]; then
-    case "${RAID_PHASE:-}" in
-      design|implementation|review|prd|wrap-up)
-        issues="${issues}
+  # Layer 3: Phase consistency — TASK entries belong in plan or wrap-up phases
+  if [ "$entry_type" = "TASK" ] && [ -n "${RAID_PHASE:-}" ] && [ "${RAID_PHASE}" != "plan" ] && [ "${RAID_PHASE}" != "wrap-up" ] && [ "${RAID_PHASE}" != "finishing" ]; then
+    issues="${issues}
   - TASK entries belong in Plan phase, not ${RAID_PHASE}."
-        ;;
-    esac
   fi
 
 done < "$RAID_FILE_PATH"
