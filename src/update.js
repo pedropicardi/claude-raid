@@ -31,7 +31,7 @@ function copyForceRecursive(src, dest) {
   }
 }
 
-function performUpdate(cwd) {
+function performUpdate(cwd, opts = {}) {
   const claudeDir = path.join(cwd, '.claude');
   const skippedAgents = [];
 
@@ -144,6 +144,20 @@ function performUpdate(cwd) {
 
   mergeSettings(cwd);
 
+  // RTK hint — if RTK is detected but not configured in raid.json
+  let rtkHint = false;
+  if (opts.rtkDetected) {
+    const raidConfigPath = path.join(claudeDir, 'raid.json');
+    if (fs.existsSync(raidConfigPath)) {
+      try {
+        const raidConfig = JSON.parse(fs.readFileSync(raidConfigPath, 'utf8'));
+        if (!raidConfig.rtk) {
+          rtkHint = true;
+        }
+      } catch {}
+    }
+  }
+
   let message = 'The Raid has been updated to the latest version.';
   if (migratedFields.length > 0) {
     message += `\nMigrated raid.json: added ${migratedFields.join(', ')}`;
@@ -158,15 +172,19 @@ function performUpdate(cwd) {
     message += '\nUse `claude-raid dismantle` then `claude-raid summon` to reset.';
   }
 
-  return { success: true, message, skippedAgents, migratedFields };
+  return { success: true, message, skippedAgents, migratedFields, rtkHint };
 }
 
 function run() {
   const cwd = process.cwd();
+  const { execSync } = require('child_process');
+  let rtkDetected = false;
+  try { execSync('command -v rtk', { stdio: 'pipe' }); rtkDetected = true; } catch {}
+
   console.log('\n' + banner());
   console.log(header('Reforging the Arsenal...') + '\n');
 
-  const result = performUpdate(cwd);
+  const result = performUpdate(cwd, { rtkDetected });
 
   if (!result.success) {
     console.log('  ' + colors.red('✖') + ' No party found. Run ' + colors.bold('claude-raid summon') + ' first.');
@@ -176,6 +194,11 @@ function run() {
   console.log('  ' + colors.green('✔') + ' The party\'s arsenal has been reforged.');
   if (result.skippedAgents.length > 0) {
     console.log('  ' + colors.dim('Preserved customized warriors: ' + result.skippedAgents.join(', ')));
+  }
+
+  if (result.rtkHint) {
+    console.log('  ' + colors.dim('Tip: RTK detected — add "rtk": { "enabled": true } to raid.json'));
+    console.log('  ' + colors.dim('or re-run summon with --rtk to enable token compression.'));
   }
 }
 

@@ -137,4 +137,31 @@ describe('update', () => {
     const content = fs.readFileSync(path.join(cwd, '.claude', 'party-rules.md'), 'utf8');
     assert.strictEqual(content, 'my custom rules');
   });
+
+  it('includes rtk recommendation when rtk is detected but not configured', () => {
+    init = require('../../src/init');
+    update = require('../../src/update');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const result = update.performUpdate(cwd, { rtkDetected: true });
+    assert.ok(result.rtkHint, 'should include RTK hint');
+  });
+
+  it('does not include rtk hint when already configured', () => {
+    init = require('../../src/init');
+    update = require('../../src/update');
+    const cwd = makeTempDir();
+    init.install(cwd, { rtkEnabled: true });
+    const result = update.performUpdate(cwd, { rtkDetected: true });
+    assert.strictEqual(result.rtkHint, false, 'should not hint when RTK already configured');
+  });
+
+  it('does not include rtk hint when rtk not detected', () => {
+    init = require('../../src/init');
+    update = require('../../src/update');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const result = update.performUpdate(cwd);
+    assert.strictEqual(result.rtkHint, false, 'should not hint when RTK not detected');
+  });
 });
