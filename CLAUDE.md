@@ -113,16 +113,21 @@ Skills are organized into three categories:
 
 ```
 .claude/dungeon/{quest-slug}/          # Active quest artifacts
-├── phase-1-prd.md                     # Phase 1 scoreboard (optional)
-├── prd.md                             # PRD deliverable (optional)
-├── phase-2-design.md                  # Phase 2 scoreboard
-├── design.md                          # Design deliverable
-├── phase-3-plan.md                    # Phase 3 scoreboard
-├── phase-3-plan-task-01.md            # Individual task files (deliverable)
-├── phase-4-implementation.md          # Implementation log
-├── phase-5-review.md                  # Review board (optional)
+├── phases/                            # Evolution logs (scoreboards)
+│   ├── phase-2-design.md
+│   ├── phase-3-plan.md
+│   ├── phase-4-implementation.md
+│   └── phase-5-review.md
+├── spoils/                            # Polished deliverables
+│   ├── prd.md
+│   ├── design.md
+│   ├── review.md
+│   └── tasks/
+│       └── phase-3-plan-task-NN.md
+├── backups/                           # Pre-compact safety copies
+│   └── phase-N-{name}-backup.md
 ├── phase-6-wrap-up.md                 # Quest storyboard
-├── teambuff-01.md                     # Team retrospective reports (on-demand)
+├── teambuff-NN.md                     # Team retrospective reports (on-demand)
 └── teambuff-rulings.md                # Active rulings from teambuffs
 
 .claude/vault/{quest-slug}/            # Archived completed quests
