@@ -27,6 +27,9 @@ const HOOKS = {
     { name: 'validate-browser-tests-exist.sh', desc: 'Checks Playwright tests exist before commits' },
     { name: 'validate-browser-cleanup.sh',     desc: 'Verifies browser processes cleaned up properly' },
   ],
+  optional: [
+    { name: 'rtk-bridge.sh', desc: 'Token compression via RTK (optional, opt-in)' },
+  ],
 };
 
 const SKILLS = {
