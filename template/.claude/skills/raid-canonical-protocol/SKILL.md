@@ -53,6 +53,12 @@ digraph session {
 | Review | 3 independent + fighting | 1 review + Wizard | Wizard only |
 | TDD | **Enforced** | **Enforced** | **Enforced** |
 
+## Plan Mode
+
+Claude Code's plan mode is incompatible with the Raid. The Raid has its own permission model — `teammateMode` controls agent write access, and hooks enforce phase-based restrictions. Plan mode would block the quest workflow.
+
+The Wizard detects plan mode at session start (Step 0 in `raid-init`) and asks the human to exit it before proceeding.
+
 ## Round-Based Interaction
 
 Think turn-based RPG, not real-time:
