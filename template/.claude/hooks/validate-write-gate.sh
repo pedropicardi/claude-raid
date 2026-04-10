@@ -33,9 +33,9 @@ case "$_file" in
     ;;
 esac
 
-# Quest dungeon dir markdown files are always allowed
+# Quest dungeon dir markdown files are always allowed (including subdirectories)
 case "$_file" in
-  .claude/dungeon/*.md)
+  .claude/dungeon/*.md|.claude/dungeon/*/*.md|.claude/dungeon/*/*/*.md)
     exit 0
     ;;
 esac
