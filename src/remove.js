@@ -10,7 +10,7 @@ const RAID_SKILLS = [
   'raid-init', 'raid-canonical-protocol', 'raid-canonical-prd', 'raid-canonical-design',
   'raid-canonical-implementation-plan', 'raid-canonical-implementation', 'raid-canonical-review',
   'raid-wrap-up', 'raid-tdd', 'raid-debugging', 'raid-verification',
-  'raid-browser', 'raid-browser-chrome',
+  'raid-browser', 'raid-browser-chrome', 'raid-teambuff',
   // Legacy (v0.1.x)
   'raid-protocol', 'raid-design', 'raid-implementation-plan', 'raid-implementation',
   'raid-review', 'raid-prd', 'raid-finishing', 'raid-browser-playwright', 'raid-git-worktrees',
