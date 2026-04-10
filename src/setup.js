@@ -217,6 +217,28 @@ function checkJq(exec) {
   };
 }
 
+function checkRtk(exec) {
+  const found = exec('command -v rtk');
+  if (!found) {
+    return {
+      id: 'rtk',
+      ok: false,
+      label: 'RTK',
+      detail: 'not installed (optional — reduces context usage by 60-90%)',
+      hint: 'Install: curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh',
+    };
+  }
+  const raw = exec('rtk --version');
+  const ver = parseVersion(raw);
+  const tag = ver ? `v${ver.major}.${ver.minor}.${ver.patch}` : (raw || 'unknown').trim();
+  return {
+    id: 'rtk',
+    ok: true,
+    label: 'RTK',
+    detail: `${tag} — token compression available`,
+  };
+}
+
 function checkPlatform(platform) {
   if (platform === 'win32') {
     return {
@@ -321,6 +343,7 @@ function runChecks(opts = {}) {
     checkTeammateMode(homedir),
     checkSplitPane(exec),
     checkPlaywright(exec, cwd),
+    checkRtk(exec),
   ];
 
   return {
