@@ -189,7 +189,7 @@ async function run() {
   console.log('  ' + header('Agents') + dim(`                                      ${result.counts.agents} files`));
   console.log('    Copied wizard.md, warrior.md, archer.md, rogue.md');
   console.log(dim('    Each agent gets its own tmux pane. Start with:'));
-  console.log(dim('    tmux new-session -s raid && claude --agent wizard'));
+  console.log(dim('    claude-raid start'));
 
   // Hooks
   console.log('');

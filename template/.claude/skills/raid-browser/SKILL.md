@@ -1,6 +1,6 @@
 ---
 name: raid-browser
-description: "Core browser orchestration: startup discovery, boot/cleanup lifecycle, port isolation, pre-flight checks (auth, test subject clarity). Shared infrastructure for raid-browser-playwright and raid-browser-chrome."
+description: "Use when browser testing infrastructure is needed — startup discovery, boot/cleanup lifecycle, port isolation, pre-flight checks. Required before raid-browser-chrome or Playwright browser tasks."
 ---
 
 # Raid Browser — Core Orchestration

@@ -155,12 +155,12 @@ describe('ui', () => {
       assert.ok(output.includes('Next Step'), 'should contain Next Step');
     });
 
-    it('contains mode descriptions', () => {
+    it('contains team description', () => {
       const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
       const output = referenceCard();
-      assert.ok(output.includes('Full Raid'), 'should contain Full Raid');
-      assert.ok(output.includes('Skirmish'), 'should contain Skirmish');
-      assert.ok(output.includes('Scout'), 'should contain Scout');
+      assert.ok(output.includes('Warrior'), 'should mention Warrior');
+      assert.ok(output.includes('Archer'), 'should mention Archer');
+      assert.ok(output.includes('Rogue'), 'should mention Rogue');
     });
 
     it('contains phase descriptions', () => {
@@ -182,21 +182,14 @@ describe('ui', () => {
     it('contains next step command', () => {
       const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
       const output = referenceCard();
-      assert.ok(output.includes('claude --agent wizard'), 'should contain entry command');
+      assert.ok(output.includes('claude-raid start'), 'should contain entry command');
     });
 
-    it('contains tmux instructions', () => {
+    it('contains tmux controls', () => {
       const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
       const output = referenceCard();
-      assert.ok(output.includes('tmux new-session'), 'should contain tmux start command');
       assert.ok(output.includes('Click pane'), 'should contain tmux pane navigation');
-    });
-
-    it('contains in-process controls fallback', () => {
-      const { referenceCard } = loadUi({ NO_COLOR: '1', _forceTTY: true });
-      const output = referenceCard();
-      assert.ok(output.includes('Shift+Down'), 'should contain Shift+Down');
-      assert.ok(output.includes('Ctrl+T'), 'should contain Ctrl+T');
+      assert.ok(output.includes('Mouse wheel'), 'should contain mouse scroll');
     });
 
     it('contains heal command hint', () => {

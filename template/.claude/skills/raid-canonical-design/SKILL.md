@@ -1,6 +1,6 @@
 ---
 name: raid-canonical-design
-description: "Phase 2 of Canonical Quest. Agents explore design approaches from different angles based on PRD. Battle-tested design doc with mermaid diagrams. No code writing. Question chain: agents→wizard→human."
+description: "Use when Phase 2 (Design) begins in a Canonical Quest, after PRD is approved or skipped."
 ---
 
 # Raid Design — Phase 2
@@ -60,7 +60,7 @@ Complete in order:
 3. **Explore project context** — files, docs, recent commits, dependencies, conventions, patterns
 4. **Research dependencies** — API surface, versioning, compatibility, known issues. Read docs COMPLETELY.
 5. **Ask clarifying questions** — one at a time to the human, eliminate every ambiguity
-6. **Open the Dungeon** — create `{questDir}/phase-2-design.md` with Phase 2 header, quest, mode. Read PRD doc if it exists.
+6. **Open the Dungeon** — create `{questDir}/phase-2-design.md` (scoreboard) with Phase 2 header, quest, mode. Read `{questDir}/prd.md` if it exists.
 7. **Dispatch with angles** — send each agent their angle via SendMessage, then go silent:
    ```
    SendMessage(to="warrior", message="DISPATCH: [quest]. Your angle: [X]...")
@@ -71,34 +71,22 @@ Complete in order:
 9. **Close the phase** — when Dungeon has sufficient verified findings to form 2-3 approaches
 10. **Synthesize approaches** — propose 2-3 approaches from Dungeon evidence, with trade-offs and recommendation
 11. **Present design section by section** — scale each section to its complexity (a few sentences if straightforward, up to 200-300 words if nuanced). Ask the human after each section: "Does this look right so far?" Be ready to revise before moving on. Cover: architecture, components, data flow, error handling, testing.
-12. **Write design doc** — save to `{questDir}/phase-2-design.md`. May also create `{questDir}/phase-2-diagrams.md` for mermaid charts.
+12. **Write design doc** — save to `{questDir}/design.md` (separate from the phase scoreboard). May also create `{questDir}/design-diagrams.md` for mermaid charts.
 13. **Adversarial spec review** — agents attack the written spec directly, challenging each other
 14. **Spec self-review** — fix issues inline (see checklist below)
 15. **Human reviews written spec** — human approves before proceeding
 16. **Commit** — `docs(quest-{slug}): phase 2 design — {summary}`
 17. **Transition** — invoke `raid-canonical-implementation-plan`
 
-## Opening the Dungeon
+## Opening the Dungeon (Phase Scoreboard)
 
-Create `{questDir}/phase-2-design.md` (where `{questDir}` is from raid-session):
+Create `{questDir}/phase-2-design.md` — this is the **dungeon scoreboard**, not the deliverable. It tracks discoveries, battles, and shared knowledge from agent exploration. Every line in Discoveries/Active Battles must use a recognized prefix (`DUNGEON:`, `UNRESOLVED:`, `BLACKCARD:`, `RESOLVED:`, `TASK:`). Freeform content is only allowed in Resolved, Shared Knowledge, and Escalations sections.
 
 ```markdown
 # Phase 2: Design
 ## Quest: <task description from human>
 ## Mode: <Full Raid | Skirmish>
-## PRD: <link to phase-1-prd.md if it exists>
-
-### Architecture Overview
-
-### Data Flow
-
-### Component Design
-
-### API Contracts
-
-### Edge Cases & Error Handling
-
-### Trade-offs & Decisions
+## PRD: <link to prd.md if it exists>
 
 ### Discoveries
 
@@ -197,9 +185,9 @@ After writing the design doc, the Wizard reviews with fresh eyes:
 
 Fix issues inline.
 
-## Design Document Structure
+## Design Document Structure (Phase Deliverable)
 
-Save to: `{questDir}/phase-2-design.md`
+The actual design doc is a **separate file**: `{questDir}/design.md`. This file is not validated by the dungeon hook and can contain freeform markdown. Write it when closing the phase — synthesize from scoreboard findings and agent exploration.
 
 ```markdown
 # [Feature Name] Design Specification
@@ -251,7 +239,10 @@ If the team is stuck on a fundamental design choice after genuine direct debate:
 
 When the design is approved and committed:
 
-1. Update `.claude/raid-session` phase to `"plan"`
+1. Update `.claude/raid-session` phase via Bash (write gate blocks Write/Edit on this file):
+   ```bash
+   jq '.phase="plan"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
+   ```
 2. **Commit:** `docs(quest-{slug}): phase 2 design — {summary}`
 3. **Send phase report to human:** summarize key design decisions, trade-offs resolved, what's next
 4. **Load the `raid-canonical-implementation-plan` skill now and begin Phase 3.**

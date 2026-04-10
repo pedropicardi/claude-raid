@@ -10,16 +10,47 @@ const versionCheck = require('../src/version-check');
 const showUpdateNotice = versionCheck.start();
 
 const COMMANDS = {
-  // Start a Raid quest — launches wizard with full permissions
+  // Start a Raid quest — launches tmux + wizard in one shot
   start: () => {
-    const { spawn } = require('child_process');
+    const { spawn, execSync } = require('child_process');
     console.log('\n' + banner());
-    console.log(header('Summoning the Wizard...') + '\n');
-    const child = spawn('claude', ['--dangerously-skip-permissions', '--agent', 'wizard'], {
-      stdio: 'inherit',
-      env: process.env,
-    });
-    child.on('exit', (code) => process.exit(code || 0));
+
+    // Check if already inside a tmux session
+    if (process.env.TMUX) {
+      console.log(header('Already in tmux — launching Wizard...') + '\n');
+      try { execSync('tmux set -g mouse on', { stdio: 'ignore' }); } catch {}
+      const child = spawn('claude', ['--dangerously-skip-permissions', '--agent', 'wizard'], {
+        stdio: 'inherit',
+        env: process.env,
+      });
+      child.on('exit', (code) => process.exit(code || 0));
+      return;
+    }
+
+    // Check if tmux is available
+    let hasTmux = false;
+    try { execSync('command -v tmux', { stdio: 'pipe' }); hasTmux = true; } catch {}
+
+    if (hasTmux) {
+      console.log(header('Opening tmux session + Wizard...') + '\n');
+      const child = spawn('tmux', [
+        'new-session', '-s', 'raid', ';',
+        'set', '-g', 'mouse', 'on', ';',
+        'send-keys', 'claude --dangerously-skip-permissions --agent wizard', 'Enter',
+      ], {
+        stdio: 'inherit',
+        env: process.env,
+      });
+      child.on('exit', (code) => process.exit(code || 0));
+    } else {
+      console.log(colors.dim('  tmux not found — launching Wizard directly.'));
+      console.log(colors.dim('  Install tmux for multi-pane agent display: brew install tmux') + '\n');
+      const child = spawn('claude', ['--dangerously-skip-permissions', '--agent', 'wizard'], {
+        stdio: 'inherit',
+        env: process.env,
+      });
+      child.on('exit', (code) => process.exit(code || 0));
+    }
   },
   // Sync local with remote after CI version bump
   sync: async () => {
@@ -64,7 +95,7 @@ if (!command || !COMMANDS[command]) {
   console.log('\n' + banner());
   console.log(header('Commands') + '\n');
   const cmds = [
-    ['start',     'Begin the Raid (launches Wizard)'],
+    ['start',     'Begin the Raid (tmux + Wizard in one shot)'],
     ['summon',    'Summon the party into this realm'],
     ['update',    'Reforge the party\'s arsenal'],
     ['dismantle', 'Dismantle the camp and retreat'],
@@ -76,6 +107,9 @@ if (!command || !COMMANDS[command]) {
   }
   console.log(header('Begin the Raid') + '\n');
   console.log('    claude-raid start\n');
+  console.log(colors.amber('  Beta') + colors.dim(' — This project is in active development and can be'));
+  console.log(colors.dim('  token-usage intensive. Multi-agent sessions consume significantly'));
+  console.log(colors.dim('  more tokens than single-agent workflows. Use with caution.') + '\n');
   console.log(colors.dim('  github.com/pedropicardi/claude-raid') + '\n');
   process.exit(command ? 1 : 0);
 }

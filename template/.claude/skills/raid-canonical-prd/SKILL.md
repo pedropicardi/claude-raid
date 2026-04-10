@@ -1,6 +1,6 @@
 ---
 name: raid-canonical-prd 
-description: "Phase 1 of Canonical Quest (optional). Agents research and explore to produce a complete PRD. No code writing. Wizard mediates human questions. Output: phase-1-prd.md in quest directory."
+description: "Use when Phase 1 (PRD) begins in a Canonical Quest. The human chose to forge a PRD rather than skip to Design."
 ---
 
 # Raid PRD — Phase 1 (Optional)
@@ -39,7 +39,10 @@ digraph prd {
 
 ## Wizard Checklist
 
-1. **Update raid-session** — set phase to `"prd"`
+1. **Update raid-session** via Bash (write gate blocks Write/Edit on this file):
+   ```bash
+   jq '.phase="prd"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
+   ```
 2. **Create phase file** — `{questDir}/phase-1-prd.md` with boilerplate sections
 3. **Digest the human's request** — understand intent, identify gaps, map the problem space
 4. **Dispatch party with research angles** via SendMessage:
@@ -51,14 +54,32 @@ digraph prd {
 7. **Dispatch cross-testing** — when agents flag ROUND_COMPLETE:, assign their findings to others
 8. **Close phase** — wrap up PRD, send report, commit
 
-## Phase File Template
+## Phase File (Dungeon Scoreboard)
 
-Create `{questDir}/phase-1-prd.md`:
+Create `{questDir}/phase-1-prd.md` — this is the **dungeon scoreboard**, not the deliverable. It tracks discoveries, battles, and shared knowledge from agent research. Every line in Discoveries/Active Battles must use a recognized prefix (`DUNGEON:`, `UNRESOLVED:`, `BLACKCARD:`, `RESOLVED:`, `TASK:`). Freeform content is only allowed in Resolved, Shared Knowledge, and Escalations sections.
 
 ```markdown
 # Phase 1: PRD — Product Requirements Document
 ## Quest: <task description>
 ## Mode: <Full Raid | Skirmish | Scout>
+
+### Discoveries
+
+### Active Battles
+
+### Resolved
+
+### Shared Knowledge
+
+### Escalations
+```
+
+## Phase Deliverable (PRD Document)
+
+The actual PRD is a **separate file**: `{questDir}/prd.md`. This file is not validated by the dungeon hook and can contain freeform markdown. Write it when closing the phase — synthesize from the scoreboard findings.
+
+```markdown
+# <Feature Name> — Product Requirements Document
 
 ### Problem Statement
 
@@ -81,10 +102,6 @@ Create `{questDir}/phase-1-prd.md`:
 ### Success Criteria
 
 ### Open Questions
-
-### Discoveries
-
-### Shared Knowledge
 ```
 
 ## Research Angles
@@ -130,4 +147,6 @@ When the PRD is complete (all sections filled, open questions resolved):
 
 ## Phase Spoils
 
-**Output**: `{questDir}/phase-1-prd.md` — Complete Product Requirements Document with all sections filled, open questions resolved, and discoveries from cross-testing documented.
+**Two outputs**:
+- `{questDir}/phase-1-prd.md` — Dungeon scoreboard with pinned discoveries, resolved battles, and shared knowledge from agent research
+- `{questDir}/prd.md` — Complete Product Requirements Document with all sections filled, synthesized from scoreboard findings

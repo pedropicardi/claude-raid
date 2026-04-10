@@ -1,6 +1,6 @@
 ---
 name: raid-canonical-implementation-plan
-description: "Phase 3 of Canonical Quest. Agents decompose the design into tasks through round-based debate. No code writing. Output: task index + individual task files in quest directory."
+description: "Use when Phase 3 (Plan) begins in a Canonical Quest, after the design doc is approved and committed."
 ---
 
 # Raid Implementation Plan — Phase 3
@@ -41,7 +41,7 @@ digraph plan {
 ## Wizard Checklist
 
 1. **Read the approved design doc** — every requirement, every constraint
-2. **Read the Phase 2 design doc** — carry forward verified knowledge from `{questDir}/phase-2-design.md`
+2. **Read the Phase 2 design doc** — carry forward verified knowledge from `{questDir}/design.md` (the deliverable) and `{questDir}/phase-2-design.md` (the scoreboard)
 3. **Open the Dungeon** — create `{questDir}/phase-3-plan.md` with Phase 3 header
 4. **Dispatch decomposition** — all agents decompose independently with different angles, then interact directly (round-based)
 5. **Observe the fight** — agents test each other's plans, argue ordering, coverage, naming. Intervene only on triggers.
@@ -218,7 +218,10 @@ Fix issues inline. If a spec requirement has no task, add the task.
 
 When the plan is approved and committed:
 
-1. Update `.claude/raid-session` phase to `"implementation"`
+1. Update `.claude/raid-session` phase via Bash (write gate blocks Write/Edit on this file):
+   ```bash
+   jq '.phase="implementation"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
+   ```
 2. **Commit**: `docs(quest-{slug}): phase 3 plan — {N} tasks, {summary}`
 3. **Send phase report to human**: task count, dependency graph, estimated scope
 4. **Load the `raid-canonical-implementation` skill now and begin Phase 4.**

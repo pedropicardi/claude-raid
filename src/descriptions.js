@@ -46,6 +46,7 @@ const SKILLS = {
   'raid-debugging':                       'Root-cause investigation',
   'raid-browser':                         'Browser startup discovery',
   'raid-browser-chrome':                  'Live browser inspection',
+  'raid-teambuff':                        'Emergency team retrospective + rulings',
 };
 
 const CONFIG = {

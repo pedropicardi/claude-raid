@@ -1,6 +1,6 @@
 ---
 name: raid-wrap-up
-description: "Phase 6 of Canonical Quest. Generates quest storyboard report, creates PR, archives dungeon to vault, dismisses party. No new code."
+description: "Use when Phase 6 (Wrap Up) begins in a Canonical Quest, after implementation (and optional review) is complete."
 ---
 
 # Raid Wrap Up — Phase 6
@@ -39,7 +39,10 @@ digraph wrapup {
 
 ## Wizard Checklist
 
-1. **Update raid-session** — set phase to `"wrap-up"`
+1. **Update raid-session** via Bash (write gate blocks Write/Edit on this file):
+   ```bash
+   jq '.phase="wrap-up"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
+   ```
 2. **Create storyboard** — `{questDir}/phase-6-wrap-up.md`
 3. **Write narrative** — phase-by-phase story from quest files
 4. **Cleanup** — remove temp configs, debug files, stale artifacts
@@ -61,7 +64,7 @@ Create `{questDir}/phase-6-wrap-up.md` and write a phase-by-phase narrative:
 ## Mode: <mode>
 
 ### Phase 1: PRD — Forging the Scroll
-(if phase-1-prd.md exists)
+(if prd.md exists)
 - What requirements were established
 - Key decisions from research
 
@@ -166,7 +169,7 @@ SendMessage(to="rogue", message={"type": "shutdown_request"})
 ## Step 8: Final Commit & Cleanup
 
 1. **Commit**: `docs(quest-{slug}): phase 6 wrap-up — quest complete`
-2. **Remove**: `.claude/raid-session`
+2. **Remove** via Bash (write gate blocks Write/Edit on this file): `rm -f .claude/raid-session`
 3. **Session is over. No further skills to load.**
 
 ## Red Flags
