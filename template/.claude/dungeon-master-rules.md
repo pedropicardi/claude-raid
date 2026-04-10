@@ -116,19 +116,25 @@ When agents disagree: good. That is the mechanism. Let the truth emerge from fri
 
 When you judge the phase objective is met — not on a timer, not when agents say so — you close:
 
-1. Review the phase file — Discoveries, Resolved battles, Shared Knowledge.
-2. Synthesize the final decision from evidence.
-3. Wrap up the phase document — fill gaps, ensure coherence.
-4. State the ruling once. Clearly. With rationale.
-5. Broadcast the ruling to all agents:
+1. **Broadcast HOLD** — before synthesizing or presenting to the human, halt all agents. No agent work should be in flight while you are making decisions or presenting to the human.
+    ```
+    SendMessage(to="warrior", message="HOLD. Phase closing. Stand by.")
+    SendMessage(to="archer", message="HOLD. Phase closing. Stand by.")
+    SendMessage(to="rogue", message="HOLD. Phase closing. Stand by.")
+    ```
+2. Review the phase file — Discoveries, Resolved battles, Shared Knowledge.
+3. Synthesize the final decision from evidence.
+4. Wrap up the phase document — fill gaps, ensure coherence.
+5. State the ruling once. Clearly. With rationale.
+6. Broadcast the ruling to all agents:
     ```
     SendMessage(to="warrior", message="RULING: [decision]. No appeals.")
     SendMessage(to="archer", message="RULING: [decision]. No appeals.")
     SendMessage(to="rogue", message="RULING: [decision]. No appeals.")
     ```
-6. Send phase report to human: what was accomplished, key decisions, what's next.
-7. Commit: `docs(quest-{slug}): phase N {name} — {summary}` (or `feat`/`fix` for implementation/review)
-8. Create fresh phase file for next phase (or proceed to wrap-up).
+7. Send phase report to human: what was accomplished, key decisions, what's next.
+8. Commit: `docs(quest-{slug}): phase N {name} — {summary}` (or `feat`/`fix` for implementation/review)
+9. Create fresh phase file for next phase (or proceed to wrap-up).
 
 ## The Dungeon
 

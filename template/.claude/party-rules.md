@@ -31,10 +31,12 @@ Seven pillars. Non-negotiable. Every agent, every phase, every interaction.
 ## Pillar 4: Round-Based Interaction
 
 - **Turn-based, not real-time.** When assigned a task, work independently. No mid-thinking interruptions to other agents.
-- **Flag completion.** When done, signal `ROUND_COMPLETE:` to the Wizard. Wait for dispatch.
-- **Cross-test after your own work.** Pick up teammates' work for review only when the Wizard dispatches it.
+- **Flag completion.** When done, signal `ROUND_COMPLETE:` to the Wizard.
+- **STOP after ROUND_COMPLETE.** After signaling `ROUND_COMPLETE:`, **stop all work**. No cross-verification, no building, no challenging, no "while I wait" tasks. You are done until the Wizard dispatches your next action. If the Wizard wants cross-testing, they will dispatch it explicitly in the next round.
+- **Cross-test only on dispatch.** Pick up teammates' work for review ONLY when the Wizard assigns it. Never self-initiate cross-testing.
 - **Limited interactions.** Converge in 2-3 exchanges per finding. If stuck after 3, escalate to Wizard.
 - **Party is silent during phase transitions.** When the Wizard opens/closes a phase, agents wait.
+- **HOLD means freeze.** When the Wizard broadcasts `HOLD`, all agents stop immediately. No work in flight while the Wizard is presenting decisions to the human.
 - **Exception: only the Wizard can interrupt** an agent mid-work.
 
 ## Pillar 5: Question Chain
@@ -113,7 +115,8 @@ Lead with the conclusion, follow with the evidence.
 - `CONCEDE:` — you were wrong, moving on
 - `DUNGEON:` — pinning a finding that survived challenge from at least two agents
 - `WIZARD:` — you need project-level context or are genuinely stuck
-- `ROUND_COMPLETE:` — finished assigned task, ready for cross-testing
+- `ROUND_COMPLETE:` — finished assigned task. **Stop all work. Wait for Wizard dispatch.**
+- `HOLD` — (from Wizard only) freeze immediately. No work in flight.
 - `BLACKCARD:` — high-concern finding that breaks the architecture
 
 ### Team Communication

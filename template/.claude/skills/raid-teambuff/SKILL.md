@@ -234,6 +234,52 @@ Wizard reflects alone. No dispatch, no cross-criticism. Wizard writes:
 - Self-criticism
 - Proposed rulings (presented to human for approval)
 
+## Known Dysfunction Patterns
+
+These are real patterns observed in production quests. When reflecting, look for these specifically — they are the most common sources of token waste and team friction.
+
+### 1. Ghost Rounds — Working After ROUND_COMPLETE
+
+An agent signals `ROUND_COMPLETE:` but keeps working — cross-verifying, building on findings, challenging teammates. This burns tokens on work the Wizard didn't dispatch and creates confusion about what's "official" output vs unsanctioned noise.
+
+**What to look for:** Did any agent produce work after their `ROUND_COMPLETE:` signal? Did agents treat ROUND_COMPLETE as "my initial research is done, now I'll cross-verify" instead of a full stop?
+
+**The fix:** `ROUND_COMPLETE:` means stop. Period. No "while I wait" tasks. The Wizard controls when the next round begins.
+
+### 2. Wizard Presenting While Agents Are Active
+
+The Wizard synthesizes or presents decisions to the human while agents are still working. This creates a split timeline — the Wizard's summary doesn't include the agents' in-flight work, and agents produce findings that nobody reads.
+
+**What to look for:** Did the Wizard close a phase or present a ruling while agents still had messages in flight? Did agent findings get lost because the Wizard had already moved on?
+
+**The fix:** The Wizard must broadcast `HOLD` before synthesizing. No decisions presented to the human while any agent is active.
+
+### 3. Self-Initiated Cross-Testing
+
+Agents start cross-testing each other's findings during their own research round, without waiting for the Wizard to dispatch cross-testing as a separate round. This blurs the boundary between "explore your angle" and "challenge others' work," leading to premature convergence or unfocused debate.
+
+**What to look for:** Did agents start challenging each other during Round 1 (research)? Did the research round merge into the cross-testing round without a clear Wizard dispatch?
+
+**The fix:** Round 1 is research only — explore your angle, pin findings, signal ROUND_COMPLETE, stop. Round 2 is cross-testing — the Wizard explicitly assigns whose findings to challenge. Agents never self-initiate cross-testing.
+
+### 4. Token Spirals
+
+An agent goes deep on an angle that doesn't warrant depth — 47 edge cases for a function with 2 code paths, 5 rounds debating a naming convention, exhaustive analysis of a non-critical path. The effort is real but the value is low.
+
+**What to look for:** Was effort proportional to impact? Did any agent spend more rounds on a finding than it deserved? Did debates continue past the point of diminishing returns?
+
+### 5. Echo Chamber
+
+Two or more agents converge on the same angle without either challenging the other. They agree, restate, and build — but never stress-test. This is the opposite of adversarial design.
+
+**What to look for:** Did any two agents produce findings that were essentially the same? Did anyone get a free pass?
+
+### 6. Wizard Over-Delegation
+
+The Wizard dispatches and goes fully silent when it should be actively steering. The team drifts because no one is reading the Dungeon as a whole, connecting findings across agents, or redirecting collapsed differentiation.
+
+**What to look for:** Did the Wizard miss intervention points? Did agents explore tangents without correction? Did findings go unconnected when the Wizard could have linked them?
+
 ## Common Rationalizations
 
 | Excuse | Reality |
