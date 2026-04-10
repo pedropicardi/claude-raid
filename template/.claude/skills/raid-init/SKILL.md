@@ -33,6 +33,16 @@ digraph init {
 }
 ```
 
+## Step 0: Detect Plan Mode
+
+Before anything else, check if you are running in Claude Code's **plan mode**.
+
+If plan mode is active, ask the human to exit it before proceeding:
+
+> "It looks like we're in **plan mode**. The Raid has its own safety gates — no teammate writes any file without permission, and hooks enforce phase-based restrictions. Plan mode would block the quest from working properly. Please exit plan mode (`/plan` or press Escape) and we'll get started."
+
+Do NOT proceed with the quest until plan mode is exited.
+
 ## Step 1: Check for In-Progress Quests
 
 Look in `.claude/dungeon/` for existing quest directories. If any exist:
