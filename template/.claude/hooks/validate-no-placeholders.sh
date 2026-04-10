@@ -16,7 +16,7 @@ fi
 # Only check files in specs or plans directories
 IS_RAID_DOC=false
 case "$RAID_FILE_PATH" in
-  "$RAID_SPECS_PATH"/*|"$RAID_PLANS_PATH"/*|.claude/dungeon/*/phase-*.md) IS_RAID_DOC=true ;;
+  "$RAID_SPECS_PATH"/*|"$RAID_PLANS_PATH"/*|.claude/dungeon/*/phases/phase-*.md|.claude/dungeon/*/spoils/*.md|.claude/dungeon/*/spoils/tasks/*.md|.claude/dungeon/*/phase-*.md) IS_RAID_DOC=true ;;
 esac
 
 if [ "$IS_RAID_DOC" = false ]; then
