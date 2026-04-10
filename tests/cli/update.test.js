@@ -33,8 +33,8 @@ describe('update', () => {
     init.install(cwd);
     const result = update.performUpdate(cwd);
     assert.strictEqual(result.success, true);
-    const content = fs.readFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'utf8');
-    assert.ok(content.includes('Raid Team Rules'));
+    const content = fs.readFileSync(path.join(cwd, '.claude', 'party-rules.md'), 'utf8');
+    assert.ok(content.includes('Party Rules'));
   });
 
   it('does not remove existing custom fields from raid.json', () => {
@@ -125,16 +125,16 @@ describe('update', () => {
     assert.strictEqual(content, 'my custom wizard');
   });
 
-  it('skips customized raid-rules.md', () => {
+  it('skips customized party-rules.md', () => {
     init = require('../../src/init');
     update = require('../../src/update');
     const cwd = makeTempDir();
     init.install(cwd);
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'my custom rules');
+    fs.writeFileSync(path.join(cwd, '.claude', 'party-rules.md'), 'my custom rules');
     const result = update.performUpdate(cwd);
     assert.strictEqual(result.success, true);
-    assert.ok(result.message.includes('raid-rules.md'));
-    const content = fs.readFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'utf8');
+    assert.ok(result.message.includes('party-rules.md'));
+    const content = fs.readFileSync(path.join(cwd, '.claude', 'party-rules.md'), 'utf8');
     assert.strictEqual(content, 'my custom rules');
   });
 });

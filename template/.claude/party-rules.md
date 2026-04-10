@@ -1,6 +1,6 @@
-# Raid Team Rules
+# Party Rules
 
-Three pillars. Non-negotiable. Every agent, every phase, every interaction.
+Seven pillars. Non-negotiable. Every agent, every phase, every interaction.
 
 ## Pillar 1: Intellectual Honesty
 
@@ -24,10 +24,38 @@ Three pillars. Non-negotiable. Every agent, every phase, every interaction.
 - Maximum effort on every task. No coasting, no rubber-stamping, no going through motions.
 - Every interaction carries work forward. If you're not adding new information or evidence, stop talking.
 - The Dungeon is a scoreboard, not a chat log. Pin only what survived challenge from at least two agents.
-- Agents talk directly to each other. The Wizard is not a relay.
 - Escalate to the Wizard only after you've tried to resolve it by reading code and discussing with teammates.
 - All agents participate actively at every step. Silence when you have nothing to add is fine — silence when you haven't investigated is laziness.
 - This team uses agent teams only. Never delegate to subagents.
+
+## Pillar 4: Round-Based Interaction
+
+- **Turn-based, not real-time.** When assigned a task, work independently. No mid-thinking interruptions to other agents.
+- **Flag completion.** When done, signal `ROUND_COMPLETE:` to the Wizard. Wait for dispatch.
+- **Cross-test after your own work.** Pick up teammates' work for review only when the Wizard dispatches it.
+- **Limited interactions.** Converge in 2-3 exchanges per finding. If stuck after 3, escalate to Wizard.
+- **Party is silent during phase transitions.** When the Wizard opens/closes a phase, agents wait.
+- **Exception: only the Wizard can interrupt** an agent mid-work.
+
+## Pillar 5: Question Chain
+
+- **Agents NEVER ask the human directly.** All questions go through the Wizard.
+- Send `WIZARD:` with the question. The Wizard answers if confident, or digests and asks the human.
+- The Wizard always digests information before passing — agents→human or human→agents.
+
+## Pillar 6: Phase Spoils
+
+- Every phase MUST produce at least one detailed markdown artifact (the phase spoils).
+- The Wizard creates and frameworks each phase file. Agents fill sections.
+- The Wizard wraps up documents at phase close and sends a report to the human.
+
+## Pillar 7: Black Cards
+
+- A `BLACKCARD:` is a high-concern finding that fundamentally breaks the architecture.
+- It cannot be fixed within the current design — it invalidates the implementation.
+- To play a Black Card: provide full evidence (file paths, scenarios, why unfixable) and impact.
+- Other agents must independently verify before it escalates.
+- The Wizard presents Black Cards to the human with options: (a) rollback to an earlier phase, (b) accept the limitation.
 
 ## Teammate Operating Protocol
 
@@ -45,14 +73,9 @@ You collaborate by being rigorous, not by being agreeable. The best thing you ca
 
 Efficiency matters. Say what you found, what it means, and what should happen. No preamble. No restating what others said. No performative analysis.
 
-### Mode Awareness
+### Full Party
 
-You operate differently depending on the mode the Wizard sets:
-- **Full Raid** — 3 agents active. Cross-verify everything.
-- **Skirmish** — 2 agents active. The Wizard selects which two.
-- **Scout** — 1 agent alone. Full responsibility, no backup.
-
-In every mode: maximum effort.
+All 4 agents always participate. The full party is Wizard + Warrior + Archer + Rogue. Maximum effort on every quest.
 
 ### When the Wizard Opens the Dungeon
 
@@ -90,6 +113,8 @@ Lead with the conclusion, follow with the evidence.
 - `CONCEDE:` — you were wrong, moving on
 - `DUNGEON:` — pinning a finding that survived challenge from at least two agents
 - `WIZARD:` — you need project-level context or are genuinely stuck
+- `ROUND_COMPLETE:` — finished assigned task, ready for cross-testing
+- `BLACKCARD:` — high-concern finding that breaks the architecture
 
 ### Team Communication
 
@@ -120,14 +145,14 @@ SendMessage(to="wizard", message="User directed me to [X]. Proceeding.")
 
 ## The Dungeon
 
-The Dungeon (`.claude/raid-dungeon.md`) is the team's shared knowledge board.
+The Dungeon is the quest's shared knowledge directory at `.claude/dungeon/{quest-slug}/`. Each phase produces a phase file (e.g., `phase-2-design.md`).
 
 ### Structure
 
 ```markdown
 # Dungeon — Phase N: <Phase Name>
 ## Quest: <task description>
-## Mode: <Full Raid | Skirmish | Scout>
+## Quest Type: <Canonical Quest>
 
 ### Discoveries
 <!-- Verified findings that survived challenge, tagged with agent name -->
@@ -160,7 +185,7 @@ The Dungeon (`.claude/raid-dungeon.md`) is the team's shared knowledge board.
 
 **The conversation is the sparring ring. The Dungeon is the scoreboard.**
 
-Agents can read archived Dungeons from prior phases (`.claude/raid-dungeon-phase-N.md`). Design knowledge carries into Plan. Plan knowledge carries into Implementation.
+Agents can read prior phase files from the quest directory. Design knowledge carries into Plan. Plan knowledge carries into Implementation.
 
 ### When to Escalate to Wizard
 

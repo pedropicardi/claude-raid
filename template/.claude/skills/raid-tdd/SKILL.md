@@ -106,7 +106,7 @@ Follow the same RED-GREEN-REFACTOR discipline but with Playwright:
 4. **Verify GREEN:** Run FULL suite (unit + browser) → all green
 5. **REFACTOR:** Clean up → re-run all
 
-Use `raid-browser-playwright` for detailed guidance. Invoke `raid-browser` for pre-flight and boot.
+Invoke `raid-browser` for pre-flight and boot. Use the browser test patterns below for Playwright-specific guidance.
 
 ### "Tests pass" = Unit AND Browser Tests
 

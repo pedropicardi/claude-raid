@@ -26,14 +26,18 @@ describe('descriptions', () => {
 
   it('exports SKILLS with 13 entries', () => {
     assert.strictEqual(Object.keys(SKILLS).length, 13);
-    assert.ok(SKILLS['raid-protocol']);
+    assert.ok(SKILLS['raid-canonical-protocol']);
     assert.ok(SKILLS['raid-tdd']);
+    assert.ok(SKILLS['raid-init']);
+    assert.ok(SKILLS['raid-canonical-prd']);
+    assert.ok(SKILLS['raid-wrap-up']);
   });
 
-  it('exports CONFIG with 3 entries', () => {
-    assert.strictEqual(Object.keys(CONFIG).length, 3);
+  it('exports CONFIG with 4 entries', () => {
+    assert.strictEqual(Object.keys(CONFIG).length, 4);
     assert.ok(CONFIG['raid.json']);
-    assert.ok(CONFIG['raid-rules.md']);
+    assert.ok(CONFIG['party-rules.md']);
+    assert.ok(CONFIG['dungeon-master-rules.md']);
     assert.ok(CONFIG['settings.json']);
   });
 

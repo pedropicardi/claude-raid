@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Raid lifecycle hook: SessionStart
-# Creates raid-session file and offers Vault access.
+# Creates raid-session file, quest directory, and offers Vault access.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -29,11 +29,29 @@ if [ "$SOURCE" = "resume" ] && [ -f ".claude/raid-session" ]; then
   exit 0
 fi
 
-# Create raid-session file — use jq to safely encode values
+# Generate quest ID from date
+QUEST_ID="$(date +%Y%m%d)-quest"
+
+# Create raid-session file with quest fields
 mkdir -p .claude
 STARTED_AT="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+QUEST_DIR=".claude/dungeon/$QUEST_ID"
 jq -n --arg sid "$SESSION_ID" --arg ts "$STARTED_AT" --arg mode "$MODE" \
-  '{ sessionId: $sid, startedAt: $ts, phase: "design", mode: $mode }' > .claude/raid-session
+  --arg qid "$QUEST_ID" --arg qdir "$QUEST_DIR" \
+  '{
+    sessionId: $sid,
+    startedAt: $ts,
+    phase: "",
+    mode: $mode,
+    questType: "",
+    questId: $qid,
+    questDir: $qdir,
+    blackCards: [],
+    phaseIteration: 1
+  }' > .claude/raid-session
+
+# Create quest directory
+mkdir -p "$QUEST_DIR"
 
 # Offer Vault context if entries exist
 if [ "$RAID_VAULT_ENABLED" = "true" ]; then

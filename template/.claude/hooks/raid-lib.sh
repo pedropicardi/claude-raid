@@ -10,6 +10,10 @@ RAID_MODE=""
 RAID_CURRENT_AGENT=""
 RAID_IMPLEMENTER=""
 RAID_TASK=""
+RAID_QUEST_TYPE=""
+RAID_QUEST_ID=""
+RAID_QUEST_DIR=""
+RAID_BLACK_CARDS=""
 
 if [ -f ".claude/raid-session" ]; then
   _session_json=$(jq -r '{
@@ -17,7 +21,11 @@ if [ -f ".claude/raid-session" ]; then
     mode: (.mode // ""),
     currentAgent: (.currentAgent // ""),
     implementer: (.implementer // ""),
-    task: (.task // "")
+    task: (.task // ""),
+    questType: (.questType // ""),
+    questId: (.questId // ""),
+    questDir: (.questDir // ""),
+    blackCards: (.blackCards // [])
   }' ".claude/raid-session" 2>/dev/null)
 
   _jq_rc=$?
@@ -28,6 +36,10 @@ if [ -f ".claude/raid-session" ]; then
     RAID_CURRENT_AGENT=$(echo "$_session_json" | jq -r '.currentAgent')
     RAID_IMPLEMENTER=$(echo "$_session_json" | jq -r '.implementer')
     RAID_TASK=$(echo "$_session_json" | jq -r '.task')
+    RAID_QUEST_TYPE=$(echo "$_session_json" | jq -r '.questType')
+    RAID_QUEST_ID=$(echo "$_session_json" | jq -r '.questId')
+    RAID_QUEST_DIR=$(echo "$_session_json" | jq -r '.questDir')
+    RAID_BLACK_CARDS=$(echo "$_session_json" | jq -c '.blackCards')
   else
     RAID_ACTIVE=false
     # Only warn if file has content (empty file is a transient state during phase transitions)
@@ -51,6 +63,7 @@ RAID_BROWSER_EXEC_CMD=""
 RAID_BROWSER_PW_CONFIG=""
 RAID_VAULT_ENABLED=true
 RAID_VAULT_PATH=".claude/vault"
+RAID_AGENT_EFFORT="medium"
 RAID_LIFECYCLE_SESSION=true
 RAID_LIFECYCLE_NUDGE=true
 RAID_LIFECYCLE_TASK_VALIDATION=true
@@ -74,6 +87,7 @@ if [ -f ".claude/raid.json" ]; then
     pwConfig: (.browser.playwrightConfig // ""),
     vaultEnabled: (if .raid.vault.enabled == null then true else .raid.vault.enabled end),
     vaultPath: (.raid.vault.path // ".claude/vault"),
+    agentEffort: (.raid.agentEffort // "medium"),
     lifecycleSession: (if .raid.lifecycle.autoSessionManagement == null then true else .raid.lifecycle.autoSessionManagement end),
     lifecycleNudge: (if .raid.lifecycle.teammateNudge == null then true else .raid.lifecycle.teammateNudge end),
     lifecycleTaskValidation: (if .raid.lifecycle.taskValidation == null then true else .raid.lifecycle.taskValidation end),
@@ -97,6 +111,7 @@ if [ -f ".claude/raid.json" ]; then
     RAID_BROWSER_PW_CONFIG=$(echo "$_config_json" | jq -r '.pwConfig')
     RAID_VAULT_ENABLED=$(echo "$_config_json" | jq -r '.vaultEnabled')
     RAID_VAULT_PATH=$(echo "$_config_json" | jq -r '.vaultPath')
+    RAID_AGENT_EFFORT=$(echo "$_config_json" | jq -r '.agentEffort')
     RAID_LIFECYCLE_SESSION=$(echo "$_config_json" | jq -r '.lifecycleSession')
     RAID_LIFECYCLE_NUDGE=$(echo "$_config_json" | jq -r '.lifecycleNudge')
     RAID_LIFECYCLE_TASK_VALIDATION=$(echo "$_config_json" | jq -r '.lifecycleTaskValidation')
@@ -108,9 +123,10 @@ if [ -f ".claude/raid.json" ]; then
 fi
 
 export RAID_ACTIVE RAID_PHASE RAID_MODE RAID_CURRENT_AGENT RAID_IMPLEMENTER RAID_TASK
+export RAID_QUEST_TYPE RAID_QUEST_ID RAID_QUEST_DIR RAID_BLACK_CARDS
 export RAID_TEST_CMD RAID_NAMING RAID_MAX_DEPTH RAID_COMMIT_MIN_LENGTH RAID_SPECS_PATH RAID_PLANS_PATH
 export RAID_BROWSER_ENABLED RAID_BROWSER_PORT_START RAID_BROWSER_PORT_END RAID_BROWSER_EXEC_CMD RAID_BROWSER_PW_CONFIG
-export RAID_VAULT_ENABLED RAID_VAULT_PATH
+export RAID_VAULT_ENABLED RAID_VAULT_PATH RAID_AGENT_EFFORT
 export RAID_LIFECYCLE_SESSION RAID_LIFECYCLE_NUDGE RAID_LIFECYCLE_TASK_VALIDATION
 export RAID_LIFECYCLE_COMPLETION_GATE RAID_LIFECYCLE_PHASE_CONFIRM RAID_LIFECYCLE_COMPACT_BACKUP
 export RAID_LIFECYCLE_TEST_WINDOW
@@ -172,6 +188,17 @@ raid_session_set() {
 raid_read_lifecycle_input() {
   RAID_HOOK_INPUT=$(cat)
   export RAID_HOOK_INPUT
+}
+
+# Return the quest dungeon directory path.
+raid_quest_dir() {
+  if [ -n "$RAID_QUEST_DIR" ]; then
+    echo "$RAID_QUEST_DIR"
+  elif [ -n "$RAID_QUEST_ID" ]; then
+    echo ".claude/dungeon/$RAID_QUEST_ID"
+  else
+    echo ".claude/dungeon"
+  fi
 }
 
 # Count Vault entries by counting table rows in index.md

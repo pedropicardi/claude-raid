@@ -1,9 +1,9 @@
 ---
-name: raid-implementation
-description: "Phase 3 of Raid protocol. Wizard assigns implementer and opens task Dungeon. Implementer builds with TDD. Challengers attack directly, building on each other's critiques. Wizard rotates and closes each task."
+name: raid-canonical-implementation
+description: "Phase 4 of Canonical Quest. Wizard assigns tasks to agents in batches (round-based). Agents build with TDD. Cross-testing after each task. Wizard orchestrates and closes when all tasks complete."
 ---
 
-# Raid Implementation — Phase 3
+# Raid Implementation — Phase 4
 
 One builds, two attack — and the attackers attack each other's reviews too. Every implementation earns its approval through direct adversarial pressure.
 
@@ -23,7 +23,7 @@ TDD is enforced in ALL modes. This is an Iron Law.
 
 ```dot
 digraph implementation {
-  "Wizard reads plan + Phase 2 Dungeon" -> "Create task tracking (TaskCreate)";
+  "Wizard reads plan + Phase 3 plan docs" -> "Create task tracking (TaskCreate)";
   "Create task tracking (TaskCreate)" -> "Wizard assigns task N (rotate implementer)";
   "Wizard assigns task N (rotate implementer)" -> "Wizard opens task Dungeon";
   "Wizard opens task Dungeon" -> "Implementer executes (TDD)";
@@ -43,15 +43,28 @@ digraph implementation {
   "All issues resolved?" -> "Wizard closes task: ruling" [label="yes"];
   "Wizard closes task: ruling" -> "More tasks?" [shape=diamond];
   "More tasks?" -> "Wizard assigns task N (rotate implementer)" [label="yes"];
-  "More tasks?" -> "Archive Dungeon + invoke raid-review" [label="no", shape=doublecircle];
+  "More tasks?" -> "Archive Dungeon + invoke raid-canonical-review" [label="no", shape=doublecircle];
 }
 ```
+
+## Step 0: Critical Plan Review (before any implementation)
+
+Each agent MUST review the plan independently before implementing:
+- Are there concerns about feasibility or missing dependencies?
+- Are any steps unclear or ambiguous?
+- Does the plan match the design doc?
+- Are the TDD steps complete with actual test code?
+
+If concerns: raise via `WIZARD:` before starting. Fix the plan first. Never force through a flawed plan.
+
+**Branch guard:** Never implement on main/master without explicit human consent. Create a feature branch first.
 
 ## Wizard Checklist
 
 1. **Read the plan** — extract all tasks, dependencies, ordering
-2. **Read Phase 2 archived Dungeon** — carry forward context
-3. **Set up worktree** — use `raid-git-worktrees` for isolation (optional)
+2. **Read Phase 3 plan docs** — carry forward context from `{questDir}/phase-3-plan.md` and task files
+3. **Dispatch plan review** — each agent reviews plan independently, raises concerns via WIZARD:
+4. **Resolve concerns** — fix plan issues before any implementation begins
 4. **Browser setup (if `browser.enabled` in raid.json)**:
    - Check if `browser.startup` exists — if null, invoke `raid-browser` startup discovery FIRST
    - Check if Playwright is installed — if not, first task becomes "scaffold Playwright"
@@ -64,7 +77,7 @@ digraph implementation {
    - Observe messages (auto-delivered) + Dungeon updates
    - Close with ruling via SendMessage to all agents
 7. **Track progress** — mark complete only after Wizard ruling per task
-8. **After all tasks** — archive Dungeon, invoke `raid-review`
+8. **After all tasks** — archive Dungeon, invoke `raid-canonical-review`
 
 ## The Implementation Gauntlet (per task)
 
@@ -80,7 +93,7 @@ SendMessage(to="archer", message="Warrior is implementing Task N. Challenge when
 SendMessage(to="rogue", message="Warrior is implementing Task N. Challenge when they report done.")
 ```
 
-Phase 3 uses a single continuous Dungeon (`.claude/raid-dungeon.md`) across all tasks. The Wizard announces each task assignment via SendMessage.
+Phase 4 uses `{questDir}/phase-4-implementation.md` as the implementation log. The Wizard announces each task assignment via SendMessage. Agents flag `ROUND_COMPLETE:` when done with their task.
 
 ### Step 2: Implementer Executes (TDD)
 
@@ -154,6 +167,17 @@ The Wizard closes when messages + Dungeon show all issues resolved and challenge
 
 **Never ignore an escalation.** If the implementer says it's stuck, something needs to change.
 
+## When to STOP Executing
+
+STOP implementing immediately when:
+- Missing dependency not covered in plan
+- Test fails for unexpected reason (not the expected "right" failure)
+- Instruction is ambiguous — two valid interpretations exist
+- Verification fails repeatedly (2+ times on same step)
+- Implementation diverges significantly from plan
+
+**Ask via `WIZARD:` rather than guessing.** Don't force through blockers — they indicate plan gaps, not agent weakness. The Wizard escalates to the human if needed.
+
 ## Quality Gates Per Task
 
 - [ ] Tests written BEFORE implementation (TDD)
@@ -183,7 +207,7 @@ The Wizard closes when messages + Dungeon show all issues resolved and challenge
 
 - **3+ fix attempts on one task:** Question whether the task spec or design is wrong.
 - **Agent repeatedly blocked:** The plan may need revision.
-- **Tests can't be written:** The design may not be testable. Return to Phase 1.
+- **Tests can't be written:** The design may not be testable. Return to Phase 2.
 
 ---
 
@@ -191,8 +215,11 @@ The Wizard closes when messages + Dungeon show all issues resolved and challenge
 
 When all tasks are approved and committed:
 
-1. Archive the Dungeon: rename `.claude/raid-dungeon.md` to `.claude/raid-dungeon-phase-3.md`
-2. Update `.claude/raid-session` phase to `"review"`
-3. **Load the `raid-review` skill now and begin Phase 4.**
+1. Update `.claude/raid-session` phase to `"review"`
+2. **Commit**: `feat(quest-{slug}): phase 4 implementation — {summary}`
+3. **Send phase report to human**: what was built, test coverage, any concerns
+4. **Ask human**: "Shall we inspect the treasure? (Review phase) Or proceed directly to wrap-up?"
+5. If review → **Load `raid-canonical-review` skill and begin Phase 5**
+6. If skip → **Load `raid-wrap-up` skill and begin Phase 6**
 
-Do not wait. Do not ask. The next action after all implementation tasks pass is loading the next skill.
+Do not wait. Do not ask twice. The next action after all tasks pass is the human's choice.

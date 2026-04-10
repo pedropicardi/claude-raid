@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
-# Raid quality gate: consolidated commit validation hook
+# Raid quality gate: commit message format validation
 # PreToolUse hook for Bash commands containing 'git commit'
-# Consolidates: validate-commit-message.sh, validate-tests-pass.sh, validate-verification.sh
-# Cross-platform: uses grep -E (not grep -P)
+# Validates conventional commit format and message length.
+# Test execution gating is handled by the skill layer (raid-verification).
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -26,32 +26,29 @@ if echo "$RAID_COMMAND" | grep -qE -- '-m '; then
   fi
 fi
 
-# Try heredoc pattern: extract delimiter, then capture content between delimiters
+# Try heredoc pattern
 if [ -z "$MSG" ]; then
   _heredoc_delim=$(echo "$RAID_COMMAND" | grep -oE "<<-?'?\"?([A-Za-z_]+)'?\"?" | head -1 | sed "s/<<-\?['\"]*//" | sed "s/['\"]//g" || true)
   if [ -n "$_heredoc_delim" ]; then
-    # Extract lines between the heredoc open and the closing delimiter
     MSG=$(echo "$RAID_COMMAND" | sed -n "/<<.*${_heredoc_delim}/,/^[[:space:]]*${_heredoc_delim}/{ /<<.*${_heredoc_delim}/d; /^[[:space:]]*${_heredoc_delim}/d; p; }" | head -1 | sed 's/^[[:space:]]*//' || true)
   fi
 fi
 
-# If no message found (editor mode or unparseable), warn but allow
+# If no message found, warn but allow
 if [ -z "$MSG" ]; then
-  # Check if this looks like a commit with a message we couldn't parse
   if echo "$RAID_COMMAND" | grep -qE -- '-m |<<'; then
     raid_warn "COMMIT: Could not extract commit message for validation."
   fi
   exit 0
 fi
 
-# Use first line only for checks
+# Use first line only
 MSG=$(echo "$MSG" | head -1)
 
 # ============================================================
-# Check 1: Message format (always active, no session required)
+# Conventional commit format
 # ============================================================
 
-# Conventional commit format
 if ! echo "$MSG" | grep -qE '^(feat|fix|docs|style|refactor|perf|test|build|ci|chore|revert)(\(.+\))?: .+'; then
   raid_block "COMMIT: Message must follow conventional commit format (type(scope): description). Got: '$MSG'"
 fi
@@ -70,69 +67,5 @@ case "$LOWER_MSG" in
     raid_block "COMMIT: Message is too generic. Describe WHAT changed and WHY."
     ;;
 esac
-
-# ============================================================
-# Check 2: Tests pass (Raid-session only)
-# ============================================================
-
-if [ "$RAID_ACTIVE" = "true" ] && [ -n "$RAID_TEST_CMD" ]; then
-  # TRUST: RAID_TEST_CMD comes from project-local raid.json — user-controlled, not untrusted input
-  set +e
-  (eval "$RAID_TEST_CMD") > /dev/null 2>&1
-  _test_rc=$?
-  set -e
-  if [ "$_test_rc" -ne 0 ]; then
-    raid_block "TESTS: Tests failed. Fix before committing. Command: $RAID_TEST_CMD"
-  fi
-  # Run browser tests if enabled and Playwright is installed
-  if [ "$RAID_BROWSER_ENABLED" = "true" ] && [ -n "$RAID_BROWSER_PW_CONFIG" ] && [ -f "$RAID_BROWSER_PW_CONFIG" ]; then
-    set +e
-    ($RAID_BROWSER_EXEC_CMD playwright test --reporter=list) > /dev/null 2>&1
-    _pw_rc=$?
-    set -e
-    if [ "$_pw_rc" -ne 0 ]; then
-      raid_block "BROWSER TESTS: Playwright tests failed. Fix before committing. Command: $RAID_BROWSER_EXEC_CMD playwright test"
-    fi
-  fi
-
-  # Write timestamp atomically (only when ALL tests pass — unit AND browser)
-  mkdir -p .claude
-  date +%s > .claude/raid-last-test-run.tmp && mv .claude/raid-last-test-run.tmp .claude/raid-last-test-run
-fi
-
-# ============================================================
-# Check 3: Verification (Raid-session only, completion commits)
-# ============================================================
-
-if [ "$RAID_ACTIVE" = "true" ]; then
-  HAS_COMPLETION=false
-  for WORD in "complete" "done" "finish" "final"; do
-    if echo "$LOWER_MSG" | grep -qiw "$WORD"; then
-      HAS_COMPLETION=true
-      break
-    fi
-  done
-
-  if [ "$HAS_COMPLETION" = "true" ]; then
-    TIMESTAMP_FILE=".claude/raid-last-test-run"
-    MAX_AGE=$(( ${RAID_LIFECYCLE_TEST_WINDOW:-10} * 60 ))
-
-    if [ ! -f "$TIMESTAMP_FILE" ]; then
-      raid_block "VERIFICATION: Commit claims completion but no test run evidence found. Run tests before claiming work is complete."
-    fi
-
-    LAST_RUN=$(cat "$TIMESTAMP_FILE" | tr -d '[:space:]')
-    NOW=$(date +%s)
-    # Guard against corrupted/non-numeric timestamp
-    case "$LAST_RUN" in
-      ''|*[!0-9]*) raid_block "VERIFICATION: Test run timestamp is corrupted. Run tests again before claiming completion." ;;
-    esac
-    AGE=$((NOW - LAST_RUN))
-
-    if [ "$AGE" -gt "$MAX_AGE" ]; then
-      raid_block "VERIFICATION: Last test run was $((AGE / 60)) minutes ago. Run tests again before claiming completion."
-    fi
-  fi
-fi
 
 exit 0

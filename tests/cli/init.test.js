@@ -49,15 +49,16 @@ describe('init', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
     init.install(cwd);
-    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-protocol', 'SKILL.md')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-canonical-protocol', 'SKILL.md')));
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-tdd', 'SKILL.md')));
   });
 
-  it('copies raid-rules.md', () => {
+  it('copies party-rules.md and dungeon-master-rules.md', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
     init.install(cwd);
-    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid-rules.md')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'party-rules.md')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'dungeon-master-rules.md')));
   });
 
   it('generates raid.json', () => {
@@ -95,18 +96,17 @@ describe('init', () => {
     const cwd = makeTempDir();
     const claudeDir = path.join(cwd, '.claude');
     fs.mkdirSync(claudeDir, { recursive: true });
-    fs.writeFileSync(path.join(claudeDir, 'raid-rules.md'), '# Rules');
+    fs.writeFileSync(path.join(claudeDir, 'party-rules.md'), '# Rules');
     const result = init.install(cwd);
     assert.ok(result.alreadyInstalled);
   });
 
-  it('adds Dungeon files to .gitignore', () => {
+  it('adds Dungeon directory to .gitignore', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
     init.install(cwd);
     const gitignore = fs.readFileSync(path.join(cwd, '.gitignore'), 'utf8');
-    assert.ok(gitignore.includes('.claude/raid-dungeon.md'), 'Should include raid-dungeon.md');
-    assert.ok(gitignore.includes('.claude/raid-dungeon-phase-*'), 'Should include raid-dungeon-phase-*');
+    assert.ok(gitignore.includes('.claude/dungeon/'), 'Should include .claude/dungeon/');
   });
 
   it('install returns result without running setup (setup is async in run())', () => {
@@ -259,7 +259,7 @@ describe('dryRun', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
     const output = init.dryRun(cwd);
-    assert.ok(output.includes('raid-protocol'), 'should list protocol skill');
+    assert.ok(output.includes('raid-canonical-protocol'), 'should list protocol skill');
     assert.ok(output.includes('raid-tdd'), 'should list tdd skill');
   });
 

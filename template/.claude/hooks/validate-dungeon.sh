@@ -13,9 +13,15 @@ if [ -z "${RAID_FILE_PATH:-}" ]; then
   exit 0
 fi
 
-# Only check Dungeon files
-case "$RAID_FILE_PATH" in
-  */.claude/raid-dungeon.md|*/.claude/raid-dungeon-phase-*.md) ;;
+# Normalize to relative path
+_file="${RAID_FILE_PATH}"
+if [[ "$_file" == /* ]]; then
+  _file="${_file#"$PWD"/}"
+fi
+
+# Only check Dungeon files (quest directory structure + backward compat flat files)
+case "$_file" in
+  .claude/dungeon/*/phase-*.md) ;;
   .claude/raid-dungeon.md|.claude/raid-dungeon-phase-*.md) ;;
   *) exit 0 ;;
 esac
@@ -67,6 +73,11 @@ while IFS= read -r line; do
       entry_type="DUNGEON"
       content_after_prefix="${line#*DUNGEON:}"
       ;;
+    "BLACKCARD:"*|"🃏 BLACKCARD:"*)
+      has_prefix=true
+      entry_type="BLACKCARD"
+      content_after_prefix="${line#*BLACKCARD:}"
+      ;;
     "UNRESOLVED:"*|"⚠️ UNRESOLVED:"*)
       has_prefix=true
       entry_type="UNRESOLVED"
@@ -87,9 +98,8 @@ while IFS= read -r line; do
     continue
   fi
 
-  # Layer 2: Evidence check — only for pinned entries
+  # Layer 2: Evidence check — for pinned entries and black cards
   if [ "$entry_type" = "DUNGEON" ]; then
-    # Strip leading whitespace from content after prefix
     content_after_prefix="$(echo "$content_after_prefix" | sed 's/^[[:space:]]*//')"
     content_len=${#content_after_prefix}
     if [ "$content_len" -lt 50 ]; then
@@ -97,22 +107,31 @@ while IFS= read -r line; do
   - Pinned entry too short. Include evidence."
     fi
 
-    # Check that pinned entries reference at least two agents (survived challenge)
+    # Check that pinned entries reference at least two agents (word boundaries)
     agent_count=0
-    echo "$content_after_prefix" | grep -qi "warrior" && agent_count=$((agent_count + 1))
-    echo "$content_after_prefix" | grep -qi "archer" && agent_count=$((agent_count + 1))
-    echo "$content_after_prefix" | grep -qi "rogue" && agent_count=$((agent_count + 1))
-    echo "$content_after_prefix" | grep -qi "wizard" && agent_count=$((agent_count + 1))
+    echo "$content_after_prefix" | grep -qiw "warrior" && agent_count=$((agent_count + 1))
+    echo "$content_after_prefix" | grep -qiw "archer" && agent_count=$((agent_count + 1))
+    echo "$content_after_prefix" | grep -qiw "rogue" && agent_count=$((agent_count + 1))
+    echo "$content_after_prefix" | grep -qiw "wizard" && agent_count=$((agent_count + 1))
     if [ "$agent_count" -lt 2 ]; then
       issues="${issues}
   - Pinned entry must reference at least 2 agents who verified it (e.g., 'verified by @Warrior and @Archer')."
     fi
   fi
 
+  if [ "$entry_type" = "BLACKCARD" ]; then
+    content_after_prefix="$(echo "$content_after_prefix" | sed 's/^[[:space:]]*//')"
+    content_len=${#content_after_prefix}
+    if [ "$content_len" -lt 80 ]; then
+      issues="${issues}
+  - Black card entry too short (${content_len} chars, minimum 80). Describe the breaking concern with evidence."
+    fi
+  fi
+
   # Layer 3: Phase consistency
   if [ "$entry_type" = "TASK" ]; then
     case "${RAID_PHASE:-}" in
-      design|implementation|review)
+      design|implementation|review|prd|wrap-up)
         issues="${issues}
   - TASK entries belong in Plan phase, not ${RAID_PHASE}."
         ;;

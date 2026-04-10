@@ -32,7 +32,6 @@ const RAID_HOOKS = {
     {
       matcher: 'Bash',
       hooks: [
-        { type: 'command', command: `bash .claude/hooks/validate-bash-writes.sh ${RAID_HOOK_MARKER}` },
         { type: 'command', command: `bash .claude/hooks/validate-commit.sh ${RAID_HOOK_MARKER}` },
         { type: 'command', command: `bash .claude/hooks/validate-browser-tests-exist.sh ${RAID_HOOK_MARKER}` },
       ],
@@ -63,20 +62,6 @@ TaskCreated: [
     {
       hooks: [
         { type: 'command', command: `bash .claude/hooks/raid-task-created.sh ${RAID_HOOK_MARKER}` },
-      ],
-    },
-  ],
-  TaskCompleted: [
-    {
-      hooks: [
-        { type: 'command', command: `bash .claude/hooks/raid-task-completed.sh ${RAID_HOOK_MARKER}` },
-      ],
-    },
-  ],
-  Stop: [
-    {
-      hooks: [
-        { type: 'command', command: `bash .claude/hooks/raid-stop.sh ${RAID_HOOK_MARKER}` },
       ],
     },
   ],

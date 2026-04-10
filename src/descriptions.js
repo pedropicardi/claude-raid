@@ -13,44 +13,46 @@ const AGENTS = {
 const HOOKS = {
   lifecycle: [
     { name: 'raid-lib.sh',            desc: 'Shared config — reads raid.json, exports session state' },
-    { name: 'raid-session-start.sh',   desc: 'Activates Raid workflow when session begins' },
-    { name: 'raid-session-end.sh',     desc: 'Archives Dungeon, cleans up when session ends' },
-    { name: 'raid-stop.sh',           desc: 'Backs up Dungeon on phase transitions' },
+    { name: 'raid-session-start.sh',   desc: 'Activates Raid workflow, creates quest directory' },
+    { name: 'raid-session-end.sh',     desc: 'Archives quest dungeon to vault, cleans up' },
     { name: 'raid-pre-compact.sh',    desc: 'Backs up Dungeon before message compaction' },
     { name: 'raid-task-created.sh',   desc: 'Validates task subjects are meaningful' },
-    { name: 'raid-task-completed.sh', desc: 'Blocks task completion without test evidence' },
   ],
   gates: [
-    { name: 'validate-commit.sh',              desc: 'Enforces conventional commits + test gate' },
-    { name: 'validate-write-gate.sh',          desc: 'Blocks implementation before design doc exists' },
+    { name: 'validate-commit.sh',              desc: 'Enforces conventional commit format' },
+    { name: 'validate-write-gate.sh',          desc: 'Protects session files, allows quest dir writes' },
     { name: 'validate-file-naming.sh',         desc: 'Enforces naming convention (kebab-case, etc.)' },
-    { name: 'validate-no-placeholders.sh',     desc: 'Blocks TBD/TODO in specs and plans' },
-    { name: 'validate-dungeon.sh',             desc: 'Requires multi-agent verification on pins' },
+    { name: 'validate-no-placeholders.sh',     desc: 'Blocks TBD/TODO in specs, plans, and quest docs' },
+    { name: 'validate-dungeon.sh',             desc: 'Validates dungeon entries and black cards' },
     { name: 'validate-browser-tests-exist.sh', desc: 'Checks Playwright tests exist before commits' },
     { name: 'validate-browser-cleanup.sh',     desc: 'Verifies browser processes cleaned up properly' },
   ],
 };
 
 const SKILLS = {
-  'raid-protocol':            'Session lifecycle and team rules',
-  'raid-design':              'Phase 1: adversarial exploration',
-  'raid-implementation-plan': 'Phase 2: task decomposition',
-  'raid-implementation':      'Phase 3: TDD with direct challenge',
-  'raid-review':              'Phase 4: independent review + fighting',
-  'raid-finishing':           'Completeness debate + merge options',
-  'raid-tdd':                 'RED-GREEN-REFACTOR enforcement',
-  'raid-debugging':           'Root-cause investigation',
-  'raid-verification':        'Evidence-before-claims gate',
-  'raid-git-worktrees':       'Isolated workspace creation',
-  'raid-browser':             'Browser startup discovery',
-  'raid-browser-playwright':  'Playwright test authoring',
-  'raid-browser-chrome':      'Live browser inspection',
+  // Core
+  'raid-init':                            'Quest selection, greeting, session setup',
+  // Canonical Quest chain
+  'raid-canonical-protocol':              'Canonical Quest protocol and rules',
+  'raid-canonical-prd':                   'Phase 1: PRD creation (optional)',
+  'raid-canonical-design':                'Phase 2: adversarial design exploration',
+  'raid-canonical-implementation-plan':   'Phase 3: task decomposition',
+  'raid-canonical-implementation':        'Phase 4: TDD with cross-testing',
+  'raid-canonical-review':                'Phase 5: pinning + fixing + black cards',
+  'raid-wrap-up':                         'Phase 6: storyboard, PR, vault archival',
+  // Reusable (quest-agnostic)
+  'raid-tdd':                             'RED-GREEN-REFACTOR enforcement',
+  'raid-verification':                    'Evidence-before-claims gate',
+  'raid-debugging':                       'Root-cause investigation',
+  'raid-browser':                         'Browser startup discovery',
+  'raid-browser-chrome':                  'Live browser inspection',
 };
 
 const CONFIG = {
-  'raid.json':      'Project settings (editable)',
-  'raid-rules.md':  '17 team rules (editable)',
-  'settings.json':  'Hooks merged into existing (backup created)',
+  'raid.json':                'Project settings (editable)',
+  'party-rules.md':           'Party agent rules (editable)',
+  'dungeon-master-rules.md':  'Wizard rules (editable)',
+  'settings.json':            'Hooks merged into existing (backup created)',
 };
 
 module.exports = { AGENTS, HOOKS, SKILLS, CONFIG };

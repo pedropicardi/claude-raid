@@ -1,14 +1,14 @@
 ---
-name: raid-review
-description: "Phase 4 of Raid protocol. Wizard opens the Dungeon, agents review independently then fight directly over findings and missing findings. Issues pinned by severity. Wizard closes when all Critical/Important fixed."
+name: raid-canonical-review
+description: "Phase 5 of Canonical Quest (optional). Two subphases: Pinning (find issues) and Fixing (resolve them). Black Card system for breaking changes. Wizard asks human before entering."
 ---
 
-# Raid Review — Phase 4
+# Raid Review — Phase 5 (Optional)
 
-Three reviewers, three angles, zero mercy. They fight each other, not just the code.
+Three reviewers, three angles, zero mercy. Pinning then fixing. Black cards for the unfixable.
 
 <HARD-GATE>
-Do NOT declare work complete without Phase 4 (except Scout mode). All assigned agents review the ENTIRE implementation independently, then attack each other's findings. Use `raid-verification` before any completion claims. No subagents.
+This phase is OPTIONAL — the Wizard asks the human before entering. All assigned agents review the ENTIRE implementation independently, then attack each other's findings. Use `raid-verification` before any completion claims. No subagents.
 </HARD-GATE>
 
 ## Mode Behavior
@@ -21,7 +21,7 @@ Do NOT declare work complete without Phase 4 (except Scout mode). All assigned a
 
 ```dot
 digraph review {
-  "Wizard reads design doc, plan, Phase 3 Dungeon" -> "Wizard opens Dungeon + dispatches";
+  "Wizard reads design doc, plan, Phase 4 implementation log" -> "Wizard opens review board";
   "Wizard opens Dungeon + dispatches" -> "Agents review independently";
   "Agents review independently" -> "Agents fight over findings directly";
   "Agents fight over findings directly" -> "Agents challenge missing findings";
@@ -32,14 +32,14 @@ digraph review {
   "Assign fixes" -> "Fix + verify + challengers re-attack";
   "Fix + verify + challengers re-attack" -> "Wizard closes: categorizes surviving issues";
   "Critical or Important?" -> "Wizard final ruling" [label="no"];
-  "Wizard final ruling" -> "Archive Dungeon + invoke raid-finishing" [shape=doublecircle];
+  "Wizard final ruling" -> "Commit + invoke raid-wrap-up" [shape=doublecircle];
 }
 ```
 
 ## Wizard Checklist
 
-1. **Prepare** — gather git range, design doc, plan doc, read Phase 3 Dungeon
-2. **Open the Dungeon** — create `.claude/raid-dungeon.md` with Phase 4 header
+1. **Prepare** — gather git range, design doc, plan doc, read `{questDir}/phase-4-implementation.md`
+2. **Open the review board** — create `{questDir}/phase-5-review.md`
 3. **Dispatch** — all agents review independently, then interact directly
 4. **Observe the fight** — agents challenge findings and missing findings directly
 5. **Close** — categorize surviving issues by severity from Dungeon
@@ -48,15 +48,15 @@ digraph review {
 8. **Rule on fixes** — Critical and Important must be fixed (code AND browser)
 9. **Verify fixes** — targeted re-attack after fixes (use `raid-verification`)
 10. **Final ruling** — approved or rejected
-11. **Archive Dungeon** — rename to `.claude/raid-dungeon-phase-4.md`
-12. **Transition** — invoke `raid-finishing`
+11. **Commit** — `fix(quest-{slug}): phase 5 review — {N} findings resolved`
+12. **Transition** — invoke `raid-wrap-up`
 
 ## Opening the Dungeon
 
-Create `.claude/raid-dungeon.md`:
+Create `{questDir}/phase-5-review.md`:
 
 ```markdown
-# Dungeon — Phase 4: Review
+# Phase 5: Review
 ## Quest: Full adversarial review of <feature> implementation
 ## Mode: <Full Raid | Skirmish>
 
@@ -96,6 +96,30 @@ Create `.claude/raid-dungeon.md`:
 **Naming & Structure:** Consistent naming? File system follows conventions? Modules clean?
 
 **Production:** Performance OK? External calls have timeouts? No secrets in code?
+
+## Verification Protocol for Findings
+
+Before acting on ANY finding (yours or a teammate's):
+1. **READ:** Complete the finding without reacting
+2. **VERIFY:** Check against codebase reality — read the actual code at the referenced location
+3. **EVALUATE:** Is this technically sound for THIS codebase? Does fixing it break something else?
+4. **RESPOND:** Technical evidence or reasoned pushback
+
+## No Performative Agreement
+
+NEVER respond with "You're absolutely right!" or "Great point!" or "Good catch!"
+Instead: state the technical finding, show evidence, or push back.
+Actions speak. Fix and show — don't compliment.
+
+If a finding IS correct: `"Fixed. [Brief description of what changed]."` or just fix it silently.
+
+## YAGNI Check on Findings
+
+Before implementing a "professional improvement" suggestion:
+- Grep codebase for actual usage of the component
+- If unused: suggest removing (YAGNI) — `"This endpoint isn't called. Remove it?"`
+- If used: implement properly
+- Don't gold-plate during review
 
 ## The Fight — Agents Challenge Each Other
 
@@ -141,9 +165,45 @@ After code review findings are pinned, the Wizard announces browser inspection.
 
 **Browser bugs block merge the same way code bugs do.**
 
+## Black Card System
+
+If any agent finds something that fundamentally breaks the architecture — a change so deep it invalidates the implementation — they play a `BLACKCARD:`:
+
+```
+BLACKCARD: [description of breaking concern]
+Evidence: [file paths, scenarios, why this is unfixable within current design]
+Impact: [what breaks, how deep the damage goes]
+```
+
+**Black Card flow:**
+1. Agent plays `BLACKCARD:` → other agents independently verify
+2. If 2+ agents agree it's a black card → Wizard escalates to human
+3. Wizard presents to human with full context (digested, not raw):
+   - What the black card is
+   - Why it's unfixable in current design
+   - Options:
+     a) **Rollback** — Go back to PRD or Design phase (creates `phase-2-design-v2.md`)
+     b) **Accept** — Live with the limitation, document it, continue
+4. Human decides → Wizard acts accordingly
+
+**Black cards are RARE.** Most issues are Critical or Important, not black cards. A black card means "the foundation is wrong" — not "there's a bug."
+
+## Fix Implementation Order
+
+When the Wizard assigns fixes during the Fixing subphase, prioritize in this order within each severity level:
+1. **Blocking issues** — crashes, security holes, data loss
+2. **Simple fixes** — typos, imports, naming inconsistencies
+3. **Complex fixes** — refactoring, logic changes, architectural adjustments
+
+Test each fix individually. Verify no regressions before moving to the next fix.
+
+## Unclear Finding Protocol
+
+If ANY finding is unclear — unclear what the problem is, unclear how to reproduce, unclear what the fix should be — **STOP**. Clarify ALL unclear items before implementing ANY fixes. Partial understanding leads to wrong implementation.
+
 ## Closing the Phase
 
-The Wizard closes when agents have exhausted their findings and the Dungeon has all issues classified:
+The Wizard closes when agents have exhausted their findings and the review board has all issues classified:
 
 **RULING: APPROVED FOR MERGE** — all Critical/Important fixed, tests pass, requirements met.
 
@@ -165,8 +225,9 @@ The Wizard closes when agents have exhausted their findings and the Dungeon has 
 
 When the RULING is APPROVED FOR MERGE:
 
-1. Archive the Dungeon: rename `.claude/raid-dungeon.md` to `.claude/raid-dungeon-phase-4.md`
-2. Update `.claude/raid-session` phase to `"finishing"`
-3. **Load the `raid-finishing` skill now and begin Finishing.**
+1. Update `.claude/raid-session` phase to `"wrap-up"`
+2. **Commit**: `fix(quest-{slug}): phase 5 review — {N} findings resolved`
+3. **Send phase report to human**: findings count, fixes applied, any black cards
+4. **Load the `raid-wrap-up` skill now and begin Phase 6.**
 
 Do not wait. Do not ask. The next action after approving for merge is loading the next skill.

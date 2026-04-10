@@ -16,7 +16,7 @@ fi
 # Only check files in specs or plans directories
 IS_RAID_DOC=false
 case "$RAID_FILE_PATH" in
-  "$RAID_SPECS_PATH"/*|"$RAID_PLANS_PATH"/*) IS_RAID_DOC=true ;;
+  "$RAID_SPECS_PATH"/*|"$RAID_PLANS_PATH"/*|.claude/dungeon/*/phase-*.md) IS_RAID_DOC=true ;;
 esac
 
 if [ "$IS_RAID_DOC" = false ]; then
@@ -41,8 +41,8 @@ while IFS= read -r line; do
   LINE_NUM=$((LINE_NUM + 1))
   LOWER_LINE=$(echo "$line" | tr '[:upper:]' '[:lower:]')
 
-  for PATTERN in "tbd" "todo" "fixme" "implement later" "add appropriate" "similar to task" "handle edge cases" "fill in"; do
-    if echo "$LOWER_LINE" | grep -qi "$PATTERN"; then
+  for PATTERN in '\btbd\b' '\btodo\b' '\bfixme\b' 'implement later' 'add appropriate' 'similar to task' 'handle edge cases' 'fill in'; do
+    if echo "$LOWER_LINE" | grep -qiE "$PATTERN"; then
       ISSUES="${ISSUES}Line ${LINE_NUM}: Found '${PATTERN}' — ${line}\n"
       break
     fi

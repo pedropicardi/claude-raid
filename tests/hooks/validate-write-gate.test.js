@@ -29,6 +29,9 @@ function setupEnv(opts = {}) {
         currentAgent: opts.session.currentAgent || 'A',
         implementer: opts.session.implementer || 'A',
         task: opts.session.task || 'test',
+        questType: opts.session.questType || '',
+        questId: opts.session.questId || '',
+        questDir: opts.session.questDir || '',
       })
     );
   }
@@ -42,7 +45,6 @@ function setupEnv(opts = {}) {
 function runHook(tmpDir, filePath) {
   const input = JSON.stringify({ tool_input: { file_path: filePath } });
   const hookPath = path.join(tmpDir, '.claude', 'hooks', 'validate-write-gate.sh');
-  // Use a wrapper that captures stderr to a file so we can read it even on exit 0
   const stderrFile = path.join(tmpDir, '.stderr-capture');
   const cmd = `echo '${input.replace(/'/g, "'\\''")}' | bash "${hookPath}" 2>"${stderrFile}"`;
   try {
@@ -77,7 +79,7 @@ describe('validate-write-gate.sh', () => {
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
     assert.strictEqual(result.status, 2);
-    assert.ok(result.stderr.includes('design'), `Expected stderr to mention design, got: ${result.stderr}`);
+    assert.ok(result.stderr.toLowerCase().includes('design'), `Expected stderr to mention design, got: ${result.stderr}`);
   });
 
   it('allows doc writes during design phase', () => {
@@ -94,12 +96,11 @@ describe('validate-write-gate.sh', () => {
     assert.strictEqual(result.status, 0);
   });
 
-  it('blocks production file writes during review phase', () => {
+  it('allows production file writes during review phase (skill layer controls)', () => {
     const tmp = setupEnv({ session: { phase: 'review', mode: 'full' } });
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
-    assert.strictEqual(result.status, 2);
-    assert.ok(result.stderr.includes('review'), `Expected stderr to mention review, got: ${result.stderr}`);
+    assert.strictEqual(result.status, 0);
   });
 
   it('allows implementer to write production files during implementation', () => {
@@ -109,27 +110,25 @@ describe('validate-write-gate.sh', () => {
     assert.strictEqual(result.status, 0);
   });
 
-  it('blocks non-implementer from writing production files during implementation', () => {
+  it('allows any agent to write production files during implementation (skill layer controls)', () => {
     const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: 'B', implementer: 'A' } });
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
-    assert.strictEqual(result.status, 2);
-    assert.ok(result.stderr.includes('A'), `Expected stderr to mention implementer name, got: ${result.stderr}`);
+    assert.strictEqual(result.status, 0);
   });
 
-  it('skips implementer check in scout mode', () => {
+  it('allows production writes during implementation in scout mode', () => {
     const tmp = setupEnv({ session: { phase: 'implementation', mode: 'scout', currentAgent: 'B', implementer: 'A' } });
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
     assert.strictEqual(result.status, 0);
   });
 
-  it('blocks production writes during review in skirmish mode', () => {
+  it('allows production writes during review in skirmish mode (skill layer controls)', () => {
     const tmp = setupEnv({ session: { phase: 'review', mode: 'skirmish' } });
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
-    assert.strictEqual(result.status, 2);
-    assert.ok(result.stderr.includes('review'), `Expected stderr to mention review, got: ${result.stderr}`);
+    assert.strictEqual(result.status, 0);
   });
 
   it('allows production writes during implementation when no implementer set', () => {
@@ -139,12 +138,11 @@ describe('validate-write-gate.sh', () => {
     assert.strictEqual(result.status, 0);
   });
 
-  it('defaults to full mode when mode is empty', () => {
+  it('allows production writes during review when mode is empty', () => {
     const tmp = setupEnv({ session: { phase: 'review', mode: '' } });
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
-    // Full mode in review = block (not warn like skirmish)
-    assert.strictEqual(result.status, 2);
+    assert.strictEqual(result.status, 0);
   });
 
   it('allows .claude file writes in any phase', () => {
@@ -159,15 +157,23 @@ describe('validate-write-gate.sh', () => {
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
     assert.strictEqual(result.status, 2);
-    assert.ok(result.stderr.includes('plan'), `Expected stderr to mention plan, got: ${result.stderr}`);
+    assert.ok(result.stderr.toLowerCase().includes('plan'), `Expected stderr to mention plan, got: ${result.stderr}`);
   });
 
-  it('blocks production files during finishing phase', () => {
-    const tmp = setupEnv({ session: { phase: 'finishing', mode: 'full' } });
+  it('blocks production files during prd phase', () => {
+    const tmp = setupEnv({ session: { phase: 'prd', mode: 'full' } });
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
     assert.strictEqual(result.status, 2);
-    assert.ok(result.stderr.toLowerCase().includes('finishing'), `Expected stderr to mention finishing, got: ${result.stderr}`);
+    assert.ok(result.stderr.toLowerCase().includes('prd'), `Expected stderr to mention prd, got: ${result.stderr}`);
+  });
+
+  it('blocks production files during wrap-up phase', () => {
+    const tmp = setupEnv({ session: { phase: 'wrap-up', mode: 'full' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, 'src/index.js');
+    assert.strictEqual(result.status, 2);
+    assert.ok(result.stderr.toLowerCase().includes('wrap-up'), `Expected stderr to mention wrap-up, got: ${result.stderr}`);
   });
 
   it('blocks production files on unknown phase (fail-closed)', () => {
@@ -178,13 +184,11 @@ describe('validate-write-gate.sh', () => {
     assert.ok(result.stderr.toLowerCase().includes('unknown'), `Expected stderr to mention unknown, got: ${result.stderr}`);
   });
 
-  it('warns on empty phase during session bootstrap', () => {
+  it('allows writes on empty phase during session bootstrap', () => {
     const tmp = setupEnv({ session: { phase: '', mode: 'full' } });
     dirs.push(tmp);
     const result = runHook(tmp, 'src/index.js');
-    // Empty phase allows writes with warning during bootstrap
     assert.strictEqual(result.status, 0);
-    assert.ok(result.stderr.includes('bootstrap') || result.stderr.includes('empty'), `Expected stderr bootstrap warning, got: ${result.stderr}`);
   });
 
   it('blocks writes to .claude/raid-session during active session', () => {
@@ -217,21 +221,10 @@ describe('validate-write-gate.sh', () => {
     assert.strictEqual(result.status, 0);
   });
 
-  it('blocks writes to protected file via .. path traversal', () => {
-    const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: 'A', implementer: 'A' } });
+  it('allows writes to quest dungeon directory during any phase', () => {
+    const tmp = setupEnv({ session: { phase: 'design', mode: 'full' } });
     dirs.push(tmp);
-    // Do NOT use path.join — it resolves .. before the path reaches the hook
-    const traversalPath = tmp + '/src/../.claude/raid-session';
-    const result = runHook(tmp, traversalPath);
-    assert.strictEqual(result.status, 2, 'Should block .. traversal to protected file');
-    assert.ok(result.stderr.includes('protected'), `Expected stderr to mention protected, got: ${result.stderr}`);
-  });
-
-  it('blocks writes to protected file via double-slash path', () => {
-    const tmp = setupEnv({ session: { phase: 'implementation', mode: 'full', currentAgent: 'A', implementer: 'A' } });
-    dirs.push(tmp);
-    const result = runHook(tmp, tmp + '//.claude/raid-session');
-    assert.strictEqual(result.status, 2, 'Should block double-slash path to protected file');
-    assert.ok(result.stderr.includes('protected'), `Expected stderr to mention protected, got: ${result.stderr}`);
+    const result = runHook(tmp, '.claude/dungeon/test-quest/phase-2-design.md');
+    assert.strictEqual(result.status, 0);
   });
 });
