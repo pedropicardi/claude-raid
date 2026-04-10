@@ -295,6 +295,15 @@ function dryRun(cwd) {
   }
   lines.push('');
 
+  // Hooks — Optional
+  if (HOOKS.optional && HOOKS.optional.length > 0) {
+    lines.push(header('Hooks \u2014 Optional') + '\n');
+    for (const h of HOOKS.optional) {
+      lines.push('  ' + colors.bold(h.name.padEnd(28)) + h.desc + tag('hooks/' + h.name));
+    }
+    lines.push('');
+  }
+
   // Skills
   lines.push(header('Skills') + '\n');
   for (const [folder, desc] of Object.entries(SKILLS)) {
