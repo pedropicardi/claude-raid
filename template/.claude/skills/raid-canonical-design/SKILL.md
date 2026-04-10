@@ -1,15 +1,21 @@
 ---
-name: raid-design
-description: "Phase 1 of Raid protocol. Wizard opens the Dungeon, agents explore freely from different angles, challenge and build on each other directly, and pin verified findings. Wizard closes when design is battle-tested."
+name: raid-canonical-design
+description: "Phase 2 of Canonical Quest. Agents explore design approaches from different angles based on PRD. Battle-tested design doc with mermaid diagrams. No code writing. Question chain: agents→wizard→human."
 ---
 
-# Raid Design — Phase 1
+# Raid Design — Phase 2
 
 Turn ideas into battle-tested designs through agent-driven adversarial exploration.
 
 <HARD-GATE>
 Do NOT write any code, scaffold any project, or take any implementation action until the Wizard has approved the design and it is committed to git. All assigned agents participate. Agents communicate via SendMessage — do not spawn subagents.
 </HARD-GATE>
+
+## Scope Check
+
+Before asking detailed questions, assess scope. If the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend rounds refining details of a project that needs decomposition first.
+
+If too large for a single design: help the human decompose into sub-quests. Each sub-quest gets its own design → plan → implementation cycle. Design the first sub-quest through the normal flow.
 
 ## Mode Behavior
 
@@ -41,7 +47,7 @@ digraph design {
   "Write design doc" -> "Adversarial spec review (agents attack directly)";
   "Adversarial spec review (agents attack directly)" -> "Spec self-review (fix inline)";
   "Spec self-review (fix inline)" -> "Human reviews written spec";
-  "Human reviews written spec" -> "Commit + invoke raid-implementation-plan" [shape=doublecircle];
+  "Human reviews written spec" -> "Commit + invoke raid-canonical-implementation-plan" [shape=doublecircle];
 }
 ```
 
@@ -54,7 +60,7 @@ Complete in order:
 3. **Explore project context** — files, docs, recent commits, dependencies, conventions, patterns
 4. **Research dependencies** — API surface, versioning, compatibility, known issues. Read docs COMPLETELY.
 5. **Ask clarifying questions** — one at a time to the human, eliminate every ambiguity
-6. **Open the Dungeon** — create `.claude/raid-dungeon.md` with Phase 1 header, quest, mode
+6. **Open the Dungeon** — create `{questDir}/phase-2-design.md` with Phase 2 header, quest, mode. Read PRD doc if it exists.
 7. **Dispatch with angles** — send each agent their angle via SendMessage, then go silent:
    ```
    SendMessage(to="warrior", message="DISPATCH: [quest]. Your angle: [X]...")
@@ -64,23 +70,35 @@ Complete in order:
 8. **Observe** — agents explore in their own panes, challenge each other via SendMessage, and pin findings to Dungeon. You receive messages automatically. Intervene only on protocol violations.
 9. **Close the phase** — when Dungeon has sufficient verified findings to form 2-3 approaches
 10. **Synthesize approaches** — propose 2-3 approaches from Dungeon evidence, with trade-offs and recommendation
-11. **Present design** — in sections scaled to complexity, get human approval per section
-12. **Write design doc** — save to specs path from `.claude/raid.json`
+11. **Present design section by section** — scale each section to its complexity (a few sentences if straightforward, up to 200-300 words if nuanced). Ask the human after each section: "Does this look right so far?" Be ready to revise before moving on. Cover: architecture, components, data flow, error handling, testing.
+12. **Write design doc** — save to `{questDir}/phase-2-design.md`. May also create `{questDir}/phase-2-diagrams.md` for mermaid charts.
 13. **Adversarial spec review** — agents attack the written spec directly, challenging each other
 14. **Spec self-review** — fix issues inline (see checklist below)
 15. **Human reviews written spec** — human approves before proceeding
-16. **Commit** — `docs(design): <topic> specification`
-17. **Archive Dungeon** — rename to `.claude/raid-dungeon-phase-1.md`
-18. **Transition** — invoke `raid-implementation-plan`
+16. **Commit** — `docs(quest-{slug}): phase 2 design — {summary}`
+17. **Transition** — invoke `raid-canonical-implementation-plan`
 
 ## Opening the Dungeon
 
-Create `.claude/raid-dungeon.md`:
+Create `{questDir}/phase-2-design.md` (where `{questDir}` is from raid-session):
 
 ```markdown
-# Dungeon — Phase 1: Design
+# Phase 2: Design
 ## Quest: <task description from human>
 ## Mode: <Full Raid | Skirmish>
+## PRD: <link to phase-1-prd.md if it exists>
+
+### Architecture Overview
+
+### Data Flow
+
+### Component Design
+
+### API Contracts
+
+### Edge Cases & Error Handling
+
+### Trade-offs & Decisions
 
 ### Discoveries
 
@@ -92,6 +110,16 @@ Create `.claude/raid-dungeon.md`:
 
 ### Escalations
 ```
+
+## Question Chain
+
+**Agents NEVER ask the human directly.** The question flow is:
+1. Agent discovers they need clarification → sends `WIZARD:` with the question
+2. Wizard reasons: can I answer this confidently from the PRD, codebase, or prior context?
+3. If yes → answer the agent directly via SendMessage
+4. If unsure → digest the question, formulate it clearly for the human, ask human
+5. Wizard passes human's answer back to agents with his own interpretation added
+6. Goal: minimize questions to human, batch related questions
 
 ## Dispatch Pattern
 
@@ -106,6 +134,13 @@ Each agent gets the same objective but a different starting angle. After dispatc
 > **@Rogue**: Explore from the failure/adversarial side. What assumptions about inputs, state, timing, availability? Build failure scenarios. What does a malicious user do? What does a slow network do? What does concurrent access do? Challenge @Warrior and @Archer's findings directly. Pin verified findings to the Dungeon.
 >
 > **All**: Read the Dungeon. Build on each other's discoveries. Challenge everything. Pin only what survives. Escalate to me with `WIZARD:` only when genuinely stuck.
+
+## Design Principles
+
+- **Isolation:** Break into units with one clear purpose, well-defined interfaces, testable independently. For each unit: what does it do, how do you use it, what does it depend on?
+- **Encapsulation:** Can someone understand a unit without reading its internals? Can you change internals without breaking consumers? If not, the boundaries need work.
+- **Size:** Smaller, well-bounded units are easier to reason about. When a file grows large, that's a signal it's doing too much.
+- **Existing codebases:** Explore current structure first. Follow existing patterns. Only include targeted improvements where they serve the current goal — no unrelated refactoring.
 
 ## What Agents Must Cover
 
@@ -164,7 +199,7 @@ Fix issues inline.
 
 ## Design Document Structure
 
-Save to: specs path from `.claude/raid.json` (default: `docs/raid/specs/YYYY-MM-DD-<topic>-design.md`)
+Save to: `{questDir}/phase-2-design.md`
 
 ```markdown
 # [Feature Name] Design Specification
@@ -216,8 +251,9 @@ If the team is stuck on a fundamental design choice after genuine direct debate:
 
 When the design is approved and committed:
 
-1. Archive the Dungeon: rename `.claude/raid-dungeon.md` to `.claude/raid-dungeon-phase-1.md`
-2. Update `.claude/raid-session` phase to `"plan"`
-3. **Load the `raid-implementation-plan` skill now and begin Phase 2.**
+1. Update `.claude/raid-session` phase to `"plan"`
+2. **Commit:** `docs(quest-{slug}): phase 2 design — {summary}`
+3. **Send phase report to human:** summarize key design decisions, trade-offs resolved, what's next
+4. **Load the `raid-canonical-implementation-plan` skill now and begin Phase 3.**
 
 Do not wait. Do not ask. The next action after committing the design doc is loading the next skill.

@@ -143,7 +143,7 @@ function referenceCard() {
     '  ' + colors.dim('interfere with normal coding outside of a Raid.'),
     '',
     '  Config:  ' + colors.bold('.claude/raid.json') + '       ' + colors.dim('project settings'),
-    '  Rules:   ' + colors.bold('.claude/raid-rules.md') + '   ' + colors.dim('editable team rules'),
+    '  Rules:   ' + colors.bold('.claude/party-rules.md') + '  ' + colors.dim('editable party rules'),
   ]);
 
   const nextStep = box('Next Step', [

@@ -37,7 +37,7 @@ function install(cwd) {
   const result = { skipped: [], alreadyInstalled: false, detected: null };
 
   // Check if already installed
-  if (fs.existsSync(path.join(claudeDir, 'raid-rules.md'))) {
+  if (fs.existsSync(path.join(claudeDir, 'party-rules.md'))) {
     result.alreadyInstalled = true;
   }
 
@@ -97,6 +97,7 @@ function install(cwd) {
       },
       raid: {
         defaultMode: 'full',
+        agentEffort: 'medium',
         vault: {
           path: '.claude/vault',
           enabled: true,
@@ -141,10 +142,7 @@ function install(cwd) {
   const ignoreEntries = [
     '.claude/raid-last-test-run',
     '.claude/raid-session',
-    '.claude/raid-dungeon.md',
-    '.claude/raid-dungeon-phase-*',
-    '.claude/raid-dungeon-backup.md',
-    '.claude/raid-dungeon-phase-*-backup.md',
+    '.claude/dungeon/',
     '.claude/vault/.draft/',
     '.env.raid',
   ];
@@ -212,7 +210,8 @@ async function run() {
   console.log('');
   console.log('  ' + header('Config'));
   console.log('    Generated ' + bold('raid.json') + '          ' + dim('Project settings (editable)'));
-  console.log('    Copied ' + bold('raid-rules.md') + '         ' + dim('17 team rules (editable)'));
+  console.log('    Copied ' + bold('party-rules.md') + '        ' + dim('Party agent rules (editable)'));
+  console.log('    Copied ' + bold('dungeon-master-rules.md') + ' ' + dim('Wizard rules (editable)'));
   console.log('    Merged ' + bold('settings.json') + '         ' + dim('Backup at .pre-raid-backup'));
 
   // Skipped files
@@ -293,10 +292,7 @@ function dryRun(cwd) {
   const ignoreEntries = [
     '.claude/raid-last-test-run',
     '.claude/raid-session',
-    '.claude/raid-dungeon.md',
-    '.claude/raid-dungeon-phase-*',
-    '.claude/raid-dungeon-backup.md',
-    '.claude/raid-dungeon-phase-*-backup.md',
+    '.claude/dungeon/',
     '.claude/vault/.draft/',
     '.env.raid',
   ];

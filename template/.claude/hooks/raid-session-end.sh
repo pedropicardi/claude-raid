@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # Raid lifecycle hook: SessionEnd
-# Drafts a Vault entry from session artifacts and prompts persist/forget.
+# Archives quest dungeon to Vault and cleans up session artifacts.
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -15,9 +15,12 @@ if [ "$RAID_LIFECYCLE_SESSION" != "true" ]; then
   exit 0
 fi
 
+# Determine quest directory
+QUEST_DIR=$(raid_quest_dir)
+
 # Create Vault draft directory
 DRAFT_DIR="$RAID_VAULT_PATH/.draft"
-mkdir -p "$DRAFT_DIR/dungeon-phases"
+mkdir -p "$DRAFT_DIR"
 
 # --- Generate quest.md ---
 QUEST_FILE="$DRAFT_DIR/quest.md"
@@ -29,6 +32,7 @@ cat > "$QUEST_FILE" <<EOF
 
 **Date:** $CURRENT_DATE
 **Mode:** $RAID_MODE
+**Quest Type:** $RAID_QUEST_TYPE
 **Branch:** $BRANCH
 
 ## Quest Summary
@@ -39,10 +43,13 @@ cat > "$QUEST_FILE" <<EOF
 
 EOF
 
-# Extract pinned findings from Dungeon
-if [ -f ".claude/raid-dungeon.md" ]; then
-  { grep -E 'DUNGEON:|FINDING:|DECISION:' ".claude/raid-dungeon.md" 2>/dev/null || true; } | while IFS= read -r line; do
-    echo "- $line" >> "$QUEST_FILE"
+# Extract pinned findings from quest dungeon directory
+if [ -d "$QUEST_DIR" ]; then
+  for phase_file in "$QUEST_DIR"/phase-*.md; do
+    [ -f "$phase_file" ] || continue
+    { grep -E 'DUNGEON:|FINDING:|DECISION:|BLACKCARD:' "$phase_file" 2>/dev/null || true; } | while IFS= read -r line; do
+      echo "- $line" >> "$QUEST_FILE"
+    done
   done
 fi
 
@@ -67,12 +74,18 @@ cat >> "$QUEST_FILE" <<'EOF'
   "quest": "",
   "date": "",
   "mode": "",
+  "questType": "",
   "tags": [],
   "patterns": [],
   "filesChanged": []
 }
 ```
 EOF
+
+# --- Copy quest dungeon to vault draft ---
+if [ -d "$QUEST_DIR" ]; then
+  cp -r "$QUEST_DIR" "$DRAFT_DIR/dungeon/"
+fi
 
 # --- Copy specs and plans ---
 if [ -d "$RAID_SPECS_PATH" ]; then
@@ -89,19 +102,16 @@ if [ -d "$RAID_PLANS_PATH" ]; then
   fi
 fi
 
-# --- Copy Dungeon phase archives ---
-for phase_file in .claude/raid-dungeon-phase-*.md; do
-  [ -f "$phase_file" ] || continue
-  cp "$phase_file" "$DRAFT_DIR/dungeon-phases/"
-done
-
 # --- Cleanup session artifacts ---
 rm -f .claude/raid-session
+rm -rf "$QUEST_DIR"
+rm -f .claude/raid-last-test-run
+
+# Backward compat: clean up old flat dungeon files if they exist
 rm -f .claude/raid-dungeon.md
 rm -f .claude/raid-dungeon-phase-*.md
 rm -f .claude/raid-dungeon-backup.md
 rm -f .claude/raid-dungeon-phase-*-backup.md
-rm -f .claude/raid-last-test-run
 
 # --- Output additionalContext ---
 cat <<ENDJSON

@@ -1,9 +1,9 @@
 ---
-name: raid-implementation-plan
-description: "Phase 2 of Raid protocol. Wizard opens the Dungeon, agents decompose the design into tasks through direct debate, test each other for compliance, and pin agreed tasks. Wizard closes when plan is battle-tested."
+name: raid-canonical-implementation-plan
+description: "Phase 3 of Canonical Quest. Agents decompose the design into tasks through round-based debate. No code writing. Output: task index + individual task files in quest directory."
 ---
 
-# Raid Implementation Plan — Phase 2
+# Raid Implementation Plan — Phase 3
 
 Break the design into bite-sized, battle-tested tasks through agent-driven adversarial decomposition.
 
@@ -21,7 +21,7 @@ Do NOT start implementation until the plan is approved by the Wizard and committ
 
 ```dot
 digraph plan {
-  "Wizard reads design doc + Phase 1 Dungeon" -> "Wizard opens Dungeon + dispatches";
+  "Wizard reads design doc + Phase 2 design doc" -> "Wizard opens Dungeon + dispatches";
   "Wizard opens Dungeon + dispatches" -> "Agents decompose independently";
   "Agents decompose independently" -> "Agents compare and fight directly";
   "Agents compare and fight directly" -> "Agents test compliance collaboratively";
@@ -34,32 +34,31 @@ digraph plan {
   "Write plan doc" -> "Adversarial plan review (agents attack directly)";
   "Adversarial plan review (agents attack directly)" -> "Self-review (6-point checklist)";
   "Self-review (6-point checklist)" -> "Wizard ruling + commit";
-  "Wizard ruling + commit" -> "Archive Dungeon + invoke raid-implementation" [shape=doublecircle];
+  "Wizard ruling + commit" -> "Archive Dungeon + invoke raid-canonical-implementation" [shape=doublecircle];
 }
 ```
 
 ## Wizard Checklist
 
 1. **Read the approved design doc** — every requirement, every constraint
-2. **Read the Phase 1 archived Dungeon** — carry forward verified knowledge
-3. **Open the Dungeon** — create `.claude/raid-dungeon.md` with Phase 2 header
-4. **Dispatch decomposition** — all agents decompose independently with different angles, then interact directly
+2. **Read the Phase 2 design doc** — carry forward verified knowledge from `{questDir}/phase-2-design.md`
+3. **Open the Dungeon** — create `{questDir}/phase-3-plan.md` with Phase 3 header
+4. **Dispatch decomposition** — all agents decompose independently with different angles, then interact directly (round-based)
 5. **Observe the fight** — agents test each other's plans, argue ordering, coverage, naming. Intervene only on triggers.
 6. **Close the phase** — when Dungeon has complete, verified task list
-7. **Synthesize** — write plan doc from Dungeon evidence
+7. **Synthesize** — write plan doc from Dungeon evidence. Create individual task files: `{questDir}/phase-3-plan-task-NN.md`
 8. **Adversarial plan review** — agents attack the written plan directly
 9. **Self-review** — 6-point checklist (see below)
 10. **Wizard ruling** — final plan approval
-11. **Commit** — `docs(plan): <feature> implementation plan`
-12. **Archive Dungeon** — rename to `.claude/raid-dungeon-phase-2.md`
-13. **Transition** — invoke `raid-implementation`
+11. **Commit** — `docs(quest-{slug}): phase 3 plan — {N} tasks, {summary}`
+12. **Transition** — invoke `raid-canonical-implementation` and begin Phase 4
 
 ## Opening the Dungeon
 
-Create `.claude/raid-dungeon.md`:
+Create `{questDir}/phase-3-plan.md`:
 
 ```markdown
-# Dungeon — Phase 2: Plan
+# Phase 3: Implementation Plan
 ## Quest: Decompose <design topic> into implementation tasks
 ## Mode: <Full Raid | Skirmish>
 
@@ -72,6 +71,38 @@ Create `.claude/raid-dungeon.md`:
 ### Shared Knowledge
 
 ### Escalations
+```
+
+## File Structure Mapping
+
+Before defining tasks, map ALL files to be created or modified:
+
+```markdown
+## File Map
+
+| File | Action | Responsibility |
+|------|--------|---------------|
+| `src/auth/handler.ts` | Create | Token validation and refresh |
+| `src/auth/types.ts` | Create | Auth types and interfaces |
+| `tests/auth/handler.test.ts` | Create | Unit tests for handler |
+| `src/middleware.ts` | Modify (L45-60) | Add auth middleware hook |
+```
+
+- Each file should have one clear responsibility
+- Files that change together should live together
+- Follow existing codebase patterns — don't restructure unless it serves the current goal
+- This map informs the task decomposition: each task should produce self-contained changes
+
+## Plan Document Header
+
+Every plan MUST start with:
+
+```markdown
+# [Feature Name] Implementation Plan
+
+**Goal:** [One sentence describing what this builds]
+**Architecture:** [2-3 sentences about approach]
+**Tech Stack:** [Key technologies/libraries]
 ```
 
 ## Dispatch for Decomposition
@@ -187,8 +218,9 @@ Fix issues inline. If a spec requirement has no task, add the task.
 
 When the plan is approved and committed:
 
-1. Archive the Dungeon: rename `.claude/raid-dungeon.md` to `.claude/raid-dungeon-phase-2.md`
-2. Update `.claude/raid-session` phase to `"implementation"`
-3. **Load the `raid-implementation` skill now and begin Phase 3.**
+1. Update `.claude/raid-session` phase to `"implementation"`
+2. **Commit**: `docs(quest-{slug}): phase 3 plan — {N} tasks, {summary}`
+3. **Send phase report to human**: task count, dependency graph, estimated scope
+4. **Load the `raid-canonical-implementation` skill now and begin Phase 4.**
 
 Do not wait. Do not ask. The next action after committing the plan doc is loading the next skill.

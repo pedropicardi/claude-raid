@@ -10,6 +10,17 @@ const versionCheck = require('../src/version-check');
 const showUpdateNotice = versionCheck.start();
 
 const COMMANDS = {
+  // Start a Raid quest — launches wizard with full permissions
+  start: () => {
+    const { spawn } = require('child_process');
+    console.log('\n' + banner());
+    console.log(header('Summoning the Wizard...') + '\n');
+    const child = spawn('claude', ['--dangerously-skip-permissions', '--agent', 'wizard'], {
+      stdio: 'inherit',
+      env: process.env,
+    });
+    child.on('exit', (code) => process.exit(code || 0));
+  },
   // Sync local with remote after CI version bump
   sync: async () => {
     const { execSync } = require('child_process');
@@ -53,6 +64,7 @@ if (!command || !COMMANDS[command]) {
   console.log('\n' + banner());
   console.log(header('Commands') + '\n');
   const cmds = [
+    ['start',     'Begin the Raid (launches Wizard)'],
     ['summon',    'Summon the party into this realm'],
     ['update',    'Reforge the party\'s arsenal'],
     ['dismantle', 'Dismantle the camp and retreat'],
@@ -63,7 +75,7 @@ if (!command || !COMMANDS[command]) {
     console.log('    ' + colors.bold(name.padEnd(12)) + desc);
   }
   console.log(header('Begin the Raid') + '\n');
-  console.log('    claude --agent wizard\n');
+  console.log('    claude-raid start\n');
   console.log(colors.dim('  github.com/pedropicardi/claude-raid') + '\n');
   process.exit(command ? 1 : 0);
 }

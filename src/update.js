@@ -35,7 +35,8 @@ function performUpdate(cwd) {
   const claudeDir = path.join(cwd, '.claude');
   const skippedAgents = [];
 
-  if (!fs.existsSync(path.join(claudeDir, 'raid-rules.md'))) {
+  // Accept either new or legacy rules file as proof of installation
+  if (!fs.existsSync(path.join(claudeDir, 'party-rules.md')) && !fs.existsSync(path.join(claudeDir, 'raid-rules.md'))) {
     return { success: false, message: 'No party found. Run `claude-raid summon` first.', skippedAgents };
   }
 
@@ -66,15 +67,29 @@ function performUpdate(cwd) {
     }
   }
 
-  // Update raid-rules.md — skip if user has customized it
-  const rulesSrc = path.join(TEMPLATE_DIR, 'raid-rules.md');
-  const rulesDest = path.join(claudeDir, 'raid-rules.md');
-  let skippedRules = false;
-  if (fs.existsSync(rulesSrc)) {
-    if (fs.existsSync(rulesDest) && !filesAreEqual(rulesSrc, rulesDest)) {
-      skippedRules = true;
-    } else {
-      fs.copyFileSync(rulesSrc, rulesDest);
+  // Migrate legacy raid-rules.md -> party-rules.md
+  const legacyRules = path.join(claudeDir, 'raid-rules.md');
+  const partyRulesDest = path.join(claudeDir, 'party-rules.md');
+  if (fs.existsSync(legacyRules) && !fs.existsSync(partyRulesDest)) {
+    fs.renameSync(legacyRules, partyRulesDest);
+  }
+  // Clean up legacy file if both exist
+  if (fs.existsSync(legacyRules) && fs.existsSync(partyRulesDest)) {
+    try { fs.unlinkSync(legacyRules); } catch {}
+  }
+
+  // Update rules files — skip if user has customized them
+  const rulesFiles = ['party-rules.md', 'dungeon-master-rules.md'];
+  const skippedRulesFiles = [];
+  for (const rulesFile of rulesFiles) {
+    const rulesSrc = path.join(TEMPLATE_DIR, rulesFile);
+    const rulesDest = path.join(claudeDir, rulesFile);
+    if (fs.existsSync(rulesSrc)) {
+      if (fs.existsSync(rulesDest) && !filesAreEqual(rulesSrc, rulesDest)) {
+        skippedRulesFiles.push(rulesFile);
+      } else {
+        fs.copyFileSync(rulesSrc, rulesDest);
+      }
     }
   }
 
@@ -136,10 +151,10 @@ function performUpdate(cwd) {
   if (skippedAgents.length > 0) {
     message += `\nSkipped customized agents: ${skippedAgents.join(', ')}`;
   }
-  if (skippedRules) {
-    message += '\nSkipped customized raid-rules.md';
+  if (skippedRulesFiles.length > 0) {
+    message += '\nSkipped customized ' + skippedRulesFiles.join(', ');
   }
-  if (skippedAgents.length > 0 || skippedRules) {
+  if (skippedAgents.length > 0 || skippedRulesFiles.length > 0) {
     message += '\nUse `claude-raid dismantle` then `claude-raid summon` to reset.';
   }
 

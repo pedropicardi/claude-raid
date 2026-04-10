@@ -46,13 +46,14 @@ describe('remove', () => {
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-protocol')));
   });
 
-  it('removes raid-rules.md and raid.json', () => {
+  it('removes rules files and raid.json', () => {
     init = require('../../src/init');
     remove = require('../../src/remove');
     const cwd = makeTempDir();
     init.install(cwd);
     remove.performRemove(cwd);
-    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-rules.md')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'party-rules.md')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'dungeon-master-rules.md')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid.json')));
   });
 
@@ -125,7 +126,7 @@ describe('remove', () => {
     const cwd = makeTempDir();
     const claudeDir = path.join(cwd, '.claude');
     fs.mkdirSync(claudeDir, { recursive: true });
-    fs.writeFileSync(path.join(claudeDir, 'raid-rules.md'), 'rules');
+    fs.writeFileSync(path.join(claudeDir, 'party-rules.md'), 'rules');
     fs.writeFileSync(path.join(claudeDir, 'raid-dungeon.md'), '# Dungeon');
     fs.writeFileSync(path.join(claudeDir, 'raid-dungeon-phase-1.md'), '# Phase 1');
     fs.writeFileSync(path.join(claudeDir, 'raid-dungeon-phase-2.md'), '# Phase 2');

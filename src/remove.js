@@ -7,10 +7,13 @@ const { banner, header, colors } = require('./ui');
 
 const RAID_AGENTS = ['wizard.md', 'warrior.md', 'archer.md', 'rogue.md'];
 const RAID_SKILLS = [
+  'raid-init', 'raid-canonical-protocol', 'raid-canonical-prd', 'raid-canonical-design',
+  'raid-canonical-implementation-plan', 'raid-canonical-implementation', 'raid-canonical-review',
+  'raid-wrap-up', 'raid-tdd', 'raid-debugging', 'raid-verification',
+  'raid-browser', 'raid-browser-chrome',
+  // Legacy (v0.1.x)
   'raid-protocol', 'raid-design', 'raid-implementation-plan', 'raid-implementation',
-  'raid-review', 'raid-finishing', 'raid-tdd', 'raid-debugging',
-  'raid-verification', 'raid-git-worktrees',
-  'raid-browser', 'raid-browser-playwright', 'raid-browser-chrome',
+  'raid-review', 'raid-prd', 'raid-finishing', 'raid-browser-playwright', 'raid-git-worktrees',
 ];
 
 function rmSafe(filePath) {
@@ -54,25 +57,22 @@ function performRemove(cwd) {
   rmDirIfEmpty(path.join(claudeDir, 'hooks'));
   rmDirIfEmpty(path.join(claudeDir, 'skills'));
 
-  rmSafe(path.join(claudeDir, 'raid-rules.md'));
+  rmSafe(path.join(claudeDir, 'party-rules.md'));
+  rmSafe(path.join(claudeDir, 'dungeon-master-rules.md'));
+  rmSafe(path.join(claudeDir, 'raid-rules.md')); // legacy cleanup
   rmSafe(path.join(claudeDir, 'raid.json'));
   rmSafe(path.join(claudeDir, 'raid-last-test-run'));
   rmSafe(path.join(claudeDir, 'raid-session'));
 
-  // Clean up Dungeon files
+  // Clean up quest dungeon directory
+  rmDirSafe(path.join(claudeDir, 'dungeon'));
+
+  // Clean up legacy flat dungeon files (v0.1.x)
   rmSafe(path.join(claudeDir, 'raid-dungeon.md'));
+  rmSafe(path.join(claudeDir, 'raid-dungeon-backup.md'));
   if (fs.existsSync(claudeDir)) {
     const dungeonFiles = fs.readdirSync(claudeDir).filter(f => f.startsWith('raid-dungeon-phase-'));
     for (const file of dungeonFiles) {
-      rmSafe(path.join(claudeDir, file));
-    }
-  }
-
-  // Clean up Dungeon backups
-  rmSafe(path.join(claudeDir, 'raid-dungeon-backup.md'));
-  if (fs.existsSync(claudeDir)) {
-    const backupFiles = fs.readdirSync(claudeDir).filter(f => f.startsWith('raid-dungeon-phase-') && f.endsWith('-backup.md'));
-    for (const file of backupFiles) {
       rmSafe(path.join(claudeDir, file));
     }
   }
@@ -86,10 +86,12 @@ function performRemove(cwd) {
   const gitignorePath = path.join(cwd, '.gitignore');
   const raidIgnoreEntries = [
     '.claude/raid-last-test-run', '.claude/raid-session',
-    '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*',
-    '.claude/raid-dungeon-backup.md', '.claude/raid-dungeon-phase-*-backup.md',
+    '.claude/dungeon/',
     '.claude/vault/.draft/',
     '.env.raid',
+    // Legacy (v0.1.x)
+    '.claude/raid-dungeon.md', '.claude/raid-dungeon-phase-*',
+    '.claude/raid-dungeon-backup.md', '.claude/raid-dungeon-phase-*-backup.md',
   ];
   if (fs.existsSync(gitignorePath)) {
     const lines = fs.readFileSync(gitignorePath, 'utf8').split('\n');

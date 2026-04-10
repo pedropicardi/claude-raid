@@ -60,8 +60,19 @@ digraph debugging {
 1. **Read error messages carefully** — stack traces, line numbers, error codes. Don't skip past them. The answer is often in the first error.
 2. **Reproduce consistently** — exact steps, every time. If not reproducible, gather more data — don't guess. An unreproducible bug is not understood.
 3. **Check recent changes** — `git diff`, recent commits, new dependencies, config changes. What changed since it last worked?
-4. **Gather evidence at boundaries** — in multi-component systems, log what enters and exits each component boundary. Run once to see WHERE it breaks. THEN investigate that component.
-5. **Trace data flow** — where does the bad value originate? Keep tracing upstream until you find the source. Fix at source, not at symptom.
+4. **Gather evidence at boundaries** — in multi-component systems, add diagnostic instrumentation:
+   ```
+   For EACH component boundary:
+     - Log what data enters the component
+     - Log what data exits the component
+     - Verify environment/config propagation
+     - Check state at each layer
+   Run ONCE to gather evidence showing WHERE it breaks.
+   THEN investigate that specific component.
+   ```
+   Example: API → Service → Database → Response. Log at each boundary. The layer where input looks right but output looks wrong is your target.
+
+5. **Trace data flow backward** — where does the bad value appear? What function produced it? What called that function with what input? Keep tracing backward until you find the SOURCE. Fix at SOURCE, not at symptom.
 
 ### Phase 2: Pattern Analysis
 
@@ -72,9 +83,10 @@ digraph debugging {
 
 ### Phase 3: Hypothesis and Testing
 
-1. **Form a single, specific hypothesis:** "X is the root cause because Y"
-2. **Make the SMALLEST possible change** to test it. One variable at a time.
-3. **Did it work?** -> Phase 4. **Didn't work?** -> NEW hypothesis. Don't pile fixes on top of failed fixes.
+**Per-agent hypothesis discipline:**
+1. **Form ONE specific hypothesis:** "I think X is the root cause because Y." Write it down. Be specific, not vague.
+2. **Make the SMALLEST possible change** to test it. One variable at a time. Don't fix multiple things at once.
+3. **Did it work?** → Phase 4. **Didn't work?** → Form a NEW hypothesis based on what you learned. Don't pile fixes on top of failed fixes. Don't just "try another thing" — the failed test gave you information. Use it.
 
 ### Phase 4: Fix Implementation
 
@@ -127,6 +139,13 @@ If 3 or more fix attempts fail, **STOP fixing and question architecture:**
 
 This is not failure — it's the system working. Detecting architectural problems before sinking more time into symptom fixes.
 
+**Pattern indicating architectural problem:**
+- Each fix reveals new shared state or coupling in a different place
+- Fixes require "massive refactoring" to implement
+- Each fix creates new symptoms elsewhere
+
+If within a Canonical Quest: consider playing a `BLACKCARD:` — this may be a design-level problem, not an implementation bug.
+
 ## Defense in Depth
 
 After finding and fixing the root cause, add validation at multiple layers:
@@ -148,6 +167,12 @@ After finding and fixing the root cause, add validation at multiple layers:
 | "The issue is simple, don't need process" | Simple issues have root causes too. Process is fast. |
 | "Emergency, no time" | Systematic debugging is FASTER than thrashing. Always. |
 | "Just try this first" | The first fix sets the pattern. Do it right. |
+| "Pattern says X but I'll adapt" | Partial understanding guarantees bugs. Read it completely. |
+| "I don't fully understand but this might work" | STOP. Return to Phase 1. |
+| "Multiple changes at once saves time" | Can't isolate what worked. Causes new bugs. |
+| "I'll write the test after confirming fix" | Untested fixes don't stick. Test first proves it. |
+| "Skip investigation, the error message says it all" | Error messages describe symptoms, not root causes. |
+| "Add multiple changes, run tests" | One variable at a time. Scientific method. |
 
 ## Escalation
 

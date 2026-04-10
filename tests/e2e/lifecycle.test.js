@@ -47,8 +47,9 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'hooks', 'raid-lib.sh')));
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-write-gate.sh')));
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-dungeon.sh')));
-    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-protocol', 'SKILL.md')));
-    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid-rules.md')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-canonical-protocol', 'SKILL.md')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'party-rules.md')));
+    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'dungeon-master-rules.md')));
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid.json')));
 
     // Verify settings merged correctly
@@ -62,16 +63,16 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'settings.json.pre-raid-backup')));
 
     // UPDATE
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'modified by user');
+    fs.writeFileSync(path.join(cwd, '.claude', 'party-rules.md'), 'modified by user');
     fs.writeFileSync(path.join(cwd, '.claude', 'raid.json'), '{"custom": "config"}');
 
     const updateResult = update.performUpdate(cwd);
     assert.ok(updateResult.success);
 
-    // raid-rules.md should be preserved when customized
-    const rules = fs.readFileSync(path.join(cwd, '.claude', 'raid-rules.md'), 'utf8');
+    // party-rules.md should be preserved when customized
+    const rules = fs.readFileSync(path.join(cwd, '.claude', 'party-rules.md'), 'utf8');
     assert.strictEqual(rules, 'modified by user');
-    assert.ok(updateResult.message.includes('raid-rules.md'));
+    assert.ok(updateResult.message.includes('party-rules.md'));
 
     // raid.json should NOT be overwritten (user config)
     const config = fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8');
@@ -89,8 +90,9 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'agents', 'wizard.md')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'hooks', 'validate-commit.sh')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'hooks', 'raid-lib.sh')));
-    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-protocol')));
-    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-rules.md')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-canonical-protocol')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'party-rules.md')));
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'dungeon-master-rules.md')));
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid.json')));
 
     // Empty raid directories cleaned up
@@ -137,7 +139,7 @@ describe('E2E: init -> update -> remove lifecycle', () => {
 
     // Verify browser skills exist
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-browser', 'SKILL.md')));
-    assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-browser-playwright', 'SKILL.md')));
+    // raid-browser-playwright was merged into raid-tdd in v0.2.0
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'skills', 'raid-browser-chrome', 'SKILL.md')));
 
     // Verify browser hooks exist
