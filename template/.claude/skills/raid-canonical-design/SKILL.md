@@ -67,16 +67,18 @@ Complete in order:
    SendMessage(to="archer", message="DISPATCH: [quest]. Your angle: [Y]...")
    SendMessage(to="rogue", message="DISPATCH: [quest]. Your angle: [Z]...")
    ```
-8. **Observe** — agents explore in their own panes, challenge each other via SendMessage, and pin findings to Dungeon. You receive messages automatically. Intervene only on protocol violations.
-9. **Close the phase** — when Dungeon has sufficient verified findings to form 2-3 approaches
-10. **Synthesize approaches** — propose 2-3 approaches from Dungeon evidence, with trade-offs and recommendation
-11. **Present design section by section** — scale each section to its complexity (a few sentences if straightforward, up to 200-300 words if nuanced). Ask the human after each section: "Does this look right so far?" Be ready to revise before moving on. Cover: architecture, components, data flow, error handling, testing.
-12. **Write design doc** — save to `{questDir}/design.md` (separate from the phase scoreboard). May also create `{questDir}/design-diagrams.md` for mermaid charts.
-13. **Adversarial spec review** — agents attack the written spec directly, challenging each other
-14. **Spec self-review** — fix issues inline (see checklist below)
-15. **Human reviews written spec** — human approves before proceeding
-16. **Commit** — `docs(quest-{slug}): phase 2 design — {summary}`
-17. **Transition** — invoke `raid-canonical-implementation-plan`
+8. **Round 1: Research** — agents explore their angles independently in their own panes. Pin findings to Dungeon. Signal `ROUND_COMPLETE:`. **Stop.** Agents do NOT self-initiate cross-testing. You receive messages automatically. Intervene only on protocol violations.
+9. **Round 2: Cross-testing** — when ALL agents have flagged `ROUND_COMPLETE:`, dispatch explicit cross-verification assignments. Each agent challenges specific findings from the others. Signal `ROUND_COMPLETE:` when done. **Stop.**
+10. **Repeat if needed** — if more exploration is needed, dispatch a new research round with refined angles
+11. **Close the phase** — broadcast `HOLD`. Close when Dungeon has sufficient verified findings to form 2-3 approaches
+12. **Synthesize approaches** — propose 2-3 approaches from Dungeon evidence, with trade-offs and recommendation
+13. **Present design section by section** — scale each section to its complexity (a few sentences if straightforward, up to 200-300 words if nuanced). Ask the human after each section: "Does this look right so far?" Be ready to revise before moving on. Cover: architecture, components, data flow, error handling, testing.
+14. **Write design doc** — save to `{questDir}/design.md` (separate from the phase scoreboard). May also create `{questDir}/design-diagrams.md` for mermaid charts.
+15. **Adversarial spec review** — agents attack the written spec directly, challenging each other
+16. **Spec self-review** — fix issues inline (see checklist below)
+17. **Human reviews written spec** — human approves before proceeding
+18. **Commit** — `docs(quest-{slug}): phase 2 design — {summary}`
+19. **Transition** — invoke `raid-canonical-implementation-plan`
 
 ## Opening the Dungeon (Phase Scoreboard)
 

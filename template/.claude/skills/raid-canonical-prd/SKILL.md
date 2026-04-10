@@ -49,10 +49,11 @@ digraph prd {
    - **@Warrior**: Explore the technical stack. What infrastructure exists? What APIs are available? What technical constraints apply? What precedents exist in the codebase?
    - **@Archer**: Explore the patterns. How does this fit existing architecture? What conventions apply? What similar features exist? What naming and structure patterns should we follow?
    - **@Rogue**: Explore the edge cases. What could go wrong? What assumptions are we making? What requirements are we missing? What will users actually do vs what we think they'll do?
-5. **Observe** — agents research in parallel. Go silent.
+5. **Round 1: Research** — agents research in parallel. Each investigates their angle independently. Pin findings. Signal `ROUND_COMPLETE:`. **Stop.** Agents do NOT self-initiate cross-testing. Go silent and observe.
 6. **Mediate questions** — agents ask Wizard, Wizard reasons, Wizard asks human only if unsure
-7. **Dispatch cross-testing** — when agents flag ROUND_COMPLETE:, assign their findings to others
-8. **Close phase** — wrap up PRD, send report, commit
+7. **Round 2: Cross-testing** — when ALL agents have flagged `ROUND_COMPLETE:`, dispatch explicit cross-verification assignments. Each agent challenges specific findings from the others. Agents signal `ROUND_COMPLETE:` when done. **Stop.**
+8. **Repeat if needed** — if more research is needed, dispatch a new research round with refined angles
+9. **Close phase** — broadcast `HOLD`, wrap up PRD, send report, commit
 
 ## Phase File (Dungeon Scoreboard)
 
