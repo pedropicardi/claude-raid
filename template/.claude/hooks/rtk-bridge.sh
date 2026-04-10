@@ -5,9 +5,12 @@
 
 set -euo pipefail
 
-# Source raid-lib for session state + config
+# Source raid-lib for session state + config.
+# Temporarily disable set -e so malformed raid.json in raid-lib doesn't abort the bridge (fail-open).
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-source "$SCRIPT_DIR/raid-lib.sh"
+set +e
+source "$SCRIPT_DIR/raid-lib.sh" 2>/dev/null
+set -e
 
 # 1. Check if rtk binary exists
 if ! command -v rtk >/dev/null 2>&1; then
