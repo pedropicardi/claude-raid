@@ -27,10 +27,21 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](#)
 [![Node.js 18+](https://img.shields.io/badge/node-18%2B-blue.svg)](#prerequisites)
+[![294 Tests](https://img.shields.io/badge/tests-294_passing-brightgreen.svg)](#)
 
-[Quick Start](#quick-start) &bull; [How It Works](#how-it-works) &bull; [The Team](#the-team) &bull; [Configuration](#configuration) &bull; [CLI Reference](#cli-reference)
+[Quick Start](#quick-start) · [The Canonical Quest](#the-canonical-quest) · [The Party](#the-party) · [The Dungeon](#the-dungeon) · [Configuration](#configuration) · [CLI Reference](#cli-reference)
 
 </div>
+
+---
+
+## What is Claude Raid?
+
+Claude Raid turns a single Claude Code session into a **4-agent adversarial team** that designs, plans, builds, reviews, and ships code through structured phases. Instead of one AI guessing at a solution, four agents challenge each other's work until only battle-tested decisions survive.
+
+The **Wizard** orchestrates. The **Warrior**, **Archer**, and **Rogue** each bring a different lens — stress tolerance, pattern coherence, and assumption destruction. They work in rounds, pin verified findings to a shared **Dungeon**, and no phase closes until the Wizard rules.
+
+One command installs the system. One command starts a quest.
 
 ---
 
@@ -40,65 +51,102 @@
 npx claude-raid summon
 ```
 
-That's it. One command installs the full system into any project.
+That's it. One command installs agents, hooks, skills, and config into your project's `.claude/` directory.
 
 ```bash
-# Preview what gets installed (no changes made)
+# Preview what gets installed (no changes)
 npx claude-raid summon --dry-run
 
-# Start a raid
-tmux new-session -s raid
-claude --agent wizard
+# Start a quest
+claude-raid start
 ```
 
-Each agent gets its own tmux pane. Click into any pane to observe or talk to that agent directly. Describe your task and the Wizard takes over.
+The Wizard greets you, you describe your task, and the quest begins.
 
 ### Prerequisites
 
-| Requirement | Why | Auto-configured? |
-|:--|:--|:--|
-| **Node.js** 18+ | Runs the installer | No |
-| **Claude Code** v2.1.32+ | Agent teams support | No |
-| **tmux** | Multi-pane agent display | No — `brew install tmux` |
-| **jq** | Hook config parsing | Pre-installed on macOS |
-| **teammateMode** | Set to `tmux` in `~/.claude.json` | Yes (wizard prompts) |
+| Requirement | Why |
+|:--|:--|
+| **Node.js** 18+ | Runs the CLI |
+| **Claude Code** v2.1.32+ | Agent teams support |
+| **tmux** | Multi-pane agent display (`brew install tmux`) |
+| **jq** | Config parsing (pre-installed on macOS) |
 
-> **tmux is required for the multi-pane experience.** Each agent runs in its own pane so you can observe and interact with them independently. Without tmux, agents run in-process (single pane, cycle with `Shift+Down`).
+> **tmux** gives each agent its own pane — click into any pane to observe or talk to that agent directly. Without tmux, agents run in-process and you cycle between them with `Shift+Down`.
 
 The setup wizard checks all prerequisites during `summon` and offers to fix what it can.
 
 ---
 
-## How It Works
+## The Canonical Quest
 
-You describe a task. The Wizard assesses complexity, recommends a mode, and opens the **Dungeon** — a shared artifact where agents pin verified findings throughout each phase.
+The Canonical Quest is a 6-phase development cycle. Every feature, refactor, or system built through the Raid follows this sequence.
 
+```mermaid
+flowchart LR
+    PRD["Phase 1\nPRD"]
+    Design["Phase 2\nDesign"]
+    Plan["Phase 3\nPlan"]
+    Impl["Phase 4\nImplementation"]
+    Review["Phase 5\nReview"]
+    Wrap["Phase 6\nWrap Up"]
+
+    PRD -->|"optional"| Design
+    Design --> Plan
+    Plan --> Impl
+    Impl --> Review
+    Review -->|"optional"| Wrap
+    Impl -->|"skip review"| Wrap
+
+    style PRD fill:#6c5ce7,color:#fff
+    style Design fill:#6c5ce7,color:#fff
+    style Plan fill:#6c5ce7,color:#fff
+    style Impl fill:#e17055,color:#fff
+    style Review fill:#00b894,color:#fff
+    style Wrap fill:#fdcb6e,color:#000
 ```
- DESIGN            Agents explore the problem from competing angles.
-                   Challenge each other's findings. Pin what survives.
-                   Wizard closes when the design is battle-tested.
 
- PLAN              Decompose the design into testable tasks.
-                   Fight over naming, ordering, coverage, compliance.
-                   Pin the agreed task list.
+### Phase 1 — PRD *(optional)*
 
- IMPLEMENTATION    One agent builds each task (TDD enforced).
-                   The others attack the implementation directly.
-                   Every task earns approval before moving on.
+Agents research the problem space and produce a complete Product Requirements Document. No code. The Wizard mediates questions between agents and the human.
 
- REVIEW            Independent reviews against design and plan.
-                   Agents fight over findings AND missing findings.
-                   Critical and Important issues must be fixed.
+**Output:** `phase-1-prd.md`
 
- FINISHING         Agents debate completeness. Wizard presents
-                   merge options: merge, PR, keep branch, or discard.
-```
+### Phase 2 — Design
 
-No phase is skipped. No work passes unchallenged.
+Agents explore design approaches from competing angles. Each brings their lens — the Warrior stress-tests architecture choices, the Archer traces ripple effects, the Rogue attacks assumptions. The design survives only if it withstands all three.
+
+**Output:** `phase-2-design.md` with mermaid diagrams and battle-tested decisions
+
+### Phase 3 — Plan
+
+Agents decompose the approved design into discrete, testable tasks. They fight over ordering, scope boundaries, naming, and test coverage until the plan earns consensus.
+
+**Output:** `phase-3-plan.md` + individual task files (`phase-3-plan-task-01.md`, etc.)
+
+### Phase 4 — Implementation
+
+The Wizard assigns tasks in batches. One agent builds each task using strict **TDD** (RED-GREEN-REFACTOR). The others cross-test the implementation — reading code, running tests, and challenging decisions. Every task earns approval before the next batch starts.
+
+**Output:** `phase-4-implementation.md` + committed, tested code
+
+### Phase 5 — Review *(optional)*
+
+Two sub-phases: **Pinning** (find issues) and **Fixing** (resolve them). Agents review independently, then fight over findings *and* missing findings. Critical and Important issues must be fixed. The **Black Card** system handles breaking architectural concerns.
+
+**Output:** `phase-5-review.md`
+
+### Phase 6 — Wrap Up
+
+The Wizard generates a quest storyboard summarizing what was built and why. Creates the PR, archives the dungeon to the vault, and dismisses the party.
+
+**Output:** `phase-6-wrap-up.md` + PR + vault archive
 
 ---
 
-## The Team
+## The Party
+
+Four agents, each with a distinct lens. They collaborate through rigor, not agreement.
 
 <table>
 <tr>
@@ -108,37 +156,43 @@ No phase is skipped. No work passes unchallenged.
 <td width="25%" align="center"><h3>Rogue</h3><em>Assumption Destroyer</em></td>
 </tr>
 <tr>
-<td valign="top">Thinks 5 times before speaking. Opens phases, dispatches the team, observes silently, and closes with binding rulings citing Dungeon evidence. <strong>Never writes code.</strong></td>
-<td valign="top">Race conditions, null input, scale, memory pressure — nothing passes unchecked. Demands evidence, proposes counter-examples, pushes until things break. Concedes instantly when proven wrong.</td>
-<td valign="top">Finds what brute force misses. Naming mismatches, violated conventions, design drift. Traces ripple effects across modules through implicit contracts.</td>
-<td valign="top">Thinks like a malicious user, a failing network, a corrupted database. Constructs the exact sequence of events that turns a minor oversight into a critical failure.</td>
+<td valign="top">Thinks 5 times before speaking. Opens phases, dispatches the team, observes, and closes with binding rulings. The bridge between agents, dungeon, and human. <strong>Never writes code.</strong></td>
+<td valign="top">Does this hold under pressure? Tests boundaries, load, edge cases, and failure modes. Brings the exact scenario that breaks it — not just "this is wrong."</td>
+<td valign="top">Does this fit? Traces how changes ripple through the system. Catches naming drift, contract violations, and implicit dependencies that break silently.</td>
+<td valign="top">What did everyone assume that isn't guaranteed? Thinks like a failing system, a malicious input, a race condition. Constructs the attack sequence that turns oversight into failure.</td>
 </tr>
 </table>
 
----
+### How They Work Together
 
-## Modes
+```mermaid
+sequenceDiagram
+    participant W as Wizard
+    participant Party as Warrior / Archer / Rogue
 
-Not every task needs all four agents. The Wizard recommends a mode based on complexity — or you can override directly.
+    W->>Party: Dispatch tasks + angles
+    Note over Party: Parallel independent work
+    Party->>W: ROUND_COMPLETE
+    W->>Party: Cross-test each other's work
+    Note over Party: Challenge, verify, concede or escalate
+    Party->>W: Findings + evidence
+    W->>W: Pin verified findings to Dungeon
+    Note over W: Next round or phase close
+```
 
-| | Full Raid | Skirmish | Scout |
-|:--|:--|:--|:--|
-| **Agents** | 3 + Wizard | 2 + Wizard | 1 + Wizard |
-| **Design** | Full adversarial | Lightweight | Inline |
-| **Planning** | Full adversarial | Merged with design | Inline |
-| **Implementation** | 1 builds, 2 attack | 1 builds, 1 attacks | 1 builds, Wizard reviews |
-| **Review** | 3 independent reviews | 1 review + Wizard | Wizard only |
-| **TDD** | Enforced | Enforced | Enforced |
+**Round-based, not real-time.** Agents work independently, flag completion, then cross-test. No mid-thinking interruptions. Each message carries evidence and a conclusion. Converge in 2-3 exchanges per finding — escalate to the Wizard after 3.
 
-**When to use each:**
+### Seven Pillars
 
-- **Full Raid** — Architecture decisions, security-critical code, major refactors, cross-layer changes
-- **Skirmish** — Medium features, non-trivial bugfixes, multi-file changes
-- **Scout** — Config changes, documentation, single-file fixes
+Every agent, every phase, every interaction:
 
-Override the Wizard's recommendation: *"Full Raid this"*, *"Skirmish this bugfix"*, *"Scout this"*.
-
-> The Wizard can escalate mid-task (Scout to Skirmish, Skirmish to Full Raid) with your approval. It cannot de-escalate without asking.
+1. **Intellectual Honesty** — Every claim backed by evidence gathered this turn. No guessing.
+2. **Zero Ego** — Concede instantly when proven wrong. A teammate catching your mistake is a gift.
+3. **Discipline** — Every interaction carries work forward. If you're not adding information, stop talking.
+4. **Round-Based Interaction** — Turn-based work, flag completion, cross-test on dispatch.
+5. **Question Chain** — Agents never ask the human directly. All questions flow through the Wizard.
+6. **Phase Spoils** — Every phase produces a detailed markdown artifact. No exceptions.
+7. **Black Cards** — Architecture-breaking findings that cannot be fixed within the current design. Escalated to the human with rollback options.
 
 ---
 
@@ -146,11 +200,34 @@ Override the Wizard's recommendation: *"Full Raid this"*, *"Skirmish this bugfix
 
 The Dungeon is the team's shared knowledge artifact — a curated board where agents pin verified findings during each phase.
 
-**What goes in:** Findings that survived challenge from 2+ agents, active unresolved battles, key decisions, escalation points.
+| Concept | What It Means |
+|:--|:--|
+| **Quest** | A complete session — from greeting to PR |
+| **Dungeon** | The quest's artifact directory: phase files, task files, findings |
+| **Vault** | Archive of completed quests for institutional memory |
+| **Phase Spoils** | Mandatory output of each phase: a detailed markdown report |
+| **Black Card** | A finding that fundamentally breaks the architecture — requires human decision |
+| **Pin** | A verified finding that survived challenge from 2+ agents |
 
-**What stays in conversation:** The back-and-forth of challenges, exploratory thinking, concessions. The conversation is the sparring ring. The Dungeon is the scoreboard.
+### Dungeon Filesystem
 
-**Lifecycle:** The Wizard creates it when opening a phase. Agents pin findings with `DUNGEON:` prefix. The Wizard archives it when closing. All Dungeon files are cleaned up when the session ends.
+```
+.claude/dungeon/{quest-slug}/          # Active quest artifacts
+├── phase-1-prd.md                     # PRD (optional)
+├── phase-2-design.md                  # Battle-tested design
+├── phase-3-plan.md                    # Task index
+├── phase-3-plan-task-01.md            # Individual task specs
+├── phase-4-implementation.md          # Implementation log
+├── phase-5-review.md                  # Review board (optional)
+└── phase-6-wrap-up.md                 # Quest storyboard
+
+.claude/vault/{quest-slug}/            # Archived completed quests
+.claude/raid-session                   # Active session state
+```
+
+**What goes in the Dungeon:** Findings that survived challenge from 2+ agents, key decisions, escalation points.
+
+**What stays in conversation:** Back-and-forth challenges, exploratory thinking, concessions. The conversation is the sparring ring. The Dungeon is the scoreboard.
 
 ---
 
@@ -172,12 +249,12 @@ The Dungeon is the team's shared knowledge artifact — a curated board where ag
 │   └── rogue.md                     # Assumption destroyer
 ├── hooks/
 │   ├── raid-lib.sh                  # Shared config and session state
-│   ├── raid-session-start.sh        # Session activation
-│   ├── raid-session-end.sh          # Archive and cleanup
-│   ├── raid-pre-compact.sh          # Pre-compaction backup
+│   ├── raid-session-start.sh        # Session activation + quest directory
+│   ├── raid-session-end.sh          # Archive to vault + cleanup
+│   ├── raid-pre-compact.sh          # Pre-compaction dungeon backup
 │   ├── raid-task-created.sh         # Task subject validation
-│   ├── validate-commit.sh           # Conventional commits + test gate
-│   ├── validate-write-gate.sh       # Design doc before implementation
+│   ├── validate-commit.sh           # Conventional commits
+│   ├── validate-write-gate.sh       # Phase-based write protection
 │   ├── validate-file-naming.sh      # Naming convention enforcement
 │   ├── validate-no-placeholders.sh  # No TBD/TODO in specs
 │   ├── validate-dungeon.sh          # Multi-agent verification on pins
@@ -191,82 +268,40 @@ The Dungeon is the team's shared knowledge artifact — a curated board where ag
     ├── raid-canonical-implementation-plan/  # Phase 3: Task decomposition
     ├── raid-canonical-implementation/       # Phase 4: TDD + cross-testing
     ├── raid-canonical-review/       # Phase 5: Pinning + fixing
-    ├── raid-wrap-up/                # Phase 6: Storyboard + PR
+    ├── raid-wrap-up/                # Phase 6: Storyboard + PR + vault
     ├── raid-tdd/                    # RED-GREEN-REFACTOR enforcement
     ├── raid-verification/           # Evidence-before-claims gate
     ├── raid-debugging/              # Root-cause investigation
     ├── raid-browser/                # Browser orchestration
-    ├── raid-browser-playwright/     # Playwright test authoring
     └── raid-browser-chrome/         # Live Chrome inspection
 ```
 
 </details>
 
-Runtime files (dungeon artifacts, session state) are created during Raid sessions and cleaned up automatically.
+### Agents (4)
 
----
+The Wizard orchestrates. Warrior, Archer, and Rogue each bring a specialized lens. All agents run on Claude Opus 4.6.
 
-## Hooks
+### Hooks (12)
 
-Hooks enforce workflow discipline automatically. They only activate during Raid sessions — they never interfere with normal coding.
+Hooks enforce workflow discipline automatically and **only activate during Raid sessions** — they never interfere with normal coding.
 
-### Lifecycle
+**Lifecycle hooks** manage session start/end, quest directory creation, vault archival, and context compaction backup.
 
-| Hook | Trigger | Purpose |
+**Quality gate hooks** enforce conventional commits, phase-based write protection, naming conventions, placeholder blocking, multi-agent verification on dungeon pins, and browser test detection.
+
+All hooks are POSIX-compatible and use `#claude-raid` markers to coexist safely with your existing hooks.
+
+### Skills (13)
+
+Skills guide agent behavior across the workflow. Three categories:
+
+| Category | Skills | Purpose |
 |:--|:--|:--|
-| `raid-session-start` | SessionStart | Activates Raid workflow, checks Vault for past quests |
-| `raid-session-end` | SessionEnd | Archives Dungeon, drafts Vault entry, removes session |
-| `raid-pre-compact` | PreCompact | Backs up Dungeon before message compaction |
-| `raid-task-created` | TaskCreated | Validates task subjects are meaningful |
-
-### Quality Gates
-
-| Hook | Trigger | Purpose |
-|:--|:--|:--|
-| `validate-commit` | PreToolUse (Bash) | Conventional commit format + test gate |
-| `validate-write-gate` | PreToolUse (Write) | Blocks implementation before design doc exists |
-| `validate-file-naming` | PostToolUse (Write) | Enforces naming conventions |
-| `validate-no-placeholders` | PostToolUse (Write) | Blocks TBD/TODO/FIXME in specs and plans |
-| `validate-dungeon` | PostToolUse (Write) | Requires 2+ agents verified on Dungeon pins |
-| `validate-browser-tests-exist` | PreToolUse (Bash) | Checks Playwright tests exist before commits |
-| `validate-browser-cleanup` | PostToolUse (Bash) | Verifies browser processes cleaned up |
-
-All hooks are POSIX-compatible, read config from `raid.json`, and use `#claude-raid` markers to avoid collisions with your existing hooks. Exit code `0` = pass, `2` = block with message.
-
----
-
-## Skills
-
-14 specialized skills guide agent behavior across the workflow.
-
-### Phase Skills
-
-| Skill | Purpose |
-|:--|:--|
-| `raid-init` | Quest selection, greeting, session setup |
-| `raid-canonical-protocol` | Canonical Quest rules, signals, phase gates |
-| `raid-canonical-prd` | Phase 1 — PRD creation (optional) |
-| `raid-canonical-design` | Phase 2 — Adversarial design exploration |
-| `raid-canonical-implementation-plan` | Phase 3 — Task decomposition |
-| `raid-canonical-implementation` | Phase 4 — TDD implementation + cross-testing |
-| `raid-canonical-review` | Phase 5 — Pinning, fixing, black cards |
-| `raid-wrap-up` | Phase 6 — Storyboard, PR, vault archival |
-
-### Discipline Skills
-
-| Skill | Purpose |
-|:--|:--|
-| `raid-tdd` | Strict RED-GREEN-REFACTOR. No production code before a failing test. |
-| `raid-debugging` | Competing hypotheses in parallel. No fixes without confirmed root cause. |
-| `raid-verification` | Evidence before assertions. Fresh test run required before any completion claim. |
-
-### Browser Skills
-
-| Skill | Purpose |
-|:--|:--|
-| `raid-browser` | Browser startup discovery — dev server, auth, startup steps |
-| `raid-browser-playwright` | Playwright MCP test authoring with network and console assertions |
-| `raid-browser-chrome` | Live browser inspection via Claude-in-Chrome MCP |
+| **Core** | `raid-init` | Quest selection, greeting, session bootstrap |
+| **Canonical Quest** | 7 phase skills | One skill per phase, chained in order |
+| **Discipline** | `raid-tdd`, `raid-verification`, `raid-debugging` | Quest-agnostic enforcement — invoked within any phase |
+| **Browser** | `raid-browser`, `raid-browser-chrome` | Browser orchestration and live inspection |
 
 ---
 
@@ -307,13 +342,13 @@ All hooks are POSIX-compatible, read config from `raid.json`, and use `#claude-r
 
 | Marker File | Language | Test Command | Lint Command |
 |:--|:--|:--|:--|
-| `package.json` | JavaScript | `npm test` | `npm run lint` |
+| `package.json` | JavaScript/TypeScript | `npm test` | `npm run lint` |
 | `Cargo.toml` | Rust | `cargo test` | `cargo clippy` |
 | `pyproject.toml` | Python | `pytest` / `poetry run pytest` | `ruff check .` |
 | `requirements.txt` | Python | `pytest` | `ruff check .` |
 | `go.mod` | Go | `go test ./...` | `go vet ./...` |
 
-Commands are extracted from your project files (e.g., `scripts.test` in `package.json`). Package manager is auto-detected (npm, pnpm, yarn, bun, uv, poetry). Edit `raid.json` to override any value.
+Package manager is auto-detected (npm, pnpm, yarn, bun, uv, poetry). Commands are extracted from your project files where possible. Edit `raid.json` to override any value.
 
 <details>
 <summary><strong>Full configuration reference</strong></summary>
@@ -330,7 +365,6 @@ Commands are extracted from your project files (e.g., `scripts.test` in `package
 | `conventions.commits` | `conventional` | Commit message format |
 | `conventions.commitMinLength` | `15` | Minimum commit message length |
 | `conventions.maxDepth` | `8` | Maximum file nesting depth |
-| `raid.defaultMode` | `full` | Default mode: `full`, `skirmish`, `scout` |
 | `raid.lifecycle.testWindowMinutes` | `10` | Max age (minutes) of test run for verification |
 
 </details>
@@ -352,7 +386,7 @@ When a browser framework is detected (Next.js, Vite, Angular, etc.), a `browser`
 }
 ```
 
-This enables browser-specific hooks and skills — Playwright test detection, browser process cleanup, and live inspection during reviews.
+This enables browser-specific hooks and skills — Playwright test detection, browser process cleanup, and live Chrome inspection during reviews.
 
 ---
 
@@ -360,13 +394,19 @@ This enables browser-specific hooks and skills — Playwright test detection, br
 
 | Command | Alias | Purpose |
 |:--|:--|:--|
+| `claude-raid start` | — | Launch the Wizard and begin a quest |
 | `claude-raid summon` | `init` | Install Raid into your project |
 | `claude-raid update` | — | Upgrade hooks, skills, and rules to latest |
 | `claude-raid dismantle` | `remove` | Remove all Raid files, restore original settings |
 | `claude-raid heal` | `doctor` | Check environment health |
+| `claude-raid sync` | — | Git pull + re-summon |
 
 <details>
 <summary><strong>Command details</strong></summary>
+
+### `start`
+
+Launches `claude --agent wizard` with full permissions. The Wizard loads its rules, greets you, and begins quest selection. This is the primary entry point for running a quest.
 
 ### `summon`
 
@@ -378,7 +418,7 @@ Installs the full Raid system. Auto-detects project type, copies agents/hooks/sk
 
 ### `update`
 
-Upgrades hooks, skills, and rules to the latest version. Skips customized agents (warns which ones were preserved). Does not touch `raid.json`.
+Upgrades hooks, skills, and rules to the latest version. Skips customized agents and warns which ones were preserved. Does not touch `raid.json`.
 
 ### `dismantle`
 
@@ -386,7 +426,11 @@ Removes all Raid agents, hooks, skills, and config files. Restores `settings.jso
 
 ### `heal`
 
-Checks Node.js, Claude Code, jq, teammateMode, and split-pane support. Offers to fix missing configuration interactively.
+Checks Node.js, Claude Code, jq, tmux, and teammateMode. Offers to fix missing configuration interactively.
+
+### `sync`
+
+Pulls latest from remote and re-runs summon to pick up any template changes. Useful after CI bumps the version.
 
 </details>
 
@@ -416,25 +460,29 @@ Checks Node.js, Claude Code, jq, teammateMode, and split-pane support. Offers to
 ## Design Principles
 
 - **Non-invasive** — Never touches your `CLAUDE.md`. Merges settings alongside your existing config with automatic backup. Clean removal restores originals.
-- **Session-scoped** — Quality gate hooks only activate during Raid sessions. They never interfere with normal coding.
+- **Session-scoped** — Quality gate hooks only activate during Raid sessions. Normal coding is never affected.
 - **Zero dependencies** — Pure Node.js stdlib. Fast `npx` cold-start.
-- **Safe by default** — Never overwrites existing files. Customized agents are always preserved.
+- **Safe by default** — Never overwrites existing files. Customized agents and rules are always preserved.
+- **Round-based discipline** — Agents work in parallel, flag completion, then cross-test. No mid-thinking interruptions.
+- **Question chain** — Agents never ask the human directly. All questions flow through the Wizard.
+- **Wizard never implements** — Dispatches, observes, digests, rules. The party writes code.
+- **Phase commits** — The Wizard commits at every phase transition with the quest name, phase, and summary.
 
 ---
 
-## Inherited from Superpowers
+## Heritage
 
-Adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent.
+Adapted from [obra/superpowers](https://github.com/obra/superpowers) by Jesse Vincent. The Raid inherits five core enforcement principles:
 
-| Concept | How the Raid Uses It |
+| Principle | How the Raid Enforces It |
 |:--|:--|
-| HARD-GATEs | No code before design approval. No implementation before plan approval. |
-| TDD Iron Law | No production code without a failing test first. Enforced in all modes. |
-| Verification Iron Law | No completion claims without fresh test evidence. |
-| No Placeholders | Specs and plans must contain complete content, not "TBD" or "implement later". |
-| Conventional Commits | Enforced via hook: `type(scope): description`. |
+| **HARD-GATEs** | No code before design approval. No implementation before plan approval. |
+| **TDD Iron Law** | No production code without a failing test first. Enforced in every phase. |
+| **Verification Iron Law** | No completion claims without fresh test evidence. |
+| **No Placeholders** | Specs and plans must contain complete content — no "TBD" or "implement later". |
+| **Conventional Commits** | Enforced via hook: `type(scope): description`. |
 
-**What's different:** Superpowers uses a single agent with subagent delegation. The Raid uses 4 persistent agents with adversarial cross-testing and direct interaction. Agents talk to each other, pin verified findings to a shared Dungeon, and self-organize within phases. Every decision is stress-tested from multiple angles before it passes.
+**What's different:** Superpowers uses a single agent with subagent delegation. The Raid uses 4 persistent agents with adversarial cross-testing. Agents challenge each other directly, pin verified findings to a shared Dungeon, and self-organize within phases. Every decision is stress-tested from three angles before it passes.
 
 ---
 
