@@ -259,6 +259,36 @@ describe('raid-pre-compact.sh', () => {
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1-backup.md')));
   });
 
+  it('does not cascade backups of backups', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
+    fs.mkdirSync(questDir, { recursive: true });
+    writeSession(cwd, { questDir: '.claude/dungeon/test-quest', questId: 'test-quest' });
+    fs.writeFileSync(path.join(questDir, 'phase-1-prd.md'), '# PRD');
+    fs.writeFileSync(path.join(questDir, 'phase-1-prd-backup.md'), '# PRD backup');
+    fs.writeFileSync(path.join(questDir, 'phase-1-prd-backup-backup.md'), '# PRD old cascade');
+    runHook('raid-pre-compact.sh', {}, cwd);
+    // Should NOT create backup-backup-backup
+    assert.ok(!fs.existsSync(path.join(questDir, 'phase-1-prd-backup-backup-backup.md')),
+      'should not create cascading backups');
+    assert.ok(!fs.existsSync(path.join(questDir, 'phase-1-prd-backup-backup-backup-backup.md')),
+      'should not create cascading backups');
+    // Original backup should still be updated
+    assert.ok(fs.existsSync(path.join(questDir, 'phase-1-prd-backup.md')));
+  });
+
+  it('does not cascade legacy flat dungeon backups', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1.md'), '# Phase 1');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1-backup.md'), '# Phase 1 backup');
+    runHook('raid-pre-compact.sh', {}, cwd);
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1-backup-backup.md')),
+      'should not create cascading legacy backups');
+  });
+
   it('does nothing when no Dungeon files exist', () => {
     const cwd = setup();
     writeRaidConfig(cwd);

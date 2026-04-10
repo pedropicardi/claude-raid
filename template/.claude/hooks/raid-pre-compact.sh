@@ -21,6 +21,8 @@ QUEST_DIR=$(raid_quest_dir)
 if [ -d "$QUEST_DIR" ]; then
   for phase_file in "$QUEST_DIR"/phase-*.md; do
     [ -f "$phase_file" ] || continue
+    # Skip files that are already backups to prevent cascade
+    [[ "$phase_file" == *-backup* ]] && continue
     cp "$phase_file" "${phase_file%.md}-backup.md"
     BACKED_UP=true
   done
@@ -34,6 +36,8 @@ fi
 
 for phase_file in .claude/raid-dungeon-phase-*.md; do
   [ -f "$phase_file" ] || continue
+  # Skip files that are already backups to prevent cascade
+  [[ "$phase_file" == *-backup* ]] && continue
   cp "$phase_file" "${phase_file%.md}-backup.md"
   BACKED_UP=true
 done
