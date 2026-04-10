@@ -11,6 +11,19 @@ const RAID_PERMISSIONS = ['Read', 'Glob', 'Grep', 'Bash', 'Write', 'Edit'];
 
 const RAID_HOOK_MARKER = '#claude-raid';
 
+const RTK_HOOK_MARKER = '#claude-raid-rtk';
+
+const RTK_HOOKS = {
+  PreToolUse: [
+    {
+      matcher: 'Bash',
+      hooks: [
+        { type: 'command', command: `bash .claude/hooks/rtk-bridge.sh ${RTK_HOOK_MARKER}` },
+      ],
+    },
+  ],
+};
+
 const RAID_HOOKS = {
   PostToolUse: [
     {
@@ -78,6 +91,10 @@ function isRaidHookEntry(entry) {
   return entry.hooks && entry.hooks.some(h => h.command && h.command.includes(RAID_HOOK_MARKER));
 }
 
+function isRtkHookEntry(entry) {
+  return entry.hooks && entry.hooks.some(h => h.command && h.command.includes(RTK_HOOK_MARKER));
+}
+
 function mergeSettings(cwd) {
   const settingsPath = path.join(cwd, '.claude', 'settings.json');
   let existing = {};
@@ -112,6 +129,31 @@ function mergeSettings(cwd) {
     existing.hooks[event].push(...raidEntries);
   }
 
+  // RTK hooks — read raid.json to check if enabled
+  const raidJsonPath = path.join(cwd, '.claude', 'raid.json');
+  let rtkEnabled = false;
+  try {
+    const raidConfig = JSON.parse(fs.readFileSync(raidJsonPath, 'utf8'));
+    rtkEnabled = raidConfig.rtk && raidConfig.rtk.enabled === true;
+  } catch {
+    // No raid.json or invalid — RTK stays disabled
+  }
+
+  // Strip existing RTK hooks first (clean slate for toggle behavior)
+  for (const event of Object.keys(existing.hooks)) {
+    existing.hooks[event] = existing.hooks[event].filter(entry => !isRtkHookEntry(entry));
+  }
+
+  // Append RTK hooks if enabled (after core hooks, ensuring last position)
+  if (rtkEnabled) {
+    for (const [event, rtkEntries] of Object.entries(RTK_HOOKS)) {
+      if (!Array.isArray(existing.hooks[event])) {
+        existing.hooks[event] = [];
+      }
+      existing.hooks[event].push(...rtkEntries);
+    }
+  }
+
   fs.writeFileSync(settingsPath, JSON.stringify(existing, null, 2) + '\n');
 }
 
@@ -142,7 +184,7 @@ function removeRaidSettings(cwd) {
 
   if (settings.hooks) {
     for (const event of Object.keys(settings.hooks)) {
-      settings.hooks[event] = settings.hooks[event].filter(entry => !isRaidHookEntry(entry));
+      settings.hooks[event] = settings.hooks[event].filter(entry => !isRaidHookEntry(entry) && !isRtkHookEntry(entry));
       if (settings.hooks[event].length === 0) delete settings.hooks[event];
     }
     if (Object.keys(settings.hooks).length === 0) delete settings.hooks;
