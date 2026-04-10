@@ -1,6 +1,6 @@
 {
   "name": "claude-raid",
-  "version": "0.2.3",
+  "version": "0.2.4",
   "type": "commonjs",
   "description": "Adversarial multi-agent development system for Claude Code",
   "author": "Pedro Picardi",
