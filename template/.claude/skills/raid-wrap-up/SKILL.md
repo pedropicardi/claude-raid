@@ -11,12 +11,6 @@ The quest ends. The bard sings the tale. The treasure is committed. The party re
 Do NOT write new code. This phase is about reporting, cleanup, PR creation, and archival. Agents are dismissed, not dispatched.
 </HARD-GATE>
 
-## Mode Behavior
-
-- **Full Raid**: Wizard writes full storyboard from all phase files. Full PR with narrative.
-- **Skirmish**: Wizard writes condensed storyboard. Standard PR.
-- **Scout**: Wizard writes brief summary. Quick PR.
-
 ## Process Flow
 
 ```dot
@@ -65,28 +59,34 @@ Create `{questDir}/phase-6-wrap-up.md` and write a phase-by-phase narrative:
 
 ### Phase 1: PRD — Forging the Scroll
 (if prd.md exists)
-- What requirements were established
-- Key decisions from research
+- Wizard + human collaborative requirements gathering
+- Key decisions and requirements established
+- Link: `{questDir}/spoils/prd.md`
 
 ### Phase 2: Design — Charting the Map
+- Who wrote the initial design (dice roll result)
+- Key defend/concede exchanges between agents
 - Architecture chosen and why
-- Key trade-offs resolved
-- Alternatives considered and rejected
+- Drift check result (if PRD existed)
+- Links: `{questDir}/spoils/design.md`, `{questDir}/phases/phase-2-design.md`
 
 ### Phase 3: Implementation Plan — Marshaling the Forces
 - Number of tasks, dependency structure
-- Risk areas identified
+- Key review findings and how they shaped the final plan
+- Links: `{questDir}/phases/phase-3-plan.md`, task files
 
 ### Phase 4: Implementation — Into the Fray
-- What was built
-- Challenges overcome
+- How tasks were divided across agents (domain affinity)
+- What was built by whom
 - Test coverage highlights
+- Link: `{questDir}/phases/phase-4-implementation.md`
 
 ### Phase 5: Review — Inspecting the Treasure
-(if phase-5-review.md exists)
-- Findings pinned and resolved
+(if review.md exists)
+- Findings pinned and severity classifications
+- Fix plan and execution
 - Black cards (if any)
-- Fixes applied
+- Links: `{questDir}/spoils/review.md`, `{questDir}/phases/phase-5-review.md`
 
 ### Summary
 - Total phases completed
