@@ -32,7 +32,7 @@ function copyRecursive(src, dest, skipped) {
   }
 }
 
-function install(cwd) {
+function install(cwd, opts = {}) {
   const claudeDir = path.join(cwd, '.claude');
   const result = { skipped: [], alreadyInstalled: false, detected: null };
 
@@ -131,6 +131,15 @@ function install(cwd) {
         startup: null,
       };
     }
+    if (opts.rtkEnabled) {
+      raidConfig.rtk = {
+        enabled: true,
+        bypass: {
+          phases: [],
+          commands: [],
+        },
+      };
+    }
     fs.writeFileSync(raidConfigPath, JSON.stringify(raidConfig, null, 2) + '\n');
   }
 
@@ -161,14 +170,14 @@ function install(cwd) {
   return result;
 }
 
-async function run() {
+async function run(opts = {}) {
   const cwd = process.cwd();
   const { bold, dim } = colors;
 
   console.log('\n' + banner());
   console.log(header('Summoning the Party...') + '\n');
 
-  const result = install(cwd);
+  const result = install(cwd, opts);
 
   if (result.alreadyInstalled) {
     console.log('  The party is already here. Use ' + bold('claude-raid update') + ' to reforge.');
@@ -222,7 +231,20 @@ async function run() {
   }
 
   // Setup wizard
-  await runSetup();
+  const setupResult = await runSetup(opts);
+
+  // Apply RTK config if enabled interactively
+  if (setupResult.actions.includes('rtk-enabled')) {
+    const raidConfigPath = path.join(cwd, '.claude', 'raid.json');
+    if (fs.existsSync(raidConfigPath)) {
+      const config = JSON.parse(fs.readFileSync(raidConfigPath, 'utf8'));
+      if (!config.rtk) {
+        config.rtk = { enabled: true, bypass: { phases: [], commands: [] } };
+        fs.writeFileSync(raidConfigPath, JSON.stringify(config, null, 2) + '\n');
+        mergeSettings(cwd);
+      }
+    }
+  }
 
   // Reference card
   const { referenceCard } = require('./ui');

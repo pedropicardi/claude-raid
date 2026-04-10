@@ -413,6 +413,15 @@ async function runSetup(opts = {}) {
 
   stdout.write('\n  ' + formatCheckLine(splitPane).join('\n  ') + '\n');
 
+  // RTK prompt — only if RTK is on PATH and not already configured via --rtk
+  const rtkCheck = checks.find(c => c.id === 'rtk');
+  if (rtkCheck && rtkCheck.ok && !opts.rtkEnabled) {
+    const rtkConfirm = await ask('\n  RTK detected — enable token compression? [Y/n] ', stdin, stdout);
+    if (rtkConfirm.toLowerCase() !== 'n') {
+      actions.push('rtk-enabled');
+    }
+  }
+
   // Recalculate allOk (required checks only: node + claude)
 
   allOk = checks.filter(c => REQUIRED_IDS.includes(c.id)).every(c => c.ok);
