@@ -1,6 +1,6 @@
 ---
 name: raid-init
-description: "Quest selection, greeting, session setup, and dungeon resume. Loaded by wizard at session start. Teaches the wizard how to greet the human, present quest choices, and begin the quest."
+description: "Use when starting a new Raid session or resuming an existing quest. Loaded first by the Wizard before any phase begins."
 ---
 
 # Raid Init — Quest Selection & Session Setup
@@ -25,11 +25,8 @@ digraph init {
   "Canonical Quest?" -> "Coming soon message" [label="B/D/E/F"];
   "Coming soon message" -> "Present quest menu";
   "Ask: PRD needed?" -> "Human describes task";
-  "Human describes task" -> "Assess complexity + recommend mode";
-  "Assess complexity + recommend mode" -> "Human approves mode?";
-  "Human approves mode?" -> "Spawn team + create quest dir" [label="yes"];
-  "Human approves mode?" -> "Assess complexity + recommend mode" [label="override"];
-  "Spawn team + create quest dir" -> "Begin first phase" [shape=doublecircle];
+  "Human describes task" -> "Spawn full team + create quest dir";
+  "Spawn full team + create quest dir" -> "Begin first phase" [shape=doublecircle];
 }
 ```
 
@@ -91,35 +88,26 @@ Loop back to the menu.
 
 Ask the human to describe the task/feature they want to build. Listen carefully. Read 3 times internally.
 
-### 4c. Mode Recommendation
+### 4c. Spawn Team & Setup
 
-Assess complexity and recommend a mode:
+The Canonical Quest always runs as Full Raid (Warrior, Archer, Rogue). Do NOT ask the human to confirm the mode — it is implicit.
 
-| Mode | When | Agents |
-|------|------|--------|
-| **Full Raid** | Large features, architectural changes, complex refactors | 3 (Warrior, Archer, Rogue) |
-| **Skirmish** | Medium features, focused changes | 2 (pick most relevant) |
-| **Scout** | Small fixes, minor additions | 1 (pick most relevant) |
-
-Present recommendation. Wait for human to approve or override.
-
-### 4d. Spawn Team & Setup
-
-1. Update raid-session with:
-   - `questType`: `"canonical"`
-   - `questId`: slugified from task description (e.g., `"auth-redesign"`)
-   - `questDir`: `.claude/dungeon/{questId}`
-   - `phase`: `""` (will be set by first phase skill)
+1. Update `.claude/raid-session` (created by the session-start hook) via **Bash with jq** — the write gate blocks Write/Edit on this file, so always use Bash:
+   ```bash
+   jq --arg qt "canonical" --arg qid "{questId}" --arg qdir ".claude/dungeon/{questId}" \
+     '.questType=$qt | .questId=$qid | .questDir=$qdir | .mode="full"' \
+     .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
+   ```
 2. Create quest directory if not already created by hook:
    ```
    mkdir -p {questDir}
    ```
-3. Spawn team:
+3. Spawn the full team:
    ```
-   TeamCreate(team_name="raid-{mode}-{questId}")
+   TeamCreate(team_name="raid-full-{questId}")
    Agent(subagent_type="warrior", team_name="raid-...", name="warrior")
-   Agent(subagent_type="archer", team_name="raid-...", name="archer")   // Full Raid + Skirmish
-   Agent(subagent_type="rogue", team_name="raid-...", name="rogue")     // Full Raid only
+   Agent(subagent_type="archer", team_name="raid-...", name="archer")
+   Agent(subagent_type="rogue", team_name="raid-...", name="rogue")
    ```
 
 ## Step 5: Begin First Phase
@@ -135,6 +123,6 @@ Present recommendation. Wait for human to approve or override.
 | Thought | Reality |
 |---------|---------|
 | "Skip the greeting, get to work" | The greeting sets the tone. It takes 5 seconds. Do it. |
-| "The human knows what mode to use" | Recommend first. Let them override. That's the protocol. |
+| "Let me ask which mode to use" | Canonical Quest = Full Raid. Always. Don't ask. |
 | "Let me start exploring the codebase" | You are the Wizard. You don't explore. You dispatch. |
 | "I'll figure out the quest type later" | Quest type determines the phase flow. Choose now. |

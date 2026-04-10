@@ -34,7 +34,7 @@ No build step. No linter configured. No dependencies to install.
 
 | Command | Alias | Action |
 |---------|-------|--------|
-| `start` | — | Launches `claude --dangerously-skip-permissions --agent wizard` |
+| `start` | — | Opens tmux session + launches Wizard (one command does it all) |
 | `summon` | `init` | Installs Raid into a project |
 | `update` | — | Upgrades hooks/skills/rules |
 | `dismantle` | `remove` | Removes Raid files |
@@ -95,7 +95,8 @@ template/.claude/
 │   ├── raid-verification/                  # Evidence-before-claims gate (reusable)
 │   ├── raid-debugging/                     # Root-cause investigation (reusable)
 │   ├── raid-browser/                       # Browser orchestration infrastructure (conditional)
-│   └── raid-browser-chrome/                # Live Chrome inspection (conditional)
+│   ├── raid-browser-chrome/                # Live Chrome inspection (conditional)
+│   └── raid-teambuff/                      # Emergency team retrospective + rulings (reusable)
 ├── party-rules.md              # Party agent rules (editable by user)
 └── dungeon-master-rules.md     # Wizard rules (editable by user)
 ```
@@ -106,19 +107,23 @@ Skills are organized into three categories:
 
 - **Core:** `raid-init` — always loaded, handles quest selection and session setup
 - **Canonical Quest chain (7):** `raid-canonical-*` + `raid-wrap-up` — phase-specific skills that chain: init → prd → design → plan → implementation → review → wrap-up
-- **Reusable (5):** `raid-tdd`, `raid-verification`, `raid-debugging`, `raid-browser`, `raid-browser-chrome` — quest-type agnostic, invoked within phases as needed
+- **Reusable (6):** `raid-tdd`, `raid-verification`, `raid-debugging`, `raid-browser`, `raid-browser-chrome`, `raid-teambuff` — quest-type agnostic, invoked within phases as needed
 
 ### Quest Filesystem
 
 ```
 .claude/dungeon/{quest-slug}/          # Active quest artifacts
-├── phase-1-prd.md                     # PRD document (optional)
-├── phase-2-design.md                  # Design specification
-├── phase-3-plan.md                    # Task index
-├── phase-3-plan-task-01.md            # Individual task files
+├── phase-1-prd.md                     # Phase 1 scoreboard (optional)
+├── prd.md                             # PRD deliverable (optional)
+├── phase-2-design.md                  # Phase 2 scoreboard
+├── design.md                          # Design deliverable
+├── phase-3-plan.md                    # Phase 3 scoreboard
+├── phase-3-plan-task-01.md            # Individual task files (deliverable)
 ├── phase-4-implementation.md          # Implementation log
 ├── phase-5-review.md                  # Review board (optional)
-└── phase-6-wrap-up.md                 # Quest storyboard
+├── phase-6-wrap-up.md                 # Quest storyboard
+├── teambuff-01.md                     # Team retrospective reports (on-demand)
+└── teambuff-rulings.md                # Active rulings from teambuffs
 
 .claude/vault/{quest-slug}/            # Archived completed quests
 .claude/raid-session                   # Active session state (JSON)

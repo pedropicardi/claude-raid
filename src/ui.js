@@ -119,19 +119,18 @@ function header(text) {
 
 function referenceCard() {
   const howItWorks = box('How It Works', [
-    '  You describe a task. The Wizard assesses complexity and',
-    '  recommends a mode:',
+    '  You describe a task. The Wizard spawns the full team:',
+    '  Warrior, Archer, and Rogue — each attacking from a',
+    '  different angle.',
     '',
-    '  ' + colors.bold('Full Raid') + '    3 agents attack from competing angles',
-    '  ' + colors.bold('Skirmish') + '     2 agents, lighter process',
-    '  ' + colors.bold('Scout') + '        1 agent + Wizard review',
+    '  The Canonical Quest flows through 6 phases:',
     '',
-    '  Every task flows through 4 phases:',
-    '',
-    '  1. ' + colors.bold('Design') + '     Agents explore and challenge the approach',
-    '  2. ' + colors.bold('Plan') + '       Agents decompose into testable tasks',
-    '  3. ' + colors.bold('Implement') + '  One builds (TDD), others attack',
-    '  4. ' + colors.bold('Review') + '     Independent reviews, fight over findings',
+    '  1. ' + colors.bold('PRD') + '        Product requirements ' + colors.dim('(optional)'),
+    '  2. ' + colors.bold('Design') + '     Agents explore and challenge the approach',
+    '  3. ' + colors.bold('Plan') + '       Agents decompose into testable tasks',
+    '  4. ' + colors.bold('Implement') + '  One builds (TDD), others attack',
+    '  5. ' + colors.bold('Review') + '     Independent reviews, fight over findings',
+    '  6. ' + colors.bold('Wrap Up') + '    Storyboard, PR, vault archive',
     '',
     '  Hooks enforce discipline automatically:',
     '  ' + colors.dim('\u2022') + ' No implementation without a design doc',
@@ -147,10 +146,11 @@ function referenceCard() {
   ]);
 
   const nextStep = box('Next Step', [
-    '  ' + colors.bold('tmux new-session -s raid'),
-    '  ' + colors.bold('claude --agent wizard'),
+    '  ' + colors.bold('claude-raid start'),
     '',
-    '  ' + colors.dim('Start tmux first, then the Wizard inside it.'),
+    '  ' + colors.dim('That\'s it. One command opens a tmux session with mouse'),
+    '  ' + colors.dim('support and launches the Wizard inside it.'),
+    '',
     '  ' + colors.dim('Each agent gets its own tmux pane automatically.'),
     '  ' + colors.dim('Click any pane to talk to that agent directly.'),
     '',
@@ -160,15 +160,19 @@ function referenceCard() {
     '  ' + colors.bold('Controls') + '  ' + colors.dim('(tmux)'),
     '  Click pane      Switch to an agent',
     '  Ctrl+B + arrow  Navigate between panes',
-    '',
-    '  ' + colors.bold('Controls') + '  ' + colors.dim('(in-process, no tmux)'),
-    '  Shift+Down      Cycle through teammates',
-    '  Ctrl+T          Toggle the shared task list',
+    '  Scroll           Mouse wheel (mouse mode enabled)',
     '',
     '  Review this anytime:  ' + colors.bold('claude-raid heal'),
   ]);
 
-  return howItWorks + '\n' + nextStep;
+  const beta = box('Beta', [
+    '  ' + colors.amber('This project is in active development.'),
+    '  Multi-agent sessions are ' + colors.bold('token-usage intensive') + ' \u2014',
+    '  a full quest consumes significantly more tokens than a',
+    '  single-agent workflow. Monitor your usage and start small.',
+  ]);
+
+  return howItWorks + '\n' + nextStep + '\n' + beta;
 }
 
 module.exports = { colors, banner, box, header, stripAnsi, referenceCard };

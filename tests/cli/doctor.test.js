@@ -36,7 +36,7 @@ describe('doctor (via setup)', () => {
     const card = referenceCard();
     assert.ok(card.includes('How It Works'), 'referenceCard should have How It Works');
     assert.ok(card.includes('Next Step'), 'referenceCard should have Next Step');
-    assert.ok(card.includes('claude --agent wizard'), 'referenceCard should have entry command');
+    assert.ok(card.includes('claude-raid start'), 'referenceCard should have entry command');
   });
 
   it('checks include all seven IDs', () => {

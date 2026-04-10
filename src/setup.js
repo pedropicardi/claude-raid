@@ -396,7 +396,7 @@ async function runSetup(opts = {}) {
 
   if (checks.every(c => c.ok)) {
     stdout.write('\n  ' + colors.green('The party is assembled.') + ' Your quest awaits.\n');
-    stdout.write('\n    claude --agent wizard\n');
+    stdout.write('\n    ' + colors.bold('claude-raid start') + '\n');
   }
 
   return { checks, allOk, actions };

@@ -1,6 +1,6 @@
 ---
 name: raid-canonical-implementation
-description: "Phase 4 of Canonical Quest. Wizard assigns tasks to agents in batches (round-based). Agents build with TDD. Cross-testing after each task. Wizard orchestrates and closes when all tasks complete."
+description: "Use when Phase 4 (Implementation) begins in a Canonical Quest, after the plan is approved and committed."
 ---
 
 # Raid Implementation — Phase 4
@@ -215,7 +215,10 @@ STOP implementing immediately when:
 
 When all tasks are approved and committed:
 
-1. Update `.claude/raid-session` phase to `"review"`
+1. Update `.claude/raid-session` phase via Bash (write gate blocks Write/Edit on this file):
+   ```bash
+   jq '.phase="review"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
+   ```
 2. **Commit**: `feat(quest-{slug}): phase 4 implementation — {summary}`
 3. **Send phase report to human**: what was built, test coverage, any concerns
 4. **Ask human**: "Shall we inspect the treasure? (Review phase) Or proceed directly to wrap-up?"

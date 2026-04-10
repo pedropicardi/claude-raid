@@ -1,6 +1,6 @@
 ---
 name: raid-canonical-protocol
-description: "Canonical Quest protocol. Establishes the 6-phase workflow (PRD, Design, Plan, Implementation, Review, Wrap Up), round-based interaction, Dungeon lifecycle, quest types, communication signals, and phase transition gates."
+description: "Use at the start of any Canonical Quest. Reference for phase lifecycle, round-based interaction rules, communication signals, and phase transition gates."
 ---
 
 # Canonical Quest Protocol
@@ -111,14 +111,14 @@ Agents → Wizard → Human. Agents NEVER ask the human directly.
 
 Every phase MUST produce at least one detailed markdown artifact:
 
-| Phase | Output File |
-|-------|-------------|
-| PRD | `{questDir}/phase-1-prd.md` |
-| Design | `{questDir}/phase-2-design.md` |
-| Plan | `{questDir}/phase-3-plan.md` + task files |
-| Implementation | `{questDir}/phase-4-implementation.md` |
-| Review | `{questDir}/phase-5-review.md` |
-| Wrap Up | `{questDir}/phase-6-wrap-up.md` |
+| Phase | Scoreboard (phase file) | Deliverable |
+|-------|--------------------------|-------------|
+| PRD | `{questDir}/phase-1-prd.md` | `{questDir}/prd.md` |
+| Design | `{questDir}/phase-2-design.md` | `{questDir}/design.md` |
+| Plan | `{questDir}/phase-3-plan.md` | task files (`phase-3-plan-task-NN.md`) |
+| Implementation | `{questDir}/phase-4-implementation.md` | code changes |
+| Review | `{questDir}/phase-5-review.md` | fixes |
+| Wrap Up | `{questDir}/phase-6-wrap-up.md` | PR + storyboard |
 
 ## Communication Signals
 

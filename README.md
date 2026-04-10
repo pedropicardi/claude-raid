@@ -1,33 +1,15 @@
 <div align="center">
 
-```
-   ⚔ ══════════════════════════════════════════════════════════ ⚔
+<img src="assets/banner.png" alt="Claude Raid — Round-based Adversarial Intelligence Dungeon for Claude Code" width="700" />
 
-       ██████╗██╗      █████╗ ██╗   ██╗██████╗ ███████╗
-      ██╔════╝██║     ██╔══██╗██║   ██║██╔══██╗██╔════╝
-      ██║     ██║     ███████║██║   ██║██║  ██║█████╗
-      ██║     ██║     ██╔══██║██║   ██║██║  ██║██╔══╝
-      ╚██████╗███████╗██║  ██║╚██████╔╝██████╔╝███████╗
-       ╚═════╝╚══════╝╚═╝  ╚═╝ ╚═════╝ ╚═════╝ ╚══════╝
-               ██████╗  █████╗ ██╗██████╗
-               ██╔══██╗██╔══██╗██║██╔══██╗
-               ██████╔╝███████║██║██║  ██║
-               ██╔══██╗██╔══██║██║██║  ██║
-               ██║  ██║██║  ██║██║██████╔╝
-               ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝╚═════╝
-
-      Round-based Adversarial Intelligence Dungeon
-                   for Claude Code
-
-   ⚔ ══════════════════════════════════════════════════════════ ⚔
-```
-
-**Four AI agents. One shared dungeon. Every decision stress-tested before it ships.**
+<br />
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](#)
 [![Node.js 18+](https://img.shields.io/badge/node-18%2B-blue.svg)](#prerequisites)
 [![294 Tests](https://img.shields.io/badge/tests-294_passing-brightgreen.svg)](#)
+
+> **Beta** — This project is in active development. Multi-agent sessions are **token-usage intensive** — a full Canonical Quest consumes significantly more tokens than a single-agent workflow. Monitor your usage and start with small tasks to calibrate.
 
 [Quick Start](#quick-start) · [The Canonical Quest](#the-canonical-quest) · [The Party](#the-party) · [The Dungeon](#the-dungeon) · [Configuration](#configuration) · [CLI Reference](#cli-reference)
 
@@ -48,20 +30,21 @@ One command installs the system. One command starts a quest.
 ## Quick Start
 
 ```bash
+# Install the Raid into your project
 npx claude-raid summon
-```
-
-That's it. One command installs agents, hooks, skills, and config into your project's `.claude/` directory.
-
-```bash
-# Preview what gets installed (no changes)
-npx claude-raid summon --dry-run
 
 # Start a quest
 claude-raid start
 ```
 
-The Wizard greets you, you describe your task, and the quest begins.
+`summon` installs agents, hooks, skills, and config into your project's `.claude/` directory.
+
+`start` opens a tmux session with mouse support and launches the Wizard — one command does it all. The Wizard greets you, you describe your task, and the quest begins.
+
+```bash
+# Preview what gets installed (no changes)
+npx claude-raid summon --dry-run
+```
 
 ### Prerequisites
 
@@ -72,7 +55,7 @@ The Wizard greets you, you describe your task, and the quest begins.
 | **tmux** | Multi-pane agent display (`brew install tmux`) |
 | **jq** | Config parsing (pre-installed on macOS) |
 
-> **tmux** gives each agent its own pane — click into any pane to observe or talk to that agent directly. Without tmux, agents run in-process and you cycle between them with `Shift+Down`.
+> **tmux** gives each agent its own pane — `claude-raid start` handles the tmux session automatically. Click into any pane to observe or talk to that agent directly.
 
 The setup wizard checks all prerequisites during `summon` and offers to fix what it can.
 
@@ -219,7 +202,9 @@ The Dungeon is the team's shared knowledge artifact — a curated board where ag
 ├── phase-3-plan-task-01.md            # Individual task specs
 ├── phase-4-implementation.md          # Implementation log
 ├── phase-5-review.md                  # Review board (optional)
-└── phase-6-wrap-up.md                 # Quest storyboard
+├── phase-6-wrap-up.md                 # Quest storyboard
+├── teambuff-01.md                     # Team retrospective reports (on-demand)
+└── teambuff-rulings.md                # Active rulings from teambuffs
 
 .claude/vault/{quest-slug}/            # Archived completed quests
 .claude/raid-session                   # Active session state
@@ -273,7 +258,8 @@ The Dungeon is the team's shared knowledge artifact — a curated board where ag
     ├── raid-verification/           # Evidence-before-claims gate
     ├── raid-debugging/              # Root-cause investigation
     ├── raid-browser/                # Browser orchestration
-    └── raid-browser-chrome/         # Live Chrome inspection
+    ├── raid-browser-chrome/         # Live Chrome inspection
+    └── raid-teambuff/               # Emergency team retrospective
 ```
 
 </details>
@@ -292,9 +278,9 @@ Hooks enforce workflow discipline automatically and **only activate during Raid 
 
 All hooks are POSIX-compatible and use `#claude-raid` markers to coexist safely with your existing hooks.
 
-### Skills (13)
+### Skills (14)
 
-Skills guide agent behavior across the workflow. Three categories:
+Skills guide agent behavior across the workflow. Four categories:
 
 | Category | Skills | Purpose |
 |:--|:--|:--|
@@ -302,6 +288,7 @@ Skills guide agent behavior across the workflow. Three categories:
 | **Canonical Quest** | 7 phase skills | One skill per phase, chained in order |
 | **Discipline** | `raid-tdd`, `raid-verification`, `raid-debugging` | Quest-agnostic enforcement — invoked within any phase |
 | **Browser** | `raid-browser`, `raid-browser-chrome` | Browser orchestration and live inspection |
+| **Team** | `raid-teambuff` | Emergency team retrospective — freezes quest, all agents reflect on dysfunction, produces binding rulings |
 
 ---
 
@@ -406,7 +393,9 @@ This enables browser-specific hooks and skills — Playwright test detection, br
 
 ### `start`
 
-Launches `claude --agent wizard` with full permissions. The Wizard loads its rules, greets you, and begins quest selection. This is the primary entry point for running a quest.
+One command does it all — opens a tmux session with mouse support and launches the Wizard with full permissions. If you're already inside tmux, it enables mouse mode and launches the Wizard directly. If tmux isn't installed, it falls back to launching the Wizard without it.
+
+This is the primary entry point for running a quest.
 
 ### `summon`
 
@@ -438,22 +427,14 @@ Pulls latest from remote and re-runs summon to pick up any template changes. Use
 
 ## Controls
 
-**tmux pane navigation (recommended):**
+`claude-raid start` opens tmux with mouse mode enabled. All panes are visible simultaneously.
 
 | Action | How |
 |:--|:--|
-| Switch to agent pane | Click the pane, or `Ctrl+B` then arrow key |
+| Switch to agent pane | Click the pane |
+| Navigate between panes | `Ctrl+B` then arrow key |
+| Scroll output | Mouse wheel |
 | Talk to an agent | Click their pane and type |
-| View all agents | All panes visible simultaneously |
-
-**In-process mode (no tmux):**
-
-| Shortcut | Action |
-|:--|:--|
-| `Shift+Down` | Cycle through teammates |
-| `Enter` | View a teammate's session |
-| `Escape` | Interrupt a teammate's turn |
-| `Ctrl+T` | Toggle the shared task list |
 
 ---
 

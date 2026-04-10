@@ -1,6 +1,6 @@
 ---
 name: raid-canonical-review
-description: "Phase 5 of Canonical Quest (optional). Two subphases: Pinning (find issues) and Fixing (resolve them). Black Card system for breaking changes. Wizard asks human before entering."
+description: "Use when Phase 5 (Review) begins in a Canonical Quest, after implementation is complete and the human opts in."
 ---
 
 # Raid Review — Phase 5 (Optional)
@@ -225,7 +225,10 @@ The Wizard closes when agents have exhausted their findings and the review board
 
 When the RULING is APPROVED FOR MERGE:
 
-1. Update `.claude/raid-session` phase to `"wrap-up"`
+1. Update `.claude/raid-session` phase via Bash (write gate blocks Write/Edit on this file):
+   ```bash
+   jq '.phase="wrap-up"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
+   ```
 2. **Commit**: `fix(quest-{slug}): phase 5 review — {N} findings resolved`
 3. **Send phase report to human**: findings count, fixes applied, any black cards
 4. **Load the `raid-wrap-up` skill now and begin Phase 6.**

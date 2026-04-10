@@ -24,8 +24,8 @@ describe('descriptions', () => {
     }
   });
 
-  it('exports SKILLS with 13 entries', () => {
-    assert.strictEqual(Object.keys(SKILLS).length, 13);
+  it('exports SKILLS with 14 entries', () => {
+    assert.strictEqual(Object.keys(SKILLS).length, 14);
     assert.ok(SKILLS['raid-canonical-protocol']);
     assert.ok(SKILLS['raid-tdd']);
     assert.ok(SKILLS['raid-init']);

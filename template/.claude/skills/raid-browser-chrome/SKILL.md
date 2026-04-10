@@ -1,6 +1,6 @@
 ---
 name: raid-browser-chrome
-description: "Claude-in-Chrome live adversarial browser inspection. Angle-driven with minimum coverage gates. Each agent runs own isolated instance. GIF/screenshot evidence required. Invoked from raid-canonical-review during Phase 5."
+description: "Use when live Chrome browser inspection is needed during Phase 5 review or ad-hoc browser verification."
 ---
 
 # Raid Browser Chrome — Live Adversarial Inspection
