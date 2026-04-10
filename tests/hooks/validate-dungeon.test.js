@@ -104,7 +104,7 @@ describe('validate-dungeon.sh', () => {
   });
 
   it('blocks entries without recognized prefix', () => {
-    const content = '# Dungeon\n\nThis line has no valid prefix and should be blocked\n';
+    const content = '# Dungeon\n\n### Discoveries\n\nThis line has no valid prefix and should be blocked\n';
     const tmp = setupEnv({
       session: { phase: 'design' },
       dungeonFile: '.claude/raid-dungeon.md',
@@ -117,7 +117,7 @@ describe('validate-dungeon.sh', () => {
   });
 
   it('blocks pinned entries that are too short', () => {
-    const content = '# Dungeon\n\n📌 DUNGEON: Too short entry here\n';
+    const content = '# Dungeon\n\n### Discoveries\n\n📌 DUNGEON: Too short entry here\n';
     const tmp = setupEnv({
       session: { phase: 'design' },
       dungeonFile: '.claude/raid-dungeon.md',
@@ -130,7 +130,7 @@ describe('validate-dungeon.sh', () => {
   });
 
   it('blocks TASK entries during design phase', () => {
-    const content = '# Dungeon\n\n📋 TASK: Implement the authentication module with proper token validation and error handling\n';
+    const content = '# Dungeon\n\n### Discoveries\n\n📋 TASK: Implement the authentication module with proper token validation and error handling\n';
     const tmp = setupEnv({
       session: { phase: 'design' },
       dungeonFile: '.claude/raid-dungeon.md',
@@ -158,6 +158,8 @@ describe('validate-dungeon.sh', () => {
     const content = [
       '# Dungeon',
       '',
+      '### Discoveries',
+      '',
       '📌 DUNGEON: Found critical architecture flaw in the authentication module — verified by @Warrior and @Rogue',
       '⚠️ UNRESOLVED: The caching layer does not invalidate properly on user deletion events in the system',
       '✅ RESOLVED: Fixed the race condition in the WebSocket handler that caused duplicate message delivery',
@@ -174,7 +176,7 @@ describe('validate-dungeon.sh', () => {
   });
 
   it('validates raid-dungeon-phase-N.md files too', () => {
-    const content = '# Phase 2 Dungeon\n\nThis line has no valid prefix\n';
+    const content = '# Phase 2 Dungeon\n\n### Discoveries\n\nThis line has no valid prefix\n';
     const tmp = setupEnv({
       session: { phase: 'implementation' },
       dungeonFile: '.claude/raid-dungeon-phase-2.md',
@@ -265,6 +267,17 @@ describe('validate-dungeon.sh', () => {
     const result = runHook(tmp, '.claude/raid-dungeon.md');
     assert.strictEqual(result.status, 2);
     assert.ok(result.stderr.includes('prefix'), `Expected stderr to mention prefix, got: ${result.stderr}`);
+  });
+
+  it('validates phase files in phases/ subdirectory', () => {
+    const tmp = setupEnv({
+      session: { phase: 'design' },
+      dungeonFile: '.claude/dungeon/test-quest/phases/phase-2-design.md',
+      dungeonContent: '### Discoveries\n\nDUNGEON: This is a design finding verified by @Warrior and @Archer with sufficient evidence length for the hook',
+    });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/dungeon/test-quest/phases/phase-2-design.md');
+    assert.strictEqual(result.status, 0);
   });
 
   it('still blocks unrecognized prefixes under ### Active Battles', () => {

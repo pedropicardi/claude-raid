@@ -22,6 +22,7 @@ fi
 # Only check Dungeon files (quest directory structure + backward compat flat files)
 case "$_file" in
   .claude/dungeon/*/phase-*.md) ;;
+  .claude/dungeon/*/phases/phase-*.md) ;;
   .claude/raid-dungeon.md|.claude/raid-dungeon-phase-*.md) ;;
   *) exit 0 ;;
 esac
@@ -57,9 +58,11 @@ while IFS= read -r line; do
     \#*) continue ;;
   esac
 
-  # Freeform sections — no prefix enforcement
+  # Only enforce prefixes in Discoveries and Active Battles sections.
+  # All other sections (including evolution log content, freeform review, etc.) are allowed.
   case "$current_section" in
-    resolved|shared|escalations) continue ;;
+    discoveries|battles) ;;
+    *) continue ;;
   esac
 
   # Layer 1: Format check — must have a recognized prefix (Discoveries + Active Battles only)
