@@ -5,132 +5,193 @@ description: "Use when Phase 2 (Design) begins in a Canonical Quest, after PRD i
 
 # Raid Design — Phase 2
 
-Turn ideas into battle-tested designs through agent-driven adversarial exploration.
+Turn ideas into battle-tested designs through the writer/reviewer/defend-concede protocol.
 
 <HARD-GATE>
-Do NOT write any code, scaffold any project, or take any implementation action until the Wizard has approved the design and it is committed to git. All assigned agents participate. Agents communicate via SendMessage — do not spawn subagents.
+Do NOT write any code, scaffold any project, or take any implementation action until the design is approved and committed.
 </HARD-GATE>
 
 ## Scope Check
 
-Before asking detailed questions, assess scope. If the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag this immediately. Don't spend rounds refining details of a project that needs decomposition first.
+Before dispatching agents, assess scope. If the request describes multiple independent subsystems (e.g., "build a platform with chat, file storage, billing, and analytics"), flag it immediately. Don't spend rounds refining a project that needs decomposition first.
 
-If too large for a single design: help the human decompose into sub-quests. Each sub-quest gets its own design → plan → implementation cycle. Design the first sub-quest through the normal flow.
-
-## Mode Behavior
-
-- **Full Raid**: All 3 agents explore from different angles, fight directly, pin findings to Dungeon. Full design doc required.
-- **Skirmish**: 2 agents explore and interact, produce a lightweight design+plan combined doc.
-- **Scout**: Wizard assesses inline, no design doc required. Skip this skill entirely.
+If too large for a single design: decompose into sub-quests with the human. Each sub-quest gets its own design → plan → implementation cycle.
 
 ## Process Flow
 
 ```dot
 digraph design {
-  "Wizard comprehends request (reads 3x)" -> "Scope check";
-  "Scope check" -> "Too large?" [shape=diamond];
-  "Too large?" -> "Decompose into sub-projects" [label="yes"];
-  "Decompose into sub-projects" -> "Brainstorm first sub-project";
-  "Too large?" -> "Explore project context" [label="no"];
-  "Explore project context" -> "Research dependencies";
-  "Research dependencies" -> "Ask clarifying questions (one at a time)";
-  "Ask clarifying questions (one at a time)" -> "Wizard opens Dungeon + dispatches";
-  "Wizard opens Dungeon + dispatches" -> "Agents explore, challenge, build freely";
-  "Agents explore, challenge, build freely" -> "Agents pin verified findings to Dungeon";
-  "Agents pin verified findings to Dungeon" -> "Dungeon sufficient?" [shape=diamond];
-  "Dungeon sufficient?" -> "Agents explore, challenge, build freely" [label="no"];
-  "Dungeon sufficient?" -> "Wizard closes: synthesizes 2-3 approaches from Dungeon" [label="yes"];
-  "Wizard closes: synthesizes 2-3 approaches from Dungeon" -> "Present design (section by section)";
-  "Present design (section by section)" -> "Human approves?" [shape=diamond];
-  "Human approves?" -> "Present design (section by section)" [label="revise"];
-  "Human approves?" -> "Write design doc" [label="yes"];
-  "Write design doc" -> "Adversarial spec review (agents attack directly)";
-  "Adversarial spec review (agents attack directly)" -> "Spec self-review (fix inline)";
-  "Spec self-review (fix inline)" -> "Human reviews written spec";
-  "Human reviews written spec" -> "Commit + invoke raid-canonical-implementation-plan" [shape=doublecircle];
+  "Wizard comprehends request + scope check" -> "Explore codebase, ask human questions";
+  "Explore codebase, ask human questions" -> "Phase recap (PRD if exists)";
+  "Phase recap (PRD if exists)" -> "Roll dice for phase turn order";
+  "Roll dice for phase turn order" -> "Scaffold design.md template + create phase-2-design.md";
+  "Scaffold design.md template + create phase-2-design.md" -> "ROUND 1: Agent 1 WRITES initial design";
+  "ROUND 1: Agent 1 WRITES initial design" -> "Agent 2 REVIEWS, pins findings";
+  "Agent 2 REVIEWS, pins findings" -> "Agent 3 REVIEWS, pins findings";
+  "Agent 3 REVIEWS, pins findings" -> "Wizard evaluates, optionally intervenes";
+  "Wizard evaluates, optionally intervenes" -> "ROUND 2: Agent 1 DEFEND/CONCEDE, writes V2";
+  "ROUND 2: Agent 1 DEFEND/CONCEDE, writes V2" -> "Agents 2+3 review V2";
+  "Agents 2+3 review V2" -> "Wizard evaluates — Round 3 needed?" [shape=diamond];
+  "Wizard evaluates — Round 3 needed?" -> "ROUND 3 (FINAL): same cycle" [label="critical findings"];
+  "Wizard evaluates — Round 3 needed?" -> "Drift check: design.md vs prd.md" [label="solid"];
+  "ROUND 3 (FINAL): same cycle" -> "Drift check: design.md vs prd.md";
+  "Drift check: design.md vs prd.md" -> "Extract final design.md";
+  "Extract final design.md" -> "Present to human" -> "Approved?" [shape=diamond];
+  "Approved?" -> "Ask why, explain to agents, more rounds" [label="no"];
+  "Ask why, explain to agents, more rounds" -> "ROUND 2: Agent 1 DEFEND/CONCEDE, writes V2";
+  "Approved?" -> "Commit + report with file links" [label="yes"];
+  "Commit + report with file links" -> "Load raid-canonical-implementation-plan" [shape=doublecircle];
 }
 ```
 
 ## Wizard Checklist
 
-Complete in order:
-
 1. **Comprehend the request** — read 3 times, identify the real problem beneath the stated one
-2. **Scope check** — if the request describes multiple independent subsystems, flag it immediately
+2. **Scope check** — if multiple independent subsystems, decompose first
 3. **Explore project context** — files, docs, recent commits, dependencies, conventions, patterns
-4. **Research dependencies** — API surface, versioning, compatibility, known issues. Read docs COMPLETELY.
-5. **Ask clarifying questions** — one at a time to the human, eliminate every ambiguity
-6. **Open the Dungeon** — create `{questDir}/phase-2-design.md` (scoreboard) with Phase 2 header, quest, mode. Read `{questDir}/prd.md` if it exists.
-7. **Dispatch with angles** — send each agent their angle via SendMessage, then go silent:
-   ```
-   SendMessage(to="warrior", message="DISPATCH: [quest]. Your angle: [X]...")
-   SendMessage(to="archer", message="DISPATCH: [quest]. Your angle: [Y]...")
-   SendMessage(to="rogue", message="DISPATCH: [quest]. Your angle: [Z]...")
-   ```
-8. **Round 1: Research** — agents explore their angles independently in their own panes. Pin findings to Dungeon. Signal `ROUND_COMPLETE:`. **Stop.** Agents do NOT self-initiate cross-testing. You receive messages automatically. Intervene only on protocol violations.
-9. **Round 2: Cross-testing** — when ALL agents have flagged `ROUND_COMPLETE:`, dispatch explicit cross-verification assignments. Each agent challenges specific findings from the others. Signal `ROUND_COMPLETE:` when done. **Stop.**
-10. **Repeat if needed** — if more exploration is needed, dispatch a new research round with refined angles
-11. **Close the phase** — broadcast `HOLD`. Close when Dungeon has sufficient verified findings to form 2-3 approaches
-12. **Synthesize approaches** — propose 2-3 approaches from Dungeon evidence, with trade-offs and recommendation
-13. **Present design section by section** — scale each section to its complexity (a few sentences if straightforward, up to 200-300 words if nuanced). Ask the human after each section: "Does this look right so far?" Be ready to revise before moving on. Cover: architecture, components, data flow, error handling, testing.
-14. **Write design doc** — save to `{questDir}/design.md` (separate from the phase scoreboard). May also create `{questDir}/design-diagrams.md` for mermaid charts.
-15. **Adversarial spec review** — agents attack the written spec directly, challenging each other
-16. **Spec self-review** — fix issues inline (see checklist below)
-17. **Human reviews written spec** — human approves before proceeding
-18. **Commit** — `docs(quest-{slug}): phase 2 design — {summary}`
-19. **Transition** — invoke `raid-canonical-implementation-plan`
+4. **Ask clarifying questions** — one at a time to the human, eliminate every ambiguity
+5. **Phase recap** — summarize PRD findings and deliverable (read `{questDir}/spoils/prd.md` if it exists). Or summarize the exploration context if PRD was skipped. Present to agents and human.
+6. **Roll dice** — randomly shuffle `["warrior", "archer", "rogue"]` for this phase's turn order. Update raid-session via Bash using the jq command from protocol "Dice Roll Reference". Announce: *"The dice have spoken. Turn order for this phase: {agent1} → {agent2} → {agent3}."*
+7. **Scaffold documents** — create `{questDir}/spoils/design.md` (template) and `{questDir}/phases/phase-2-design.md` (evolution log)
+8. **Run rounds** — see Round Protocol below
+9. **Drift check** — compare final design with `prd.md` (if exists). See Drift Detection below.
+10. **Extract final** — polish the final version into clean `design.md` from the evolution in `phase-2-design.md`
+11. **Present to human** — walk through the design. If not approved: ask why, understand, explain feedback to agents, run more rounds, re-extract. Repeat until approved.
+12. **Commit** — `docs(quest-{slug}): phase 2 design — {summary}`
+13. **Report** — link both `design.md` and `phase-2-design.md` file paths
+14. **Transition** — load `raid-canonical-implementation-plan`
 
-## Opening the Dungeon (Phase Scoreboard)
+## Round Protocol
 
-Create `{questDir}/phase-2-design.md` — this is the **dungeon scoreboard**, not the deliverable. It tracks discoveries, battles, and shared knowledge from agent exploration. Every line in Discoveries/Active Battles must use a recognized prefix (`DUNGEON:`, `UNRESOLVED:`, `BLACKCARD:`, `RESOLVED:`, `TASK:`). Freeform content is only allowed in Resolved, Shared Knowledge, and Escalations sections.
+### Round 1: Write + Review
+
+**Agent 1 (dice-first) — WRITES the initial design:**
+- Receives the PRD (or exploration context), codebase findings, and the `design.md` template
+- Writes the complete initial design applying their unique lens
+- Signs all work: `@{name} [R1]`
+- Output goes to the "Version 1" section of `phase-2-design.md`
+- Signals `TURN_COMPLETE:`
+
+**Agent 2 — REVIEWS Agent 1's work:**
+- Reads Agent 1's design in `phase-2-design.md`
+- Writes review in the "Review — Round 1" section, pins findings
+- Challenges gaps, weak assumptions, missing edge cases — from their unique lens
+- Signs all findings: `@{name} [R1]`
+- Signals `TURN_COMPLETE:`
+
+**Agent 3 — REVIEWS both prior works:**
+- Reads Agent 1's design AND Agent 2's review
+- Writes their own review section, building on or challenging Agent 2's findings
+- Signs all findings: `@{name} [R1]`
+- Signals `TURN_COMPLETE:`
+
+**Wizard evaluates Round 1:**
+- Reads all work. Ultrathink synthesis.
+- Optionally intervenes on the document — with human approval, explaining why. But only if needed; if the document is in good shape, move to Round 2.
+
+### Round 2: Defend/Concede + Review
+
+**Agent 1 — DEFEND or CONCEDE each finding, write Version 2:**
+- Reads every finding from Agents 2 and 3
+- Responds to **each one** explicitly:
+  - `DEFEND:` — counter-evidence showing the approach is correct
+  - `CONCEDE:` — acknowledge the issue, commit to addressing it
+- Writes Version 2 incorporating all conceded findings
+- May intentionally mark specific findings as false positives (with explanation)
+- Signs: `@{name} [R2]`
+- Signals `TURN_COMPLETE:`
+
+**Agents 2+3 — Review Version 2:**
+- Same review pattern as Round 1, but now evaluating the V2 and the defend/concede responses
+- Sign: `@{name} [R2]`
+
+**Wizard evaluates Round 2:**
+- If no critical or high-relevance findings remain → close
+- If breaking concerns exist → announce Round 3 as FINAL: *"This is the final round. Make every move count."*
+
+### Round 3 (if needed): Final Round
+
+Same cycle. Wizard makes clear this is the FINAL round — agents have limited moves, so every one must count. After Round 3, the Wizard closes regardless.
+
+## Evolution Log Structure
+
+`{questDir}/phases/phase-2-design.md` contains the full timeline of the design's evolution:
 
 ```markdown
-# Phase 2: Design
-## Quest: <task description from human>
-## Mode: <Full Raid | Skirmish>
-## PRD: <link to prd.md if it exists>
+# Phase 2: Design — Evolution Log
+## Quest: <task description>
+## Quest Type: Canonical Quest
+## Turn Order: @{agent1} → @{agent2} → @{agent3}
 
-### Discoveries
+---
 
-### Active Battles
+## Version 1 — @{writer} [R1]
+<!-- Agent 1 writes the complete initial design here -->
 
-### Resolved
+---
 
-### Shared Knowledge
+## Review — Round 1
 
-### Escalations
+### @{reviewer1} [R1] Review
+<!-- Agent 2's review findings -->
+
+### @{reviewer2} [R1] Review
+<!-- Agent 3's review findings -->
+
+### Wizard [R1] Synthesis
+<!-- Wizard's evaluation and any interventions -->
+
+---
+
+## Defend/Concede — @{writer} [R2]
+<!-- Agent 1 responds to each finding: DEFEND: or CONCEDE: -->
+
+## Version 2 — @{writer} [R2]
+<!-- Agent 1's revised design incorporating conceded findings -->
+
+---
+
+## Review — Round 2
+
+### @{reviewer1} [R2] Review
+<!-- Agent 2's review of V2 -->
+
+### @{reviewer2} [R2] Review
+<!-- Agent 3's review of V2 -->
+
+### Wizard [R2] Synthesis
+<!-- Wizard's evaluation -->
+
+---
+
+## Final Extraction Notes — Wizard
+<!-- What was incorporated into design.md and why -->
 ```
 
-## Question Chain
+## Design Document Template
 
-**Agents NEVER ask the human directly.** The question flow is:
-1. Agent discovers they need clarification → sends `WIZARD:` with the question
-2. Wizard reasons: can I answer this confidently from the PRD, codebase, or prior context?
-3. If yes → answer the agent directly via SendMessage
-4. If unsure → digest the question, formulate it clearly for the human, ask human
-5. Wizard passes human's answer back to agents with his own interpretation added
-6. Goal: minimize questions to human, batch related questions
+Scaffold `{questDir}/spoils/design.md`:
 
-## Dispatch Pattern
+```markdown
+# [Feature Name] Design Specification
 
-Each agent gets the same objective but a different starting angle. After dispatch, the Wizard goes silent.
+**Date:** YYYY-MM-DD
+**Status:** Draft | Under Review | Approved
+**Quest Type:** Canonical Quest
 
-**DISPATCH:**
-
-> **@Warrior**: Explore from the data/infrastructure side. What are the hard technical constraints? What schemas, migrations, APIs are needed? What breaks if we get this wrong? Find the structural load-bearing walls. Challenge @Archer and @Rogue's findings directly. Pin verified findings to the Dungeon.
->
-> **@Archer**: Explore from the integration/consistency side. How does this fit with existing patterns? What implicit contracts exist? What ripple effects? Trace the dependency chain. Check naming and file structure conventions. Challenge @Warrior and @Rogue's findings directly. Pin verified findings to the Dungeon.
->
-> **@Rogue**: Explore from the failure/adversarial side. What assumptions about inputs, state, timing, availability? Build failure scenarios. What does a malicious user do? What does a slow network do? What does concurrent access do? Challenge @Warrior and @Archer's findings directly. Pin verified findings to the Dungeon.
->
-> **All**: Read the Dungeon. Build on each other's discoveries. Challenge everything. Pin only what survives. Escalate to me with `WIZARD:` only when genuinely stuck.
-
-## Design Principles
-
-- **Isolation:** Break into units with one clear purpose, well-defined interfaces, testable independently. For each unit: what does it do, how do you use it, what does it depend on?
-- **Encapsulation:** Can someone understand a unit without reading its internals? Can you change internals without breaking consumers? If not, the boundaries need work.
-- **Size:** Smaller, well-bounded units are easier to reason about. When a file grows large, that's a signal it's doing too much.
-- **Existing codebases:** Explore current structure first. Follow existing patterns. Only include targeted improvements where they serve the current goal — no unrelated refactoring.
+## Problem Statement
+## Requirements (numbered, unambiguous)
+## Constraints
+## Architecture
+## File Structure
+## Error Handling Strategy
+## Testing Strategy
+## Edge Cases
+## Future Considerations (NOT building now, designing to accommodate)
+## Design Decision
+### Alternatives Considered (with rejection reasons)
+## RULING
+```
 
 ## What Agents Must Cover
 
@@ -138,115 +199,53 @@ Every agent addresses ALL of these from their assigned angle:
 
 - **Performance** — scale, bottlenecks, complexity
 - **Robustness** — retries, fallbacks, graceful degradation
-- **Reliability** — blast radius of failure, production-readiness
-- **Testability** — meaningful tests, mock strategy, test-friendly design. When `browser.enabled`: can this feature be E2E tested with Playwright? What user flows need browser verification? Are there loading states, client-side routing, or visual states that unit tests can't catch?
+- **Testability** — meaningful tests, mock strategy, test-friendly design
 - **Error handling** — what errors occur, how surfaced, UX of failure
 - **Edge cases** — empty, null, boundary, Unicode, timezones, large payloads
 - **Cascading effects** — blast radius, what else changes
-- **Clean architecture** — separation of concerns, single responsibility, dependency inversion
-- **Modularity & composability** — replaceable, extensible, composable
-- **DRY** — duplicating logic? reuse existing code?
-- **Dependencies** — version compatibility, security, maintenance, licensing
+- **Clean architecture** — separation of concerns, single responsibility
+- **Dependencies** — version compatibility, security, licensing
 
-## The Fight — What Makes It Productive
+## Drift Detection
 
-```
-Agents interact DIRECTLY — @Name addressing, building, challenging, roasting:
-1. Present findings with EVIDENCE (file paths, docs, concrete examples)
-2. Challenge other agents DIRECTLY with COUNTER-EVIDENCE (not opinions)
-3. Build on each other's discoveries — BUILDING: with independent verification
-4. Go to the EDGES — push every finding to its extreme
-5. LEARN from each other — incorporate discoveries into your model
-6. Pin verified findings — DUNGEON: only after surviving challenge
-7. Challenge weak analysis — back every challenge with your own independent evidence
-8. Escalate to Wizard — WIZARD: only when genuinely stuck
-```
+Before closing, the Wizard compares `design.md` with `prd.md` (if it exists). If the design contradicts or omits a PRD requirement without explicit rationale, that's drift.
 
-**The goal is not to tear each other down. The goal is to forge the strongest design by testing it from every angle. The Dungeon captures what survived.**
+If drift detected, present options to the human:
+- **(a)** Change PRD to match design — the design exploration revealed the PRD was wrong
+- **(b)** Change design to match PRD — the design drifted from the original intent
+- **(c)** Something else — explain the situation, let the human decide
 
-## Closing the Phase
+## Design Principles
 
-The Wizard closes when the Dungeon has sufficient verified findings — enough Discoveries, Shared Knowledge, and Resolved battles to synthesize 2-3 approaches.
+- **Isolation:** Break into units with one clear purpose, well-defined interfaces, testable independently.
+- **Encapsulation:** Can someone understand a unit without reading its internals?
+- **Size:** When a file grows large, that's a signal it's doing too much.
+- **Existing codebases:** Follow existing patterns. Only improve where it serves the current goal.
 
-**How the Wizard knows it's time to close:**
-- Dungeon has verified findings covering all major aspects (performance, robustness, testability, etc.)
-- Active Battles section is empty or has only minor unresolved points
-- Agents are converging — new findings are variations, not revelations
-- Shared Knowledge section has the foundational truths the design needs
-
-**RULING:** Synthesize from Dungeon evidence. Propose 2-3 approaches. Recommend one. Archive Dungeon.
-
-## Spec Self-Review
-
-After writing the design doc, the Wizard reviews with fresh eyes:
-
-1. **Placeholder scan:** Any TBD, TODO, incomplete sections, vague requirements? Fix them.
-2. **Internal consistency:** Do any sections contradict each other? Architecture match feature descriptions?
-3. **Scope check:** Focused enough for a single implementation plan, or needs decomposition?
-4. **Ambiguity check:** Could any requirement be interpreted two ways? Pick one and make it explicit.
-
-Fix issues inline.
-
-## Design Document Structure (Phase Deliverable)
-
-The actual design doc is a **separate file**: `{questDir}/design.md`. This file is not validated by the dungeon hook and can contain freeform markdown. Write it when closing the phase — synthesize from scoreboard findings and agent exploration.
-
-```markdown
-# [Feature Name] Design Specification
-
-**Date:** YYYY-MM-DD
-**Status:** Draft | Under Review | Approved
-**Raid Team:** Wizard (dungeon master), [agents used]
-**Mode:** Full Raid | Skirmish
-
-## Problem Statement
-## Requirements (numbered, unambiguous)
-## Constraints
-## Dungeon Findings (verified, from Phase 1 Dungeon)
-### Key Discoveries (survived cross-testing)
-### Lessons Learned (wrong assumptions corrected)
-## Design Decision
-### Alternatives Considered (2-3 with rejection reasons)
-## Architecture
-## File Structure
-## Error Handling Strategy
-## Testing Strategy
-## Edge Cases
-## Future Considerations (NOT building now, designing to accommodate)
-## RULING
-```
-
-## Red Flags — Thoughts That Signal Violations
+## Red Flags
 
 | Thought | Reality |
 |---------|---------|
-| "This is too simple to need a design" | Simple projects are where unexamined assumptions cause the most waste. |
-| "I already know the right approach" | Knowing and verifying are different. Propose 2-3 anyway. |
-| "Let's just start coding and figure it out" | Code without design becomes the design. And it's usually wrong. |
-| "The agents all agree, let's move on" | Agreement without challenge is groupthink. Did they actually cross-test? |
-| "I'll wait for the Wizard to tell me what to do" | You own the phase. Explore, challenge, build. Self-organize. |
-| "Let me just post everything to the Dungeon" | Only verified, challenged findings get pinned. |
-| "I need the Wizard to mediate this disagreement" | Talk to the other agent directly first. Escalate only if stuck. |
-
-## Escalation
-
-If the team is stuck on a fundamental design choice after genuine direct debate:
-1. Present the top 2 options with trade-offs to the human
-2. Let the human decide
-3. Never ask the human to resolve something the team should handle
-
----
+| "This is too simple to need a design" | Simple projects hide unexamined assumptions. |
+| "I already know the right approach" | Knowing and verifying are different. |
+| "The agents all agree after one round" | Minimum 2 rounds. Agreement without challenge is groupthink. |
+| "Let me silently ignore that finding" | Every finding must get DEFEND: or CONCEDE:. No silent ignoring. |
+| "Good enough, let's move on" | Present to human. Only they decide when it's good enough. |
 
 ## Phase Transition
 
 When the design is approved and committed:
 
-1. Update `.claude/raid-session` phase via Bash (write gate blocks Write/Edit on this file):
+1. Update raid-session phase via Bash:
    ```bash
    jq '.phase="plan"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
    ```
 2. **Commit:** `docs(quest-{slug}): phase 2 design — {summary}`
-3. **Send phase report to human:** summarize key design decisions, trade-offs resolved, what's next
-4. **Load the `raid-canonical-implementation-plan` skill now and begin Phase 3.**
+3. **Report:** Link `design.md` and `phase-2-design.md` file paths to the human.
+4. **Load `raid-canonical-implementation-plan` and begin Phase 3.**
 
-Do not wait. Do not ask. The next action after committing the design doc is loading the next skill.
+## Phase Spoils
+
+**Two outputs:**
+- `{questDir}/phases/phase-2-design.md` — Full evolution timeline (all versions, reviews, defend/concede responses)
+- `{questDir}/spoils/design.md` — Clean final design specification (wizard-polished)
