@@ -17,13 +17,13 @@ fi
 BACKED_UP=false
 QUEST_DIR=$(raid_quest_dir)
 
-# Back up quest dungeon phase files
-if [ -d "$QUEST_DIR" ]; then
-  for phase_file in "$QUEST_DIR"/phase-*.md; do
+# Back up quest dungeon phase files from phases/ to backups/
+if [ -d "$QUEST_DIR/phases" ]; then
+  mkdir -p "$QUEST_DIR/backups"
+  for phase_file in "$QUEST_DIR"/phases/phase-*.md; do
     [ -f "$phase_file" ] || continue
-    # Skip files that are already backups to prevent cascade
-    [[ "$phase_file" == *-backup* ]] && continue
-    cp "$phase_file" "${phase_file%.md}-backup.md"
+    basename_file=$(basename "$phase_file")
+    cp "$phase_file" "$QUEST_DIR/backups/${basename_file%.md}-backup.md"
     BACKED_UP=true
   done
 fi

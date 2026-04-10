@@ -247,14 +247,14 @@ describe('raid-pre-compact.sh', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
-    fs.mkdirSync(questDir, { recursive: true });
+    fs.mkdirSync(path.join(questDir, 'phases'), { recursive: true });
     writeSession(cwd, { questDir: '.claude/dungeon/test-quest', questId: 'test-quest' });
-    fs.writeFileSync(path.join(questDir, 'phase-1-prd.md'), '# PRD');
-    fs.writeFileSync(path.join(questDir, 'phase-2-design.md'), '# Design');
+    fs.writeFileSync(path.join(questDir, 'phases', 'phase-2-design.md'), '# Design');
+    fs.writeFileSync(path.join(questDir, 'phases', 'phase-3-plan.md'), '# Plan');
     const result = runHook('raid-pre-compact.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
-    assert.ok(fs.existsSync(path.join(questDir, 'phase-1-prd-backup.md')));
-    assert.ok(fs.existsSync(path.join(questDir, 'phase-2-design-backup.md')));
+    assert.ok(fs.existsSync(path.join(questDir, 'backups', 'phase-2-design-backup.md')));
+    assert.ok(fs.existsSync(path.join(questDir, 'backups', 'phase-3-plan-backup.md')));
     assert.ok(result.stdout.includes('additionalContext'));
   });
 
@@ -274,19 +274,15 @@ describe('raid-pre-compact.sh', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
-    fs.mkdirSync(questDir, { recursive: true });
+    fs.mkdirSync(path.join(questDir, 'phases'), { recursive: true });
+    fs.mkdirSync(path.join(questDir, 'backups'), { recursive: true });
     writeSession(cwd, { questDir: '.claude/dungeon/test-quest', questId: 'test-quest' });
-    fs.writeFileSync(path.join(questDir, 'phase-1-prd.md'), '# PRD');
-    fs.writeFileSync(path.join(questDir, 'phase-1-prd-backup.md'), '# PRD backup');
-    fs.writeFileSync(path.join(questDir, 'phase-1-prd-backup-backup.md'), '# PRD old cascade');
+    fs.writeFileSync(path.join(questDir, 'phases', 'phase-2-design.md'), '# Design');
+    fs.writeFileSync(path.join(questDir, 'backups', 'phase-2-design-backup.md'), '# Design backup');
     runHook('raid-pre-compact.sh', {}, cwd);
-    // Should NOT create backup-backup-backup
-    assert.ok(!fs.existsSync(path.join(questDir, 'phase-1-prd-backup-backup-backup.md')),
+    assert.ok(!fs.existsSync(path.join(questDir, 'backups', 'phase-2-design-backup-backup.md')),
       'should not create cascading backups');
-    assert.ok(!fs.existsSync(path.join(questDir, 'phase-1-prd-backup-backup-backup-backup.md')),
-      'should not create cascading backups');
-    // Original backup should still be updated
-    assert.ok(fs.existsSync(path.join(questDir, 'phase-1-prd-backup.md')));
+    assert.ok(fs.existsSync(path.join(questDir, 'backups', 'phase-2-design-backup.md')));
   });
 
   it('does not cascade legacy flat dungeon backups', () => {
