@@ -65,7 +65,7 @@ describe('mergeSettings', () => {
     const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
     assert.ok(settings.permissions.allow.includes('WebFetch'));
     assert.ok(settings.permissions.allow.includes('Read'));
-    assert.ok(settings.permissions.allow.includes('Write'));
+    assert.ok(settings.permissions.allow.includes('Write(*)'));
     const readCount = settings.permissions.allow.filter(p => p === 'Read').length;
     assert.strictEqual(readCount, 1);
   });
