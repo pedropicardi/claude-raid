@@ -19,12 +19,6 @@ NO COMPLETION CLAIMS WITHOUT FRESH VERIFICATION EVIDENCE
 
 If you haven't run the verification command THIS turn, you cannot claim it passes.
 
-## Mode Behavior
-
-- **Full Raid**: Triple verification — implementer + 2 challengers verify independently.
-- **Skirmish**: Double verification — implementer + 1 challenger.
-- **Scout**: Single verification + Wizard confirms.
-
 ## The Gate Function
 
 ```

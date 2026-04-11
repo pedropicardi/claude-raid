@@ -154,7 +154,7 @@ describe('validate-dungeon.sh', () => {
     assert.strictEqual(result.status, 0);
   });
 
-  it('allows all prefixes during finishing phase', () => {
+  it('allows all prefixes during wrap-up phase', () => {
     const content = [
       '# Dungeon',
       '',
@@ -166,7 +166,7 @@ describe('validate-dungeon.sh', () => {
       '📋 TASK: Clean up the temporary migration scripts and remove deprecated API endpoints from the codebase',
     ].join('\n') + '\n';
     const tmp = setupEnv({
-      session: { phase: 'finishing' },
+      session: { phase: 'wrap-up' },
       dungeonFile: '.claude/raid-dungeon.md',
       dungeonContent: content,
     });

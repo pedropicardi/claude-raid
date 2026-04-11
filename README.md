@@ -7,7 +7,7 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Zero Dependencies](https://img.shields.io/badge/dependencies-0-brightgreen.svg)](#)
 [![Node.js 18+](https://img.shields.io/badge/node-18%2B-blue.svg)](#prerequisites)
-[![294 Tests](https://img.shields.io/badge/tests-294_passing-brightgreen.svg)](#)
+[![325 Tests](https://img.shields.io/badge/tests-325_passing-brightgreen.svg)](#)
 
 > **Beta** — This project is in active development. Multi-agent sessions are **token-usage intensive** — a full Canonical Quest consumes significantly more tokens than a single-agent workflow. Monitor your usage and start with small tasks to calibrate.
 
@@ -44,6 +44,9 @@ claude-raid start
 ```bash
 # Preview what gets installed (no changes)
 npx claude-raid summon --dry-run
+
+# Install with RTK token compression (optional)
+npx claude-raid summon --rtk
 ```
 
 ### Prerequisites
@@ -93,31 +96,31 @@ flowchart LR
 
 Agents research the problem space and produce a complete Product Requirements Document. No code. The Wizard mediates questions between agents and the human.
 
-**Output:** `phase-1-prd.md`
+**Output:** `spoils/prd.md`
 
 ### Phase 2 — Design
 
 Agents explore design approaches from competing angles. Each brings their lens — the Warrior stress-tests architecture choices, the Archer traces ripple effects, the Rogue attacks assumptions. The design survives only if it withstands all three.
 
-**Output:** `phase-2-design.md` with mermaid diagrams and battle-tested decisions
+**Output:** `phases/phase-2-design.md` (evolution log) + `spoils/design.md` (polished deliverable)
 
 ### Phase 3 — Plan
 
 Agents decompose the approved design into discrete, testable tasks. They fight over ordering, scope boundaries, naming, and test coverage until the plan earns consensus.
 
-**Output:** `phase-3-plan.md` + individual task files (`phase-3-plan-task-01.md`, etc.)
+**Output:** `phases/phase-3-plan.md` + `spoils/tasks/phase-3-plan-task-NN.md`
 
 ### Phase 4 — Implementation
 
 The Wizard assigns tasks in batches. One agent builds each task using strict **TDD** (RED-GREEN-REFACTOR). The others cross-test the implementation — reading code, running tests, and challenging decisions. Every task earns approval before the next batch starts.
 
-**Output:** `phase-4-implementation.md` + committed, tested code
+**Output:** `phases/phase-4-implementation.md` + committed, tested code
 
 ### Phase 5 — Review *(optional)*
 
 Two sub-phases: **Pinning** (find issues) and **Fixing** (resolve them). Agents review independently, then fight over findings *and* missing findings. Critical and Important issues must be fixed. The **Black Card** system handles breaking architectural concerns.
 
-**Output:** `phase-5-review.md`
+**Output:** `phases/phase-5-review.md` + `spoils/review.md`
 
 ### Phase 6 — Wrap Up
 
@@ -145,6 +148,8 @@ Four agents, each with a distinct lens. They collaborate through rigor, not agre
 <td valign="top">What did everyone assume that isn't guaranteed? Thinks like a failing system, a malicious input, a race condition. Constructs the attack sequence that turns oversight into failure.</td>
 </tr>
 </table>
+
+All agents run on Claude Opus 4.6.
 
 ### How They Work Together
 
@@ -196,14 +201,21 @@ The Dungeon is the team's shared knowledge artifact — a curated board where ag
 
 ```
 .claude/dungeon/{quest-slug}/          # Active quest artifacts
-├── phase-1-prd.md                     # PRD (optional)
-├── phase-2-design.md                  # Battle-tested design
-├── phase-3-plan.md                    # Task index
-├── phase-3-plan-task-01.md            # Individual task specs
-├── phase-4-implementation.md          # Implementation log
-├── phase-5-review.md                  # Review board (optional)
+├── phases/                            # Evolution logs (scoreboards)
+│   ├── phase-2-design.md
+│   ├── phase-3-plan.md
+│   ├── phase-4-implementation.md
+│   └── phase-5-review.md
+├── spoils/                            # Polished deliverables
+│   ├── prd.md
+│   ├── design.md
+│   ├── review.md
+│   └── tasks/
+│       └── phase-3-plan-task-NN.md
+├── backups/                           # Pre-compact safety copies
+│   └── phase-N-{name}-backup.md
 ├── phase-6-wrap-up.md                 # Quest storyboard
-├── teambuff-01.md                     # Team retrospective reports (on-demand)
+├── teambuff-NN.md                     # Team retrospective reports (on-demand)
 └── teambuff-rulings.md                # Active rulings from teambuffs
 
 .claude/vault/{quest-slug}/            # Archived completed quests
@@ -244,7 +256,8 @@ The Dungeon is the team's shared knowledge artifact — a curated board where ag
 │   ├── validate-no-placeholders.sh  # No TBD/TODO in specs
 │   ├── validate-dungeon.sh          # Multi-agent verification on pins
 │   ├── validate-browser-tests-exist.sh  # Playwright test detection
-│   └── validate-browser-cleanup.sh  # Browser process cleanup
+│   ├── validate-browser-cleanup.sh  # Browser process cleanup
+│   └── rtk-bridge.sh               # Token compression via RTK (opt-in)
 └── skills/
     ├── raid-init/                   # Quest selection and session setup
     ├── raid-canonical-protocol/     # Canonical Quest rules and signals
@@ -268,24 +281,27 @@ The Dungeon is the team's shared knowledge artifact — a curated board where ag
 
 The Wizard orchestrates. Warrior, Archer, and Rogue each bring a specialized lens. All agents run on Claude Opus 4.6.
 
-### Hooks (12)
+### Hooks (13)
 
 Hooks enforce workflow discipline automatically and **only activate during Raid sessions** — they never interfere with normal coding.
 
-**Lifecycle hooks** manage session start/end, quest directory creation, vault archival, and context compaction backup.
+**Lifecycle hooks** (5) manage session start/end, quest directory creation, vault archival, context compaction backup, and task validation. All source `raid-lib.sh` for shared config.
 
-**Quality gate hooks** enforce conventional commits, phase-based write protection, naming conventions, placeholder blocking, multi-agent verification on dungeon pins, and browser test detection.
+**Quality gate hooks** (7) enforce conventional commits, phase-based write protection, naming conventions, placeholder blocking, multi-agent verification on dungeon pins, browser test detection, and browser process cleanup.
+
+**Optional hooks** (1): `rtk-bridge.sh` provides token compression via RTK — enabled with `--rtk` during summon.
 
 All hooks are POSIX-compatible and use `#claude-raid` markers to coexist safely with your existing hooks.
 
 ### Skills (14)
 
-Skills guide agent behavior across the workflow. Four categories:
+Skills guide agent behavior across the workflow. Five categories:
 
 | Category | Skills | Purpose |
 |:--|:--|:--|
 | **Core** | `raid-init` | Quest selection, greeting, session bootstrap |
-| **Canonical Quest** | 7 phase skills | One skill per phase, chained in order |
+| **Protocol** | `raid-canonical-protocol` | Phase lifecycle rules, transition gates, signals |
+| **Canonical Quest** | 6 phase skills | One skill per phase, chained in order |
 | **Discipline** | `raid-tdd`, `raid-verification`, `raid-debugging` | Quest-agnostic enforcement — invoked within any phase |
 | **Browser** | `raid-browser`, `raid-browser-chrome` | Browser orchestration and live inspection |
 | **Team** | `raid-teambuff` | Emergency team retrospective — freezes quest, all agents reflect on dysfunction, produces binding rulings |
@@ -301,6 +317,10 @@ Skills guide agent behavior across the workflow. Four categories:
   "project": {
     "name": "my-project",
     "language": "typescript",
+    "packageManager": "npm",
+    "runCommand": "npm run",
+    "execCommand": "npx",
+    "installCommand": "npm add",
     "testCommand": "npm test",
     "lintCommand": "npm run lint",
     "buildCommand": "npm run build"
@@ -311,14 +331,20 @@ Skills guide agent behavior across the workflow. Four categories:
     "worktrees": ".worktrees"
   },
   "conventions": {
-    "fileNaming": "kebab-case",
+    "fileNaming": "none",
     "commits": "conventional"
   },
   "raid": {
     "defaultMode": "full",
+    "agentEffort": "medium",
     "vault": { "path": ".claude/vault", "enabled": true },
     "lifecycle": {
       "autoSessionManagement": true,
+      "teammateNudge": true,
+      "taskValidation": true,
+      "completionGate": true,
+      "phaseTransitionConfirm": true,
+      "compactBackup": true,
       "testWindowMinutes": 10
     }
   }
@@ -342,6 +368,9 @@ Package manager is auto-detected (npm, pnpm, yarn, bun, uv, poetry). Commands ar
 
 | Key | Default | Description |
 |:--|:--|:--|
+| `project.name` | auto-detected | Project name |
+| `project.language` | auto-detected | Primary language |
+| `project.packageManager` | auto-detected | npm, pnpm, yarn, bun, uv, or poetry |
 | `project.testCommand` | auto-detected | Command to run tests |
 | `project.lintCommand` | auto-detected | Command to run linting |
 | `project.buildCommand` | auto-detected | Command to build |
@@ -350,8 +379,18 @@ Package manager is auto-detected (npm, pnpm, yarn, bun, uv, poetry). Commands ar
 | `paths.worktrees` | `.worktrees` | Git worktree directory |
 | `conventions.fileNaming` | `none` | `kebab-case`, `snake_case`, `camelCase`, or `none` |
 | `conventions.commits` | `conventional` | Commit message format |
-| `conventions.commitMinLength` | `15` | Minimum commit message length |
-| `conventions.maxDepth` | `8` | Maximum file nesting depth |
+| `conventions.commitMinLength` | `15` | Minimum commit message length (set manually) |
+| `conventions.maxDepth` | `8` | Maximum file nesting depth (set manually) |
+| `raid.defaultMode` | `full` | Default quest mode |
+| `raid.agentEffort` | `medium` | Agent reasoning effort level |
+| `raid.vault.enabled` | `true` | Archive completed quests to vault |
+| `raid.vault.path` | `.claude/vault` | Vault directory path |
+| `raid.lifecycle.autoSessionManagement` | `true` | Auto-manage session start/end |
+| `raid.lifecycle.teammateNudge` | `true` | Nudge agents to use teammate mode |
+| `raid.lifecycle.taskValidation` | `true` | Validate task subjects are meaningful |
+| `raid.lifecycle.completionGate` | `true` | Require verification before completion claims |
+| `raid.lifecycle.phaseTransitionConfirm` | `true` | Confirm before phase transitions |
+| `raid.lifecycle.compactBackup` | `true` | Back up dungeon before context compaction |
 | `raid.lifecycle.testWindowMinutes` | `10` | Max age (minutes) of test run for verification |
 
 </details>
@@ -368,12 +407,33 @@ When a browser framework is detected (Next.js, Vite, Angular, etc.), a `browser`
     "devCommand": "npm run dev",
     "baseUrl": "http://localhost:3000",
     "defaultPort": 3000,
-    "playwrightConfig": "playwright.config.ts"
+    "portRange": [3001, 3005],
+    "playwrightConfig": "playwright.config.ts",
+    "auth": null,
+    "startup": null
   }
 }
 ```
 
 This enables browser-specific hooks and skills — Playwright test detection, browser process cleanup, and live Chrome inspection during reviews.
+
+### RTK Token Compression
+
+When installed with `--rtk`, an `rtk` section is added to `raid.json`:
+
+```json
+{
+  "rtk": {
+    "enabled": true,
+    "bypass": {
+      "phases": [],
+      "commands": []
+    }
+  }
+}
+```
+
+RTK compresses token usage via a fail-open bridge hook. Bypass specific phases or command prefixes by editing the arrays. Requires the `rtk` binary to be installed separately.
 
 ---
 
@@ -404,6 +464,7 @@ Installs the full Raid system. Auto-detects project type, copies agents/hooks/sk
 - Never overwrites existing files — customized agents are preserved
 - Idempotent — safe to run multiple times
 - `--dry-run` shows exactly what would be created without touching disk
+- `--rtk` enables RTK token compression bridge
 
 ### `update`
 

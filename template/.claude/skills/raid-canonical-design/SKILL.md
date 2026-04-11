@@ -61,6 +61,59 @@ digraph design {
 13. **Report** — link both `design.md` and `phase-2-design.md` file paths
 14. **Transition** — load `raid-canonical-implementation-plan`
 
+## Dispatch Templates
+
+Dispatch carries only dynamic context the agent can't get from party-rules or the phase file's embedded comments. Keep dispatch lean — detailed instructions are in the scaffolded document sections.
+
+**Writer (Round 1, Turn 1):**
+```
+TURN_DISPATCH: Phase 2 Design, Round 1, Turn 1.
+Quest: {description}
+Phase recap: {summary of PRD/prior findings}
+Your role: WRITER. Your section: "Version 1 — @{name} [R1]"
+
+FIRST: Read the FULL document at {questDir}/phases/phase-2-design.md before writing anything.
+  Understand the structure, read the embedded instructions in your section, and read the
+  Writing Guidance at the bottom. Then read {questDir}/spoils/prd.md (if exists) + codebase.
+THEN: Write in your designated section following the embedded instructions.
+```
+
+**Reviewer (Round 1, Turns 2-3):**
+```
+TURN_DISPATCH: Phase 2 Design, Round 1, Turn {T}.
+Quest: {description}
+{prior agent} just wrote Version 1.
+Your role: REVIEWER. Your section: "@{name} [R1] Review"
+
+FIRST: Read the FULL document at {questDir}/phases/phase-2-design.md before writing anything.
+  Understand the structure, read Version 1, read the embedded instructions in your review section.
+THEN: Write your review in your designated section following the embedded instructions.
+```
+
+**Writer (Round 2+, Defend/Concede):**
+```
+TURN_DISPATCH: Phase 2 Design, Round {N}, Turn 1.
+Quest: {description}
+Round {N-1} reviews are in from @{reviewer1} and @{reviewer2}.
+Your role: WRITER. Sections: "Defend/Concede — @{name} [R{N}]" then "Version {N} — @{name} [R{N}]"
+
+FIRST: Read the FULL document at {questDir}/phases/phase-2-design.md.
+  Read every finding from Round {N-1}. Read the embedded instructions in your sections.
+THEN: Respond to each finding, then write Version {N}.
+```
+
+**Reviewer (Round 2+, Turns 2-3):**
+```
+TURN_DISPATCH: Phase 2 Design, Round {N}, Turn {T}.
+Quest: {description}
+{writer} responded with DEFEND/CONCEDE and wrote Version {N}.
+Your role: REVIEWER. Your section: "@{name} [R{N}] Review"
+
+FIRST: Read the FULL document at {questDir}/phases/phase-2-design.md.
+  Read Version {N}, the defend/concede responses, and your embedded instructions.
+THEN: Write your review in your designated section.
+```
+
 ## Round Protocol
 
 ### Round 1: Write + Review
@@ -113,64 +166,159 @@ digraph design {
 
 Same cycle. Wizard makes clear this is the FINAL round — agents have limited moves, so every one must count. After Round 3, the Wizard closes regardless.
 
-## Evolution Log Structure
+## Evolution Log Template
 
-`{questDir}/phases/phase-2-design.md` contains the full timeline of the design's evolution:
+Scaffold `{questDir}/phases/phase-2-design.md`. Replace `{writer}`, `{reviewer1}`, `{reviewer2}` with actual agent names from the dice roll:
 
 ```markdown
 # Phase 2: Design — Evolution Log
-## Quest: <task description>
+
+## Quest: [quest description]
 ## Quest Type: Canonical Quest
 ## Turn Order: @{agent1} → @{agent2} → @{agent3}
+
+## References
+- PRD: `{questDir}/spoils/prd.md` (if exists)
+
+## Quest Goal
+<!-- Wizard writes 2-3 lines: what the design phase aims to produce,
+     key constraints from the PRD, and the main architectural question to answer -->
 
 ---
 
 ## Version 1 — @{writer} [R1]
-<!-- Agent 1 writes the complete initial design here -->
+
+<!-- @{writer}: WRITER for this phase. Read references above first.
+     Fill EVERY section. Scale depth to complexity (simple→bullets, complex→full detail).
+     Make reasoning explicit — reviewers will challenge everything. -->
+
+### Problem Restatement
+<!-- Restate the problem in technical terms. How does it manifest in the codebase?
+     What specific code, systems, or flows are affected? -->
+
+### Requirements Summary
+<!-- Numbered list extracted from PRD. Each requirement that this design must satisfy.
+     If no PRD exists, derive from the wizard's context. -->
+
+### Constraints
+<!-- Technical: language, framework, infrastructure, backwards compatibility.
+     Business: timeline, compliance, dependencies on other teams.
+     Only constraints that affect design decisions. -->
+
+### Architecture
+<!-- Scale depth to complexity:
+     - Describe the main components/modules and how they connect
+     - Show data flow: what enters, what's processed, what exits
+     - Define key interfaces between components
+     - For complex features: include sequence of operations, state transitions
+     - Reference existing code patterns in the codebase where you're extending them
+     - Call out what's NEW vs what EXTENDS existing code -->
+
+### File Structure
+<!-- Map of files to create or modify:
+     | File | Action | Purpose |
+     |------|--------|---------|
+     Use the project's existing structure as the guide. -->
+
+### Error Handling Strategy
+<!-- What errors can occur at each boundary?
+     How is each error surfaced to the user or calling code?
+     What's the recovery path? What's unrecoverable? -->
+
+### Testing Strategy
+<!-- What types of tests? (unit, integration, e2e)
+     What's the mocking strategy?
+     What are the critical paths that MUST have test coverage?
+     When browser.enabled: which flows need Playwright tests? -->
+
+### Edge Cases
+<!-- Catalog by category:
+     - Boundary: empty input, max values, zero, negative
+     - State: concurrent access, partial failure, interrupted operations
+     - Input: malformed data, unicode, unexpected types
+     - Environment: network failure, timeout, missing dependencies
+     Only include edge cases relevant to THIS feature. -->
+
+### Alternatives Considered
+<!-- At least 2 alternatives to your chosen approach.
+     For each: what it is, why it was rejected (specific technical reason). -->
 
 ---
 
 ## Review — Round 1
 
 ### @{reviewer1} [R1] Review
-<!-- Agent 2's review findings -->
+
+<!-- @{reviewer1}: REVIEWER. Read Version 1, then verify claims against actual code.
+     For each finding: 1) WHAT is wrong 2) WHY it matters 3) WHAT should change.
+     Use FINDING:/CHALLENGE:/BUILDING: signals. Sign @{reviewer1} [R1]. -->
 
 ### @{reviewer2} [R1] Review
-<!-- Agent 3's review findings -->
+
+<!-- @{reviewer2}: REVIEWER. Read Version 1 + @{reviewer1}'s review.
+     Find what was missed. Challenge with evidence. Don't repeat — add new value. -->
 
 ### Wizard [R1] Synthesis
-<!-- Wizard's evaluation and any interventions -->
+<!-- Wizard evaluates the round. Key findings, open questions,
+     direction for Round 2. Optional interventions (with human approval). -->
 
 ---
 
 ## Defend/Concede — @{writer} [R2]
-<!-- Agent 1 responds to each finding: DEFEND: or CONCEDE: -->
+
+<!-- @{writer}: Respond to EACH finding from both reviewers.
+     DEFEND: [ref] — counter-evidence. CONCEDE: [ref] — what you'll fix in V2.
+     No silent ignoring. Every finding gets a response. -->
 
 ## Version 2 — @{writer} [R2]
-<!-- Agent 1's revised design incorporating conceded findings -->
+
+<!-- @{writer}: Incorporate all conceded findings into a revised design.
+     Mark what changed from V1 and why.
+     Defended items remain as-is — state why they survived challenge. -->
+
+[Same sections as Version 1]
 
 ---
 
 ## Review — Round 2
 
 ### @{reviewer1} [R2] Review
-<!-- Agent 2's review of V2 -->
+<!-- @{reviewer1}: Focus on Version 2 changes and the defend/concede responses.
+     Did @{writer} address your findings adequately?
+     Are the defenses valid? Are the concessions properly incorporated?
+     Any NEW issues introduced by the changes? -->
 
 ### @{reviewer2} [R2] Review
-<!-- Agent 3's review of V2 -->
+<!-- @{reviewer2}: Same focus. Challenge defenses you disagree with.
+     Confirm concessions were properly incorporated. -->
 
 ### Wizard [R2] Synthesis
-<!-- Wizard's evaluation -->
+<!-- Wizard evaluates. If critical findings remain → announce Round 3 as FINAL.
+     If solid → proceed to extraction. -->
 
 ---
 
 ## Final Extraction Notes — Wizard
-<!-- What was incorporated into design.md and why -->
+<!-- What was incorporated into design.md and why.
+     What was intentionally excluded and why.
+     Drift check result against prd.md (if exists). -->
+
+---
+
+## Writing Guidance
+- Sign all work: `@{name} [R{N}]`
+- Evidence-based: file paths, line numbers, concrete examples — no opinions without proof
+- No placeholders: no TBD, TODO, or vague references
+- Scale depth to complexity — a few sentences if straightforward, detailed if nuanced
+- Reviewers: respond to EVERY finding with DEFEND: or CONCEDE:
+- Each review must add NEW value — don't repeat what prior reviewers said
 ```
+
+**Round 3:** If needed, the wizard appends Round 3 sections to the evolution log before dispatching. Do NOT pre-scaffold Round 3.
 
 ## Design Document Template
 
-Scaffold `{questDir}/spoils/design.md`:
+Scaffold `{questDir}/spoils/design.md` — wizard-only, clean deliverable extracted from evolution log:
 
 ```markdown
 # [Feature Name] Design Specification

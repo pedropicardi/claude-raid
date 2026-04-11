@@ -13,6 +13,8 @@ RAID_TASK=""
 RAID_QUEST_TYPE=""
 RAID_QUEST_ID=""
 RAID_QUEST_DIR=""
+RAID_STARTED_AT=""
+RAID_PHASE_ITERATION=""
 RAID_BLACK_CARDS=""
 RAID_CURRENT_ROUND=""
 RAID_MAX_ROUNDS=""
@@ -29,6 +31,8 @@ if [ -f ".claude/raid-session" ]; then
     questType: (.questType // ""),
     questId: (.questId // ""),
     questDir: (.questDir // ""),
+    startedAt: (.startedAt // ""),
+    phaseIteration: (.phaseIteration // 1),
     blackCards: (.blackCards // []),
     currentRound: (.currentRound // 0),
     maxRounds: (.maxRounds // 3),
@@ -47,6 +51,8 @@ if [ -f ".claude/raid-session" ]; then
     RAID_QUEST_TYPE=$(echo "$_session_json" | jq -r '.questType')
     RAID_QUEST_ID=$(echo "$_session_json" | jq -r '.questId')
     RAID_QUEST_DIR=$(echo "$_session_json" | jq -r '.questDir')
+    RAID_STARTED_AT=$(echo "$_session_json" | jq -r '.startedAt')
+    RAID_PHASE_ITERATION=$(echo "$_session_json" | jq -r '.phaseIteration')
     RAID_BLACK_CARDS=$(echo "$_session_json" | jq -c '.blackCards')
     RAID_CURRENT_ROUND=$(echo "$_session_json" | jq -r '.currentRound')
     RAID_MAX_ROUNDS=$(echo "$_session_json" | jq -r '.maxRounds')
@@ -144,8 +150,8 @@ if [ -f ".claude/raid.json" ]; then
 fi
 
 export RAID_ACTIVE RAID_PHASE RAID_MODE RAID_CURRENT_AGENT RAID_IMPLEMENTER RAID_TASK
-export RAID_QUEST_TYPE RAID_QUEST_ID RAID_QUEST_DIR RAID_BLACK_CARDS
-export RAID_CURRENT_ROUND RAID_MAX_ROUNDS RAID_TURN_ORDER RAID_CURRENT_TURN_INDEX
+export RAID_QUEST_TYPE RAID_QUEST_ID RAID_QUEST_DIR RAID_STARTED_AT RAID_PHASE_ITERATION
+export RAID_BLACK_CARDS RAID_CURRENT_ROUND RAID_MAX_ROUNDS RAID_TURN_ORDER RAID_CURRENT_TURN_INDEX
 export RAID_TEST_CMD RAID_NAMING RAID_MAX_DEPTH RAID_COMMIT_MIN_LENGTH RAID_SPECS_PATH RAID_PLANS_PATH
 export RAID_BROWSER_ENABLED RAID_BROWSER_PORT_START RAID_BROWSER_PORT_END RAID_BROWSER_EXEC_CMD RAID_BROWSER_PW_CONFIG
 export RAID_VAULT_ENABLED RAID_VAULT_PATH RAID_AGENT_EFFORT
@@ -168,9 +174,14 @@ raid_read_input() {
 # Returns 0 if file is production code (not test, doc, config, or .claude).
 raid_is_production_file() {
   local file="$1"
-  # Normalize absolute paths to relative (Claude passes absolute paths)
+  # Normalize absolute paths to relative
   if [[ "$file" == /* ]]; then
     file="${file#"$PWD"/}"
+    # Handle symlink mismatch (e.g., macOS /var -> /private/var) by resolving input path
+    if [[ "$file" == /* ]] && [ -e "$file" ]; then
+      file="$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file")"
+      file="${file#"$(pwd -P)"/}"
+    fi
   fi
   case "$file" in
     tests/*|test/*|*.test.*|*.spec.*|*_test.*|*_spec.*) return 1 ;;

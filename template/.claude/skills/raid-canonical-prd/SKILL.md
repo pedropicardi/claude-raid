@@ -1,5 +1,5 @@
 ---
-name: raid-canonical-prd 
+name: raid-canonical-prd
 description: "Use when Phase 1 (PRD) begins in a Canonical Quest. The human chose to forge a PRD rather than skip to Design. Wizard and human only — no agents dispatched."
 ---
 
@@ -70,29 +70,72 @@ The Wizard is the master of requirements — a visionary who thinks in future-pr
 Write `{questDir}/spoils/prd.md`:
 
 ```markdown
-# <Feature Name> — Product Requirements Document
+# [Feature Name] — Product Requirements Document
+
+## Quest: [quest description]
+## Date: YYYY-MM-DD
+## Author: Wizard
+
+## Quest Goal
+<!-- Wizard writes 2-3 lines: what this PRD aims to capture and why -->
+
+---
 
 ### Problem Statement
+<!-- What problem exists today? Who is affected? What's the cost of not solving it?
+     Be specific — reference actual code, systems, or user pain points discovered
+     during codebase exploration. -->
 
-### Goals & Non-Goals
+### Goals
+<!-- What does success look like? Each goal should be measurable or verifiable.
+     Number them. -->
 
-#### Goals
-
-#### Non-Goals
+### Non-Goals
+<!-- What are we explicitly NOT building? This prevents scope creep.
+     Be specific about what's out of scope and why. -->
 
 ### User Stories
+<!-- Describe how users will interact with the feature. Write naturally —
+     not locked to a rigid format, but professional and clear.
+     Cover the primary flow, then edge cases and error scenarios.
+     Each story should be concrete enough that you could write a test for it. -->
 
 ### Functional Requirements
+<!-- Numbered list. Each requirement is specific, unambiguous, and testable.
+     Group by domain if the feature spans multiple areas.
+     Reference user stories where applicable. -->
 
 ### Non-Functional Requirements
+<!-- Performance, scalability, security, accessibility, compatibility.
+     Include concrete targets where possible (e.g., "responds within 200ms
+     at p95 under 1000 concurrent users"). Omit categories that don't apply
+     with "N/A — [reason]". -->
 
 ### Business Logic
+<!-- Rules, calculations, state machines, validation logic.
+     Be precise — this section drives implementation decisions.
+     Use examples: "When X happens and Y is true, then Z." -->
 
 ### Constraints & Assumptions
+<!-- Technical constraints (language, framework, infrastructure).
+     Business constraints (timeline, budget, compliance).
+     Assumptions that, if wrong, would change the approach. -->
 
 ### Success Criteria
+<!-- How do we verify this feature works? Define acceptance criteria
+     at the feature level. These become the basis for the review phase. -->
 
 ### Open Questions
+<!-- Questions that surfaced during exploration that the human needs to answer.
+     Each question includes context on why it matters and what decision it blocks. -->
+
+---
+
+## Writing Guidance
+- Every section filled. Write "N/A — [reason]" if truly not applicable.
+- Be specific over comprehensive — concrete examples beat abstract descriptions.
+- Reference actual code paths, files, and systems discovered during exploration.
+- Requirements must be testable — if you can't verify it, rewrite it.
 ```
 
 Fill every section. Write "N/A — [reason]" if a section truly does not apply.

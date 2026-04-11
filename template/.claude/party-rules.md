@@ -21,23 +21,42 @@ Seven pillars. Non-negotiable. Every agent, every phase, every interaction.
 
 ## Pillar 3: Discipline and Efficiency
 
-- Maximum effort on every task. No coasting, no rubber-stamping, no going through motions.
+- Maximum effort on every task. No coasting, no rubber-stamping, no going through motions. You have limited moves per phase.
 - Every interaction carries work forward. If you're not adding new information or evidence, stop talking.
-- The Dungeon is a scoreboard, not a chat log. Pin only what survived challenge from at least two agents.
-- Escalate to the Wizard only after you've tried to resolve it by reading code and discussing with teammates.
-- All agents participate actively at every step. Silence when you have nothing to add is fine — silence when you haven't investigated is laziness.
+- The phases files are a scoreboard, not a chat log. Pin only what survived challenge from at least two agents.
+- Escalate to the Wizard if stuck.
 - This team uses agent teams only. Never delegate to subagents.
 
-## Pillar 4: Round-Based Interaction
+## Pillar 4: Sequential Turn-Based Interaction
 
-- **Turn-based, not real-time.** When assigned a task, work independently. No mid-thinking interruptions to other agents.
-- **Flag completion.** When done, signal `ROUND_COMPLETE:` to the Wizard.
-- **STOP after ROUND_COMPLETE.** After signaling `ROUND_COMPLETE:`, **stop all work**. No cross-verification, no building, no challenging, no "while I wait" tasks. You are done until the Wizard dispatches your next action. If the Wizard wants cross-testing, they will dispatch it explicitly in the next round.
-- **Cross-test only on dispatch.** Pick up teammates' work for review ONLY when the Wizard assigns it. Never self-initiate cross-testing.
-- **Limited interactions.** Converge in 2-3 exchanges per finding. If stuck after 3, escalate to Wizard.
-- **Party is silent during phase transitions.** When the Wizard opens/closes a phase, agents wait.
+- **One agent works at a time.** When the Wizard dispatches your turn, you are the only active agent. No other agent is working.
+- **Dice roll per phase.** The Wizard rolls dice at the start of each agent phase (Design, Plan, Review, Fix Session). Each phase gets its own turn order. **Exception:** the Implementation phase has no dice roll — the Wizard assigns tasks strategically by file/domain affinity.
+- **Turn flow.** Wizard dispatches `TURN_DISPATCH:` → you work → you send `TURN_COMPLETE:` with summary → Wizard mediates and dispatches next agent.
+- **Round = 3 turns + Wizard synthesis.** After all 3 agents have completed their turn, the Wizard ultrathinks, synthesizes all findings, and pins a round synthesis to the Dungeon.
+- **Minimum 2 rounds, maximum 3 per phase.** The Wizard does not close a phase before round 2 completes.
+- **No direct agent-to-agent messages.** You read the Dungeon to see prior agents' work. You pin your own work to the Dungeon. Communication flows through artifacts and the Wizard's mediation — not through SendMessage between agents.
+- **After** `TURN_COMPLETE:`**, stop completely.** No further work until the Wizard dispatches your next turn. No "while I wait" tasks.
 - **HOLD means freeze.** When the Wizard broadcasts `HOLD`, all agents stop immediately. No work in flight while the Wizard is presenting decisions to the human.
-- **Exception: only the Wizard can interrupt** an agent mid-work.
+- **Wizard mediates every round.** The Wizard is not passive — they ultrathink, synthesize, and set direction between every round.
+- **Exception: only the Wizard can interrupt** an agent mid-turn.
+
+## Writer / Reviewer / Defend-Concede Protocol
+
+Phases that produce documents (Design, Plan, Review) follow a structured pattern. All work happens in the phase file at `phases/phase-N-{name}.md`. The Wizard extracts the polished deliverable to `spoils/` at phase close.
+
+- **Round 1:** The first agent in the turn order **writes** the initial document in the "Version 1" section. The second agent **reviews** and pins findings in the "Review — Round 1" section. The third agent reviews both and adds their own findings.
+- **Round 2:** The original writer reads all review findings and responds to **each one** with either:
+  - `DEFEND:` — the finding is incorrect or does not apply. Provide counter-evidence.
+  - `CONCEDE:` — the finding is valid. Commit to addressing it in the next version.
+  - **Silent ignoring is not allowed.** Every finding must get an explicit response.
+- The writer then produces Version 2 in the "Version 2" section incorporating all concessions. Reviewers review again.
+- **Round 3 (if needed):** Same cycle. The Wizard tells agents this is the FINAL round — make every move count.
+
+After the final round, the Wizard extracts and polishes the final deliverable from `phases/` into `spoils/`.
+
+### Signing
+
+Every section, finding, review, defense, and concession must be signed with the agent's identity and round number. Format: `@warrior [R1]`, `@archer [R2]`, `@rogue [R1]`. Just by reading the document, anyone can see who wrote what and when.
 
 ## Pillar 5: Question Chain
 
@@ -79,64 +98,66 @@ Efficiency matters. Say what you found, what it means, and what should happen. N
 
 All 4 agents always participate. The full party is Wizard + Warrior + Archer + Rogue. Maximum effort on every quest.
 
-### When the Wizard Opens the Dungeon
+### When the Wizard Dispatches Your Turn
 
-The Wizard dispatches with angles and goes silent. You own the phase from here:
+The Wizard dispatches you with `TURN_DISPATCH:` and your assigned angle. You are the only active agent. The dispatch includes phase-specific context: your role (writer or reviewer), coverage areas, quality criteria, and where to read/write.
 
-1. Read the quest and your assigned angle.
-2. Read the Dungeon for any prior phase knowledge (archived Dungeons).
-3. Explore deeply using your unique lens (see your agent definition).
-4. Document findings with evidence: file paths, line numbers, test output, concrete examples.
-5. Share findings with teammates directly — don't wait for the Wizard to relay.
-6. When teammates share findings, independently verify before responding. Read the code yourself. Then engage — challenge, extend, or confirm with your own evidence.
-7. When a finding survives challenge from at least two agents, pin it: `DUNGEON:` with evidence.
+1. Read the current phase file in `phases/` for prior agents' work this round.
+2. Read deliverables in `spoils/` inherited from prior phases (PRD, design doc, plan tasks).
+3. Work your assigned angle using your unique lens (see your agent definition).
+4. **Follow the dispatch instructions** — they tell you what to cover and where to write.
+5. Document findings with evidence: file paths, line numbers, test output, concrete examples.
+6. **Sign all work** with your identity and round: `@warrior [R1] FINDING: ...`
+7. If a prior agent's finding needs challenging, pin counter-evidence: `@rogue [R1] CHALLENGE: @warrior's finding at X:Y — my investigation shows...`
+8. Signal `TURN_COMPLETE:` to the Wizard with a brief summary. **Stop all work.**
 
-### Working With Teammates
+### Between-Turn Knowledge
 
-You talk to teammates directly. You don't route through the Wizard.
+You read teammates' work in the Dungeon. You do not message them during your turn. Your challenges, building, and concessions happen through Dungeon pins, not direct conversation. The Dungeon is both the scoreboard AND the communication channel between agents.
 
-**The independent verification rule:** Before you respond to any teammate's finding — to challenge it, agree with it, or build on it — you first independently investigate the same area. Read the actual code. Form your own conclusion. Then respond with your evidence alongside theirs.
+**The independent verification rule (Pillar 1) applies here:** before responding to any prior agent's finding, independently investigate the same area. Read the actual code. Form your own conclusion. Then pin your response with your own evidence.
 
-**Challenging:** When your independent verification contradicts a teammate's finding, state what you found, show your evidence, and explain the discrepancy. Don't just say "this is wrong" — show what's actually there.
+**Challenging:** When your independent verification contradicts a prior agent's finding, pin what you found with your evidence and explain the discrepancy.
 
-**Building:** When your verification confirms and deepens a teammate's finding, extend it through your unique lens.
+**Building:** When your verification confirms and deepens a prior agent's finding, pin the extension through your unique lens.
 
-**Conceding:** When a teammate's challenge holds up against your evidence — concede immediately and redirect your energy into the next angle.
-
-**Chain reactions:** If a teammate's finding triggers a new investigation thread for you, follow it immediately. Don't wait for permission or turns.
+**Conceding:** When a prior agent's challenge of your work holds up — acknowledge it in your pins and redirect your energy into the next angle.
 
 ### Communication Signals
 
 Lead with the conclusion, follow with the evidence.
 
 - `FINDING:` — something you discovered with your own evidence
-- `CHALLENGE:` — you independently verified a teammate's claim and found a problem
-- `BUILDING:` — you independently verified a teammate's claim and it goes deeper
-- `CONCEDE:` — you were wrong, moving on
-- `DUNGEON:` — pinning a finding that survived challenge from at least two agents
+- `CHALLENGE:` — you independently verified a prior agent's claim and found a problem
+- `BUILDING:` — you independently verified a prior agent's claim and it goes deeper
+- `DEFEND:` — a reviewer challenged your work and you have counter-evidence showing your approach is correct
+- `CONCEDE:` — a reviewer challenged your work and they are right. Acknowledge and commit to fix.
+- `DUNGEON:` — pinning a finding that survived challenge from at least two agents across turns
 - `WIZARD:` — you need project-level context or are genuinely stuck
-- `ROUND_COMPLETE:` — finished assigned task. **Stop all work. Wait for Wizard dispatch.**
+- `TURN_COMPLETE:` — finished your turn. **Stop all work. Wait for Wizard dispatch.**
+- `TURN_DISPATCH:` — (from Wizard only) starts your turn with angle and context
 - `HOLD` — (from Wizard only) freeze immediately. No work in flight.
 - `BLACKCARD:` — high-concern finding that breaks the architecture
 
 ### Team Communication
 
-You are a team member. Your teammates are in separate tmux panes.
+You are a team member. Your teammates are in separate tmux panes but you do not message them directly.
 
-- `SendMessage(to="wizard", message="...")` — escalate to the Wizard
-- `SendMessage(to="<teammate>", message="...")` — challenge or build on their work
+- `SendMessage(to="wizard", message="WIZARD: ...")` — escalate during your turn
+- `SendMessage(to="wizard", message="TURN_COMPLETE: ...")` — signal turn completion
 
-Messages are delivered automatically. Idle teammates wake up when they receive a message.
+Agents do NOT use SendMessage to each other. All inter-agent communication flows through Dungeon pins. You read what prior agents pinned, and you pin your own work for subsequent agents to read.
 
 **Discovering teammates:** Read the team config at `~/.claude/teams/{team_name}/config.json` to see your teammates' names.
 
 **Task coordination:**
+
 - `TaskCreate(subject="...", description="...")` — create a new task for discovered work
 - `TaskUpdate(taskId="...", owner="<your-name>")` — claim a task
 - `TaskUpdate(taskId="...", status="completed")` — mark a task done
 - Check `TaskList` after completing each task to find next available work
 
-**The Dungeon is still your knowledge artifact.** Pin verified findings there via Write tool. Use SendMessage for real-time conversation and challenges. Both systems coexist.
+**The Dungeon is your shared artifact AND communication channel.** Pin findings via Write tool. Sign pins with your agent identity and round (e.g., `@warrior [R1]`) so subsequent agents can quickly identify what's new and who wrote it.
 
 ### User Direct Access
 
@@ -148,58 +169,63 @@ SendMessage(to="wizard", message="User directed me to [X]. Proceeding.")
 
 ## The Dungeon
 
-The Dungeon is the quest's shared knowledge directory at `.claude/dungeon/{quest-slug}/`. Each phase produces a phase file (e.g., `phase-2-design.md`).
+The Dungeon is the quest directory at `.claude/dungeon/{quest-slug}/`. It has two subdirectories:
 
-### Structure
+- **`phases/`** — Evolution logs (scoreboards). This is where rounds happen. Writers write versions, reviewers pin findings, defenders respond. One file per phase (e.g., `phases/phase-2-design.md`).
+- **`spoils/`** — Polished deliverables. After the Wizard closes a phase, the final output is extracted here (e.g., `spoils/design.md`, `spoils/prd.md`). Task files go in `spoils/tasks/`.
+
+**Agents write to `phases/`.** The Wizard extracts polished deliverables to `spoils/` at phase close.
+
+### Phase File Structure
 
 ```markdown
-# Dungeon — Phase N: <Phase Name>
+# Phase N: <Phase Name>
 ## Quest: <task description>
-## Quest Type: <Canonical Quest>
 
-### Discoveries
-<!-- Verified findings that survived challenge, tagged with agent name -->
+### Version 1
+<!-- Agent 1 writes initial document here, signed @name [R1] -->
 
-### Active Battles
-<!-- Ongoing unresolved challenges between agents -->
+### Review — Round 1
+<!-- Agent 2 and 3 pin findings here, signed @name [R1] -->
 
-### Resolved
-<!-- Challenges that reached conclusion — conceded, proven, or Wizard-ruled -->
+### Version 2
+<!-- Agent 1 writes V2 with DEFEND/CONCEDE responses, signed @name [R2] -->
 
-### Shared Knowledge
-<!-- Facts established as true by 2+ agents independently verifying -->
-
-### Escalations
-<!-- Points where agents needed Wizard input -->
+### Review — Round 2
+<!-- Agents review V2, signed @name [R2] -->
 ```
 
 ### Curation Rules
 
-**What goes IN the Dungeon (via `DUNGEON:` only):**
-- Findings that survived a challenge (verified truths)
-- Active unresolved battles (prevents re-litigation)
-- Shared knowledge promoted by 2+ agents agreeing
-- Key decisions and their reasoning
+**What goes in phase files:**
+- Versioned work (V1, V2, V3) by the writer
+- Review findings by reviewers, signed and evidenced
+- DEFEND/CONCEDE responses with reasoning
+- Wizard round syntheses between rounds
 
 **What stays in conversation only:**
-- Back-and-forth of challenges
 - Exploratory thinking and hypotheses
-- Concessions and rebuttals
+- Back-and-forth before a finding is pinned
 
-**The conversation is the sparring ring. The Dungeon is the scoreboard.**
+**The phase file is both the scoreboard and the communication channel.** Agents pin findings for subsequent agents to read. Sign all work with agent identity and round (e.g., `@archer [R2]`).
 
-Agents can read prior phase files from the quest directory. Design knowledge carries into Plan. Plan knowledge carries into Implementation.
+### Reading Prior Work
+
+- **Same phase:** Read `phases/phase-N-{name}.md` to see prior agents' work this phase.
+- **Prior phases:** Read deliverables in `spoils/` (e.g., `spoils/design.md`, `spoils/prd.md`) and evolution logs in `phases/` for full context.
+- Each phase inherits deliverables from all prior phases. The Wizard recaps the full quest history at the opening of each phase.
 
 ### When to Escalate to Wizard
 
 **Do escalate:**
+
 - 2+ agents stuck on same disagreement for 3+ exchanges with no new evidence
 - Uncertain about project-level context (user requirements, constraints, priorities)
 - Team needs a direction-setting decision that affects the quest
 - Found something that may require human input
 
 **Don't escalate:**
+
 - You can resolve it by reading the code
 - Another agent already answered your question
 - It's a matter of opinion that doesn't affect the outcome
-- You're stuck but haven't tried talking to the other agents first

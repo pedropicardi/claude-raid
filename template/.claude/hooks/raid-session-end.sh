@@ -45,9 +45,9 @@ EOF
 
 # Extract pinned findings from quest dungeon directory
 if [ -d "$QUEST_DIR" ]; then
-  for phase_file in "$QUEST_DIR"/phase-*.md; do
+  for phase_file in "$QUEST_DIR"/phases/phase-*.md; do
     [ -f "$phase_file" ] || continue
-    { grep -E 'DUNGEON:|FINDING:|DECISION:|BLACKCARD:' "$phase_file" 2>/dev/null || true; } | while IFS= read -r line; do
+    { grep -E 'DUNGEON:|BLACKCARD:|UNRESOLVED:|RESOLVED:|TASK:' "$phase_file" 2>/dev/null || true; } | while IFS= read -r line; do
       echo "- $line" >> "$QUEST_FILE"
     done
   done

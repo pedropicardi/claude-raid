@@ -69,58 +69,147 @@ digraph review {
 6. **Extract fix plan** — polish into `{questDir}/spoils/review.md`
 7. **Present to human** for approval
 
-### Round Protocol (Review)
+### Dispatch Templates (Review)
 
-**Round 1: Find + Challenge**
+Dispatch carries only dynamic context. Detailed instructions (severity format, checklist, finding structure) are embedded in the scaffolded phase file.
 
-**Agent 1 — Reviews the full implementation:**
-- Reads all code changes against design.md and plan
-- Pins findings with severity classification (Critical / Important / Minor)
-- Signs: `@{name} [R1]`
+**Reviewer (Round 1):**
+```
+TURN_DISPATCH: Phase 5 Review, Round 1, Turn {T}.
+Quest: {description}
+Phase recap: {summary of all prior phases — what was built, key decisions}
+Your role: REVIEWER. Your section: "@{name} [R1]"
 
-**Agent 2 — Adversary-tests Agent 1's findings + adds own:**
-- Reads Agent 1's findings, independently verifies each one
-- Challenges severity classifications where warranted
-- Adds findings Agent 1 missed from their own lens
-- Signs: `@{name} [R1]`
+FIRST: Read the FULL document at {questDir}/phases/phase-5-review.md to understand the structure.
+  Read the embedded instructions in your section. Then read the code changes (git diff),
+  {questDir}/spoils/design.md, and task files.
+THEN: Write your review in your designated section following the embedded instructions.
+```
 
-**Agent 3 — Reviews all + adds own:**
-- Reads both prior agents' findings
-- Challenges, extends, adds from their lens
-- Signs: `@{name} [R1]`
+**Fix Plan Writer (Round 2, Turn 1):**
+```
+TURN_DISPATCH: Phase 5 Review, Round 2, Turn 1.
+Quest: {description}
+All Round 1 findings are in.
+Your role: converge findings into fix plan. Your section: "@{name} [R2] — Converged Fix Plan"
 
-**Round 2: Converge + Fix Plan**
+FIRST: Read the FULL document at {questDir}/phases/phase-5-review.md.
+  Read all Round 1 findings. Read the embedded instructions in your section.
+THEN: Write the converged fix plan following the embedded instructions.
+```
 
-**Agent 1 — Converges all findings into a fix plan:**
-- Reads every finding from all agents
-- Groups by severity and domain
-- Proposes a concrete fix plan: what to fix, how, in what order
-- May mark some findings as false positives (with evidence)
-- Signs: `@{name} [R2]`
+**Fix Session dispatch:**
+```
+TURN_DISPATCH: Phase 5 Fix Session, Round 1, Turn {T}.
+Quest: {description}
+Fix plan: {questDir}/spoils/review.md
 
-**Agents 2+3 — Attack the fix plan:**
-- Challenge the proposed fixes: are they correct? Complete? Do they introduce new issues?
-- Challenge false positive designations
-- Signs: `@{name} [R2]`
+FIRST: Read the FULL document at {questDir}/phases/phase-5-review.md to find
+  the Fix Session section and your embedded instructions. Then read the fix plan.
+THEN: Execute your role following the embedded instructions.
+TDD enforced — load raid-tdd. Signal TURN_COMPLETE with status when done.
+```
 
-**Round 3 (if needed):** Wizard announces FINAL round. Same cycle — converge and close.
+### Evolution Log Template (Sub-phase A)
 
-### Severity Classification
+Scaffold `{questDir}/phases/phase-5-review.md`. Replace agent name placeholders with actual names from dice roll:
 
-| Severity | Definition | Action |
-|----------|------------|--------|
-| **Critical** | Bugs, security holes, data loss, crashes | Must fix. No exceptions. |
-| **Important** | Missing features, poor error handling, test gaps, naming inconsistencies | Must fix. |
-| **Minor** | Style, docs, optimization | Note for future. |
+```markdown
+# Phase 5: Review — Evolution Log
 
-### Review Checklist — Each Agent
+## Quest: [quest description]
+## Quest Type: Canonical Quest
+## Turn Order (Review): @{agent1} → @{agent2} → @{agent3}
 
-- **Requirements:** Every design doc requirement implemented? No extras (YAGNI)?
-- **Code Quality:** Clean separation? Error handling? DRY? Clear names?
-- **Testing:** Every function tested? Edge cases? Failure paths?
-- **Architecture:** Design decisions implemented correctly? No drift?
-- **Naming & Structure:** Consistent? Follows conventions?
-- **Production:** Performance? Timeouts? No secrets in code?
+## References
+- PRD: `{questDir}/spoils/prd.md` (if exists)
+- Design: `{questDir}/spoils/design.md`
+- Tasks: `{questDir}/spoils/tasks/phase-3-plan-task-*.md`
+- Implementation: `{questDir}/phases/phase-4-implementation.md`
+
+## Quest Goal
+<!-- Wizard writes 2-3 lines: what this review must verify,
+     total file count from implementation, key risk areas to focus on -->
+
+---
+
+## Sub-phase A: Review
+
+### @{agent1} [R1] — Full Implementation Review
+
+<!-- @{agent1}: FIRST REVIEWER. Read ACTUAL CODE — not reports.
+     For each finding: [Severity] `file:line` — what, why, proposed fix.
+     Example: [Critical] `src/auth/handler.ts:23` — missing validation. Fix: add zod schema.
+     Checklist: requirements, code quality, testing, architecture, naming, production. -->
+
+### @{agent2} [R1] — Adversarial Review
+
+<!-- @{agent2}: ADVERSARIAL REVIEWER. Verify @{agent1}'s findings against actual code.
+     Challenge severity if overblown. Add findings @{agent1} missed. Don't repeat.
+     Same format: [Severity] `file:line` — what, why, fix. -->
+
+### @{agent3} [R1] — Final Review Pass
+
+<!-- @{agent3}: FINAL REVIEWER. Read all prior findings. Challenge what you disagree with.
+     Find what BOTH reviewers missed. Same format: [Severity] `file:line` — what, why, fix. -->
+
+### Wizard [R1] Synthesis
+<!-- Wizard categorizes all surviving findings by severity.
+     Counts: N Critical, N Important, N Minor.
+     Direction for Round 2. -->
+
+---
+
+### @{agent1} [R2] — Converged Fix Plan
+
+<!-- @{agent1}: Read EVERY finding from all reviewers (R1).
+     Your job is to produce a SINGLE converged fix plan.
+
+     1. Group all findings by severity (Critical → Important → Minor)
+     2. Within each group, order by domain/file for efficient fixing
+     3. For each finding: confirm, mark as false positive (with evidence), or merge duplicates
+     4. Propose concrete fix for each confirmed finding
+     5. Note execution order (dependencies between fixes)
+
+     Format per finding:
+     **[Critical-1]** `src/auth/handler.ts:23` — Missing input validation
+     - Found by: @{agent2} [R1], confirmed by @{agent3} [R1]
+     - Fix: Add zod schema validation in validateToken() before line 23
+     - Blocked by: none -->
+
+### @{agent2} [R2] — Fix Plan Review
+
+<!-- @{agent2}: Review fix plan. Are fixes correct? Execution order right?
+     Challenge false positive designations. Flag dropped findings. -->
+
+### @{agent3} [R2] — Fix Plan Review
+
+<!-- @{agent3}: Same focus. Challenge what @{agent2} missed.
+     Confirm or dispute false positive designations. -->
+
+### Wizard [R2] Synthesis
+<!-- Wizard evaluates the fix plan. If solid → extract to review.md.
+     If critical gaps → announce Round 3 as FINAL. -->
+
+---
+
+## Final Extraction Notes — Wizard
+<!-- What was incorporated into review.md.
+     False positives excluded and why.
+     Total findings: N confirmed, N false positives, N deferred. -->
+
+---
+
+## Writing Guidance
+- Sign all work: `@{name} [R{N}]`
+- Read ACTUAL CODE — not summaries, not reports, not commit messages
+- Every finding needs: severity, location, what, why, proposed fix
+- No performative agreement — no "Great catch!" Just evidence or pushback.
+- Reviewers: challenge severity classifications, not just content
+- Fix plan must be actionable — concrete fixes, not "improve error handling"
+```
+
+**Round 3:** If needed, wizard appends Round 3 sections before dispatching. Do NOT pre-scaffold.
 
 ### Browser Inspection (when `browser.enabled`)
 
@@ -143,34 +232,96 @@ Only entered if `review.md` contains fixes to make. This is different from the I
 1. **Fresh dice roll** — a new turn order for the fix session. Update raid-session via Bash using the jq command from protocol "Dice Roll Reference". Announce: *"Fresh dice for the fix session: {agent1} → {agent2} → {agent3}."*
 2. **Dispatch fixes** — round-based, sequential
 
-### Fix Session Round Protocol
+### Fix Session Evolution Log (Appended Dynamically)
 
-**Agent 1 — Makes fixes from `review.md`:**
-- Implements each fix following TDD
-- Reports what was fixed and how
-- Signs: `@{name} [R1]`
+When Sub-phase B begins, the wizard appends these sections to `phase-5-review.md` with fresh agent names from the new dice roll:
 
-**Agent 2 — Reviews the fixes:**
-- Reads the actual code changes
-- Verifies each fix addresses the original finding
-- Checks for regressions
-- Signs: `@{name} [R1]`
+```markdown
+---
 
-**Agent 3 — Reviews fixes + prior review:**
-- Reads fixes AND Agent 2's review
-- Final verification pass
-- Signs: `@{name} [R1]`
+## Sub-phase B: Fix Session
+
+## Turn Order (Fix Session): @{agent1} → @{agent2} → @{agent3}
+<!-- Fresh dice roll — may be different order from review sub-phase -->
+
+### @{agent1} [R1] — Implementing Fixes
+
+<!-- @{agent1}: Work through review.md fix plan in order.
+     For each fix:
+     1. Implement the fix following TDD (write test → verify fail → fix → verify pass)
+     2. Report what was fixed and how
+
+     Format per fix:
+     **[Critical-1]** `src/auth/handler.ts:23` — FIXED
+     - Change: Added zod schema validation in validateToken()
+     - Test: `tests/auth/handler.test.ts` — added "rejects malformed tokens" test
+     - Commit: `fix(auth): add input validation to token handler`
+
+     Prioritize: blocking issues first, then simple fixes, then complex fixes. -->
+
+### @{agent2} [R1] — Fix Verification
+
+<!-- @{agent2}: Read the ACTUAL CODE changes for each fix above.
+     - Does each fix address the original finding?
+     - Does any fix introduce new issues?
+     - Run the full test suite — any regressions?
+     Report per fix: VERIFIED or ISSUE: [what's wrong] -->
+
+### @{agent3} [R1] — Fix Verification
+
+<!-- @{agent3}: Same focus. Verify fixes AND @{agent2}'s verification.
+     Final pass — anything missed? -->
+
+### Wizard [R1] Synthesis
+<!-- All fixes verified? If issues remain → another round.
+     If clean → extract results, present to human. -->
+```
 
 2-3 rounds until the Wizard is satisfied all fixes are sound.
 
-### Fix Implementation Order
+### Review Deliverable Template
 
-Prioritize within each severity level:
-1. **Blocking issues** — crashes, security holes, data loss
-2. **Simple fixes** — typos, imports, naming
-3. **Complex fixes** — refactoring, logic changes
+Wizard extracts into `{questDir}/spoils/review.md` — issue-centric, grouped by severity:
 
-Test each fix individually. Verify no regressions before the next.
+```markdown
+# [Feature Name] — Review Report
+
+## Quest: [quest description]
+## Date: YYYY-MM-DD
+## Author: Wizard (extracted from phase-5-review.md)
+
+---
+
+## Summary
+<!-- Total findings, breakdown by severity, fix session outcome -->
+
+## Critical Issues
+
+### [Critical-1] `file:line` — Short description
+- **Found by:** @agent [R1], confirmed by @agent [R1]
+- **Description:** What is wrong and why it matters
+- **Fix:** What was done to resolve it
+- **Status:** Fixed | Deferred — [reason]
+- **Verification:** Test name or evidence that the fix works
+
+## Important Issues
+
+### [Important-1] `file:line` — Short description
+<!-- Same structure -->
+
+## Minor Issues (Noted for Future)
+
+### [Minor-1] `file:line` — Short description
+- **Found by:** @agent [R1]
+- **Description:** What and why
+- **Status:** Deferred — not blocking
+
+## False Positives
+
+### [FP-1] `file:line` — Short description
+- **Raised by:** @agent [R1]
+- **Dismissed by:** @agent [R2] — [evidence why it's not an issue]
+```
 
 ## Black Card System
 

@@ -17,6 +17,11 @@ fi
 _file="${RAID_FILE_PATH}"
 if [[ "$_file" == /* ]]; then
   _file="${_file#"$PWD"/}"
+  # Handle symlink mismatch (e.g., macOS /var -> /private/var) by resolving input path
+  if [[ "$_file" == /* ]] && [ -e "$_file" ]; then
+    _file="$(cd "$(dirname "$_file")" && pwd -P)/$(basename "$_file")"
+    _file="${_file#"$(pwd -P)"/}"
+  fi
 fi
 
 # Only check Dungeon files (quest directory structure + backward compat flat files)
@@ -132,7 +137,7 @@ while IFS= read -r line; do
   fi
 
   # Layer 3: Phase consistency — TASK entries belong in plan or wrap-up phases
-  if [ "$entry_type" = "TASK" ] && [ -n "${RAID_PHASE:-}" ] && [ "${RAID_PHASE}" != "plan" ] && [ "${RAID_PHASE}" != "wrap-up" ] && [ "${RAID_PHASE}" != "finishing" ]; then
+  if [ "$entry_type" = "TASK" ] && [ -n "${RAID_PHASE:-}" ] && [ "${RAID_PHASE}" != "plan" ] && [ "${RAID_PHASE}" != "wrap-up" ]; then
     issues="${issues}
   - TASK entries belong in Plan phase, not ${RAID_PHASE}."
   fi

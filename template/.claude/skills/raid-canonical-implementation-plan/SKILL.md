@@ -50,69 +50,86 @@ digraph plan {
 10. **Report** — link task files and `phases/phase-3-plan.md` to the human
 11. **Transition** — load `raid-canonical-implementation`
 
-## Round Protocol
+## Dispatch Templates
 
-### Round 1: Write + Review
+Dispatch carries only dynamic context. Detailed instructions are embedded in the scaffolded phase file.
 
-**Agent 1 (dice-first) — WRITES all numbered tasks:**
-- Receives `spoils/design.md` and codebase context
-- Writes the complete task list with file maps, acceptance criteria, and TDD steps
-- Applies their unique lens to the decomposition
-- Signs: `@{name} [R1]`
-- Output goes to "Version 1" section of `phase-3-plan.md`
+**Writer (Round 1, Turn 1):**
+```
+TURN_DISPATCH: Phase 3 Plan, Round 1, Turn 1.
+Quest: {description}
+Phase recap: {summary of PRD + Design findings}
+Your role: WRITER. Your section: "Version 1 — @{name} [R1]"
 
-**Agent 2 — REVIEWS for design compliance:**
-- Reads Agent 1's task list against `spoils/design.md` requirement by requirement
-- Pins findings: missing requirements, ordering problems, naming drift, test gaps
-- Signs: `@{name} [R1]`
-
-**Agent 3 — REVIEWS, extends findings:**
-- Reads tasks AND Agent 2's review
-- Adds own findings from their unique lens
-- Signs: `@{name} [R1]`
-
-### Round 2: Defend/Concede + Review
-
-**Agent 1 — DEFEND or CONCEDE each finding, write Version 2:**
-- Responds to every finding explicitly
-- Writes revised task list incorporating conceded findings
-- Signs: `@{name} [R2]`
-
-**Agents 2+3 — Review Version 2** (same pattern as Round 1)
-
-**Wizard evaluates** — close or announce Round 3 as FINAL.
-
-## File Structure Mapping
-
-Before defining tasks, map ALL files to be created or modified:
-
-```markdown
-## File Map
-
-| File | Action | Responsibility |
-|------|--------|---------------|
-| `src/auth/handler.ts` | Create | Token validation and refresh |
-| `tests/auth/handler.test.ts` | Create | Unit tests for handler |
-| `src/middleware.ts` | Modify (L45-60) | Add auth middleware hook |
+FIRST: Read the FULL document at {questDir}/phases/phase-3-plan.md before writing anything.
+  Understand the structure, read the embedded instructions in your section, and read the
+  Writing Guidance at the bottom. Then read {questDir}/spoils/design.md + codebase.
+THEN: Write in your designated section following the embedded instructions.
 ```
 
-## Task Granularity
+**Reviewer (Round 1, Turns 2-3):**
+```
+TURN_DISPATCH: Phase 3 Plan, Round 1, Turn {T}.
+Quest: {description}
+{prior agent} wrote the task decomposition.
+Your role: REVIEWER. Your section: "@{name} [R1] Review"
 
-**Each step is one action (2-5 minutes):**
-- "Write the failing test" — step
-- "Run it to verify it fails" — step
-- "Implement minimal code to pass" — step
-- "Run tests to verify pass" — step
-- "Commit" — step
+FIRST: Read the FULL document at {questDir}/phases/phase-3-plan.md before writing anything.
+  Read the tasks, read the embedded instructions in your review section.
+  Cross-check against {questDir}/spoils/design.md for compliance.
+THEN: Write your review in your designated section following the embedded instructions.
+```
 
-### Browser Test Tasks (when `browser.enabled` in raid.json)
+**Writer (Round 2+, Defend/Concede):**
+```
+TURN_DISPATCH: Phase 3 Plan, Round {N}, Turn 1.
+Quest: {description}
+Round {N-1} reviews are in. 
+Your role: WRITER. Sections: "Defend/Concede" then "Version {N}"
 
-When a task involves browser-facing code, include Playwright test steps alongside unit tests. Not every task needs browser tests — include them for user-facing flows, UI interactions, client-side routing, and visual state changes.
+FIRST: Read the FULL document at {questDir}/phases/phase-3-plan.md.
+  Read every finding. Read the embedded instructions in your sections.
+THEN: Respond to each finding, then write Version {N}.
+```
 
-## Task Structure
+## Evolution Log Template
 
-````markdown
-### Task N: [Component Name]
+Scaffold `{questDir}/phases/phase-3-plan.md`. Replace `{writer}`, `{reviewer1}`, `{reviewer2}` with actual agent names from the dice roll:
+
+```markdown
+# Phase 3: Plan — Evolution Log
+
+## Quest: [quest description]
+## Quest Type: Canonical Quest
+## Turn Order: @{agent1} → @{agent2} → @{agent3}
+
+## References
+- PRD: `{questDir}/spoils/prd.md` (if exists)
+- Design: `{questDir}/spoils/design.md`
+- Design Evolution: `{questDir}/phases/phase-2-design.md`
+
+## Quest Goal
+<!-- Wizard writes 2-3 lines: what this plan must produce,
+     how many requirements from the design need task coverage,
+     and any dependency constraints discovered during design -->
+
+---
+
+## File Map — @{writer} [R1]
+
+<!-- @{writer}: Map ALL files before writing tasks. Each task should produce
+     self-contained changes to a subset of these files.
+     | File | Action | Purpose |
+     |------|--------|---------|
+     Files that change together belong in the same task. -->
+
+## Version 1 — @{writer} [R1]
+
+<!-- @{writer}: WRITER. Decompose design.md into numbered tasks.
+     Every requirement maps to a task. Dependency order — each buildable independently.
+     Task granularity: one TDD cycle (2-5 min). Use this structure per task: -->
+
+### Task 1: [Component Name]
 
 **Files:**
 - Create: `exact/path/to/file.ext`
@@ -120,21 +137,101 @@ When a task involves browser-facing code, include Playwright test steps alongsid
 - Test: `tests/exact/path/to/test.ext`
 
 **Acceptance Criteria:**
+<!-- Each criterion must be verifiable by running a test or checking a concrete output.
+     Bad: "handles errors properly"
+     Good: "returns 401 with {error: 'token_expired'} when JWT is past expiry"
+     Good: "throws ValidationError when input.name exceeds 255 characters" -->
 - [ ] [Specific, verifiable criterion]
 - [ ] All tests pass
 - [ ] No regressions
-- [ ] Naming follows established patterns
 
 **Steps:**
-- [ ] Step 1: Write the failing test
-- [ ] Step 2: Run test, verify it fails for the right reason
-- [ ] Step 3: Write minimal implementation
-- [ ] Step 4: Run test, verify it passes + full suite passes
-- [ ] Step 5: Commit with descriptive message
+- [ ] Write the failing test
+- [ ] Run test, verify it fails for the right reason
+- [ ] Write minimal implementation to pass
+- [ ] Run test + full suite, verify all pass
+- [ ] Commit: `feat(scope): descriptive message`
 
 **Implementation Notes:**
-<!-- Agent fills this after implementing the task -->
-````
+<!-- Left empty. Agent fills this AFTER implementing the task in Phase 4.
+     When filling: state what was built, key decisions made during implementation,
+     and any deviations from the plan with reasoning. -->
+
+### Task 2: [Component Name]
+<!-- Continue numbering. Same structure for every task. -->
+
+---
+
+## Review — Round 1
+
+### @{reviewer1} [R1] Review
+
+<!-- @{reviewer1}: REVIEWER. Check @{writer}'s tasks against design.md:
+     COVERAGE (every requirement → task), ORDERING (buildable independently),
+     GRANULARITY (one TDD cycle each), CRITERIA (verifiable), FILES (conventions),
+     TESTS (failure paths), NAMING (consistent), NO PLACEHOLDERS (TBD/TODO).
+     For each finding: WHAT, WHY, WHAT should change. -->
+
+### @{reviewer2} [R1] Review
+
+<!-- @{reviewer2}: REVIEWER. Read tasks + @{reviewer1}'s review.
+     Find what was missed. Challenge with evidence. Don't repeat — add new value. -->
+
+### Wizard [R1] Synthesis
+
+---
+
+## Defend/Concede — @{writer} [R2]
+
+<!-- @{writer}: Read EVERY finding from @{reviewer1} and @{reviewer2}.
+     Respond to EACH finding explicitly:
+
+     DEFEND: [finding reference] — [counter-evidence]
+     CONCEDE: [finding reference] — [what you'll change in V2]
+
+     No silent ignoring. Every finding gets a response. -->
+
+## Version 2 — @{writer} [R2]
+
+<!-- @{writer}: Revised task list incorporating all conceded findings.
+     Mark what changed from V1 (added tasks, reordered, revised criteria). -->
+
+[Same task structure as Version 1]
+
+---
+
+## Review — Round 2
+
+### @{reviewer1} [R2] Review
+<!-- @{reviewer1}: Focus on V2 changes. Were findings addressed? New issues? -->
+
+### @{reviewer2} [R2] Review
+<!-- @{reviewer2}: Same focus. Challenge defenses. Confirm concessions incorporated. -->
+
+### Wizard [R2] Synthesis
+
+---
+
+## Final Extraction Notes — Wizard
+<!-- How many tasks extracted. Dependency graph summary.
+     What changed between V1 and final. -->
+
+---
+
+## Writing Guidance
+- Sign all work: `@{name} [R{N}]`
+- Evidence-based: reference design.md section numbers, file paths, concrete examples
+- No placeholders: no TBD, TODO, "implement later", "similar to Task N", "handle edge cases"
+- Each task must be independently buildable and committable
+- Acceptance criteria must be verifiable by running a test or checking concrete output
+- Reviewers: respond to EVERY finding — no silent ignoring
+```
+
+**Round 3:** If needed, wizard appends Round 3 sections before dispatching. Do NOT pre-scaffold.
+
+### Browser Test Tasks (when `browser.enabled` in raid.json)
+
+When a task involves browser-facing code, the plan must include Playwright test steps alongside unit tests. Not every task needs browser tests — include them for user-facing flows, UI interactions, client-side routing, and visual state changes.
 
 ## No Placeholders — Ever
 

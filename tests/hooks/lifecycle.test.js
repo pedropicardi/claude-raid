@@ -338,13 +338,29 @@ describe('raid-session-end.sh', () => {
   it('copies quest dungeon to vault draft', () => {
     const cwd = setupWithGit();
     const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
-    fs.mkdirSync(questDir, { recursive: true });
-    fs.writeFileSync(path.join(questDir, 'phase-2-design.md'), '# Design');
+    const phasesDir = path.join(questDir, 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-2-design.md'), '# Design');
     const result = runHook('raid-session-end.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
     const draftDungeon = path.join(cwd, '.claude', 'vault', '.draft', 'dungeon');
     assert.ok(fs.existsSync(draftDungeon), 'dungeon dir should be copied to draft');
-    assert.ok(fs.existsSync(path.join(draftDungeon, 'phase-2-design.md')));
+    assert.ok(fs.existsSync(path.join(draftDungeon, 'phases', 'phase-2-design.md')));
+  });
+
+  it('extracts pinned findings from phase files into quest.md', () => {
+    const cwd = setupWithGit();
+    const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
+    const phasesDir = path.join(questDir, 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-2-design.md'), 'DUNGEON: Use adapter pattern verified by @warrior and @archer\nUNRESOLVED: API needs rate limiting\nBLACKCARD: Auth model insufficient — session tokens stored in plaintext violates compliance\n');
+    const result = runHook('raid-session-end.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    const questFile = path.join(cwd, '.claude', 'vault', '.draft', 'quest.md');
+    const content = fs.readFileSync(questFile, 'utf8');
+    assert.ok(content.includes('DUNGEON: Use adapter pattern'), 'should extract DUNGEON findings');
+    assert.ok(content.includes('UNRESOLVED: API needs rate limiting'), 'should extract UNRESOLVED entries');
+    assert.ok(content.includes('BLACKCARD: Auth model insufficient'), 'should extract BLACKCARD entries');
   });
 
   it('copies spec file to draft when specs exist', () => {
@@ -362,8 +378,9 @@ describe('raid-session-end.sh', () => {
   it('cleans up session artifacts', () => {
     const cwd = setupWithGit();
     const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
-    fs.mkdirSync(questDir, { recursive: true });
-    fs.writeFileSync(path.join(questDir, 'phase-2-design.md'), '# Design');
+    const phasesDir = path.join(questDir, 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-2-design.md'), '# Design');
     fs.writeFileSync(path.join(cwd, '.claude', 'raid-last-test-run'), '12345');
     const result = runHook('raid-session-end.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);

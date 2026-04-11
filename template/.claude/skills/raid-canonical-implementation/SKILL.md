@@ -37,7 +37,7 @@ Before any implementation begins, each agent reviews the plan independently:
 - Are any steps unclear or ambiguous?
 - Does the plan match the design doc?
 
-If concerns: raise via `WIZARD:` before starting. Fix the plan first.
+If concerns: raise via `WIZARD:` before starting. Fix the plan first. For minor issues, the wizard fixes the plan inline and gets human approval before implementation begins. For fundamental plan flaws, return to Phase 3.
 
 **Branch guard:** Never implement on main/master without explicit human consent. Create a feature branch first.
 
@@ -53,9 +53,9 @@ If concerns: raise via `WIZARD:` before starting. Fix the plan first.
 6. **Divide tasks strategically** — see Task Division below
 7. **Create task tracking** — use TaskCreate for every plan task
 8. **Dispatch tasks one at a time** — see Dispatch Protocol below
-9. **After all tasks complete** — produce summary table deliverable
+9. **After all tasks complete** — review the evolution log, verify all task reports are filled, fill the Implementation Summary table, polish before presenting to human
 10. **Commit** — `feat(quest-{slug}): phase 4 implementation — {summary}`
-11. **Report** — link `phases/phase-4-implementation.md` to the human
+11. **Report** — link `{questDir}/phases/phase-4-implementation.md` to the human
 12. **Ask human** — Review phase or straight to Wrap-up?
 
 ## Task Division — Strategic Assignment
@@ -69,16 +69,23 @@ The Wizard assigns tasks deliberately. No dice roll, no rotation — strategic d
 **Example reasoning:**
 > *"Tasks 1-3 all modify the auth module — assigning to @warrior for context continuity. Tasks 4-5 are integration points that need pattern consistency — @archer. Tasks 6-7 involve input validation and error paths — @rogue. Task 8 depends on tasks 1-3, so it waits until @warrior finishes those."*
 
-## Dispatch Protocol
+## Dispatch Template
 
-One agent at a time. Sequential dispatch, strategic order:
+One agent at a time. Dispatch carries task assignment and file pointers. TDD protocol comes from the agent's `raid-tdd` skill. Report instructions are embedded in the evolution log.
 
 ```
-TaskUpdate(taskId="N", owner="warrior")
-SendMessage(to="warrior", message="TURN_DISPATCH: Task N is yours. TDD enforced. Read the task file at {questDir}/spoils/tasks/phase-3-plan-task-NN.md. Implement, write your breakdown in the Implementation Notes section, commit, then signal TURN_COMPLETE with status.")
+TURN_DISPATCH: Task {N} — {task name}.
+Quest: {description}
+
+FIRST: Read the FULL document at {questDir}/phases/phase-4-implementation.md to understand
+  the structure and find your task section. Read the embedded instructions in your section.
+  Then read your task spec at {questDir}/spoils/tasks/phase-3-plan-task-{NN}.md.
+THEN: Implement with TDD (load raid-tdd), fill your report in your section,
+  and fill Implementation Notes in the task file.
+Signal TURN_COMPLETE with status when done.
 ```
 
-After `TURN_COMPLETE:`, the Wizard reads the breakdown, then assigns the next task — to the same agent (if they have more tasks in their domain) or to the next agent who has pending work.
+After `TURN_COMPLETE:`, the Wizard reads the report, then assigns the next task.
 
 ## Agent Implementation Protocol (TDD)
 
@@ -119,36 +126,81 @@ STOP implementing immediately when:
 
 **Ask via `WIZARD:` rather than guessing.** The Wizard escalates to the human if needed.
 
-## Implementation Log
+## Evolution Log Template
 
-Use `{questDir}/phases/phase-4-implementation.md` to track all task completions:
-
-```markdown
-# Phase 4: Implementation Log
-## Quest: <task description>
-
-### Task 1: [Name] — @warrior
-**Status:** Complete
-**Files Changed:** `src/auth/handler.ts` (created), `tests/auth/handler.test.ts` (created)
-**Summary:** Implemented token validation with JWT verification. 3 tests passing.
-**Commit:** `feat(auth): implement token validation handler`
-
-### Task 2: [Name] — @archer
-...
-```
-
-## Phase Deliverable — Summary Table
-
-After all tasks are complete, the Wizard produces a summary table as the phase deliverable:
+Scaffold `{questDir}/phases/phase-4-implementation.md`. Wizard pre-fills one task slot per plan task with the assigned agent's name:
 
 ```markdown
+# Phase 4: Implementation — Evolution Log
+
+## Quest: [quest description]
+## Quest Type: Canonical Quest
+
+## References
+- PRD: `{questDir}/spoils/prd.md` (if exists)
+- Design: `{questDir}/spoils/design.md`
+- Tasks: `{questDir}/spoils/tasks/phase-3-plan-task-*.md`
+
+## Quest Goal
+<!-- Wizard writes 2-3 lines: what the implementation aims to deliver,
+     total task count, and the division strategy (which agent gets which domain) -->
+
+## Task Assignment
+
+<!-- Wizard fills this table after dividing tasks by domain affinity -->
+
+| Task | Agent | Domain | Blocked By | Status |
+|------|-------|--------|------------|--------|
+
+---
+
+## Task Reports
+
+### Task 1: [Name] — @{assigned agent}
+
+<!-- @{agent}: After completing this task, fill in the sections below.
+     Sign your report. Be concise — this is a report, not a narrative.
+     Also fill the Implementation Notes section in the Phase 3 task file.
+     Update the Task Assignment table status to "complete" when done. -->
+
+**Status:** pending | in_progress | complete | blocked
+**Files Changed:**
+<!-- List every file created or modified, with action:
+     - `src/auth/handler.ts` (created)
+     - `src/middleware.ts` (modified L45-60) -->
+
+**Summary:**
+<!-- 1-3 sentences: what was built, key decisions made, test count.
+     Reference the task file for full spec. -->
+
+**Commit:** `feat(scope): message`
+
+**Deviations from Plan:**
+<!-- If you deviated from the task spec, explain WHAT and WHY.
+     If none: "None — implemented as specified." -->
+
+---
+
+<!-- Wizard pre-scaffolds one slot per task with the assigned agent's name -->
+
+---
+
 ## Implementation Summary
+
+<!-- Wizard fills this after ALL tasks are complete.
+     This is the phase deliverable — a table of all changes. -->
 
 | File | Change | Why | Task | Agent |
 |------|--------|-----|------|-------|
-| `src/auth/handler.ts` | Created | Token validation and refresh | 1 | @warrior |
-| `tests/auth/handler.test.ts` | Created | Unit tests for handler | 1 | @warrior |
-| `src/middleware.ts` | Modified (L45-60) | Added auth middleware hook | 3 | @archer |
+
+---
+
+## Writing Guidance
+- Sign all work: `@{name}`
+- Be concise — report what happened, not how you felt about it
+- Every deviation from plan must be explained
+- Update the Task Assignment table as you go
+- If blocked: flag WIZARD: immediately, don't wait
 ```
 
 ## Quality Gates Per Task
@@ -189,7 +241,7 @@ When all tasks are complete and committed:
    jq '.phase="review"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
    ```
 2. **Commit:** `feat(quest-{slug}): phase 4 implementation — {summary}`
-3. **Report:** Link `phases/phase-4-implementation.md` and summary table to the human.
+3. **Report:** Link `{questDir}/phases/phase-4-implementation.md` and summary table to the human.
 4. **Ask human:** "Shall we inspect the treasure? (Review phase) Or proceed directly to wrap-up?"
 5. If review → **Load `raid-canonical-review` and begin Phase 5**
 6. If skip → **Load `raid-wrap-up` and begin Phase 6**
@@ -197,5 +249,5 @@ When all tasks are complete and committed:
 ## Phase Spoils
 
 **Two outputs:**
-- `{questDir}/phases/phase-4-implementation.md` — Implementation log with per-task breakdowns
+- `{questDir}/phases/phase-4-implementation.md` — Evolution log with per-task breakdowns
 - Code changes committed with descriptive messages + summary table of all changed files

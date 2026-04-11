@@ -332,7 +332,7 @@ function dryRun(cwd) {
   }
   lines.push('');
 
-  lines.push('  Run without --dry-run to install.');
+  lines.push('  Run without --dry-run to summon.');
 
   return lines.join('\n');
 }

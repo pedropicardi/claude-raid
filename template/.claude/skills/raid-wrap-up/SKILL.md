@@ -54,44 +54,45 @@ Create `{questDir}/phase-6-wrap-up.md` and write a phase-by-phase narrative:
 
 ```markdown
 # Phase 6: Wrap Up — Quest Storyboard
-## Quest: <quest name>
-## Mode: <mode>
+
+## Quest: [quest name]
+
+## References
+- PRD: `{questDir}/spoils/prd.md` (if exists)
+- Design: `{questDir}/spoils/design.md`
+- Design Evolution: `{questDir}/phases/phase-2-design.md`
+- Plan: `{questDir}/phases/phase-3-plan.md`
+- Tasks: `{questDir}/spoils/tasks/phase-3-plan-task-*.md`
+- Implementation: `{questDir}/phases/phase-4-implementation.md`
+- Review: `{questDir}/spoils/review.md` (if exists)
+- Review Evolution: `{questDir}/phases/phase-5-review.md` (if exists)
+
+---
 
 ### Phase 1: PRD — Forging the Scroll
-(if prd.md exists)
-- Wizard + human collaborative requirements gathering
-- Key decisions and requirements established
-- Link: `{questDir}/spoils/prd.md`
+<!-- If prd.md exists. Summarize: what requirements were established,
+     key decisions, any surprising findings from exploration. 2-5 bullets. -->
 
 ### Phase 2: Design — Charting the Map
-- Who wrote the initial design (dice roll result)
-- Key defend/concede exchanges between agents
-- Architecture chosen and why
-- Drift check result (if PRD existed)
-- Links: `{questDir}/spoils/design.md`, `{questDir}/phases/phase-2-design.md`
+<!-- Who wrote the initial design (dice result). Key defend/concede moments.
+     Architecture chosen and main alternatives rejected.
+     Drift check result if PRD existed. 3-6 bullets. -->
 
-### Phase 3: Implementation Plan — Marshaling the Forces
-- Number of tasks, dependency structure
-- Key review findings and how they shaped the final plan
-- Links: `{questDir}/phases/phase-3-plan.md`, task files
+### Phase 3: Plan — Marshaling the Forces
+<!-- Total task count, dependency structure highlights.
+     Key findings from plan review that changed the decomposition. 2-4 bullets. -->
 
 ### Phase 4: Implementation — Into the Fray
-- How tasks were divided across agents (domain affinity)
-- What was built by whom
-- Test coverage highlights
-- Link: `{questDir}/phases/phase-4-implementation.md`
+<!-- How tasks were divided (which agent, which domain).
+     Notable challenges overcome. Test count / coverage highlights. 3-5 bullets. -->
 
 ### Phase 5: Review — Inspecting the Treasure
-(if review.md exists)
-- Findings pinned and severity classifications
-- Fix plan and execution
-- Black cards (if any)
-- Links: `{questDir}/spoils/review.md`, `{questDir}/phases/phase-5-review.md`
+<!-- If review ran. Findings count by severity.
+     Key fixes applied. Black cards if any. 2-5 bullets. -->
 
-### Summary
-- Total phases completed
-- Key achievements
-- Known limitations
+### Quest Summary
+<!-- Total phases completed. Key achievements (what was built).
+     Known limitations (deferred items, accepted constraints). -->
 ```
 
 Read all prior phase files from the quest directory to build this narrative.

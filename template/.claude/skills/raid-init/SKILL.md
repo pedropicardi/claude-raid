@@ -26,7 +26,7 @@ digraph init {
   "Coming soon message" -> "Present quest menu";
   "Ask: PRD needed?" -> "Human describes task";
   "Human describes task" -> "Spawn full team + create quest dir";
-  "Spawn full team + create quest dir" -> "Begin first phase" [shape=doublecircle];
+  "Spawn full team + create quest dir" -> "Announce quest + begin first phase" [shape=doublecircle];
 }
 ```
 
@@ -90,12 +90,12 @@ Ask the human to describe the task/feature they want to build. Listen carefully.
 
 ### 4c. Spawn Team & Setup
 
-The Canonical Quest always runs as Full Raid (Warrior, Archer, Rogue). Do NOT ask the human to confirm the mode — it is implicit.
+The Canonical Quest always runs with the full party (Wizard + Warrior + Archer + Rogue). 4 agents, no reduced configurations.
 
 1. Update `.claude/raid-session` (created by the session-start hook) via **Bash with jq** — the write gate blocks Write/Edit on this file, so always use Bash:
    ```bash
    jq --arg qt "canonical" --arg qid "{questId}" --arg qdir ".claude/dungeon/{questId}" \
-     '.questType=$qt | .questId=$qid | .questDir=$qdir | .mode="full"' \
+     '.questType=$qt | .questId=$qid | .questDir=$qdir' \
      .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
    ```
 2. Create quest directory if not already created by hook:
@@ -116,13 +116,15 @@ The Canonical Quest always runs as Full Raid (Warrior, Archer, Rogue). Do NOT as
 - If PRD skipped → Load `raid-canonical-design` skill, begin Phase 2
 
 **Announce the quest to the party and the human:**
-> "The quest begins: **{task description}**. Mode: **{mode}**. {agent count} brave souls answer the call."
+> "The quest begins: **{task description}**. 4 brave souls answer the call. The dice will roll at each phase to determine turn order."
+
+Dice rolls happen **per phase**, not at quest start. The first dice roll happens when Phase 2 (Design) opens — or whenever the first agent phase begins. Phase 1 (PRD) is wizard+human only, so no dice needed there.
 
 ## Red Flags
 
 | Thought | Reality |
 |---------|---------|
 | "Skip the greeting, get to work" | The greeting sets the tone. It takes 5 seconds. Do it. |
-| "Let me ask which mode to use" | Canonical Quest = Full Raid. Always. Don't ask. |
+| "Let me ask which mode to use" | Canonical Quest = full party, always. Don't ask. |
 | "Let me start exploring the codebase" | You are the Wizard. You don't explore. You dispatch. |
 | "I'll figure out the quest type later" | Quest type determines the phase flow. Choose now. |

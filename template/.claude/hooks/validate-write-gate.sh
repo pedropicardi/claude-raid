@@ -23,6 +23,11 @@ fi
 _file="${RAID_FILE_PATH}"
 if [[ "$_file" == /* ]]; then
   _file="${_file#"$PWD"/}"
+  # Handle symlink mismatch (e.g., macOS /var -> /private/var) by resolving input path
+  if [[ "$_file" == /* ]] && [ -e "$_file" ]; then
+    _file="$(cd "$(dirname "$_file")" && pwd -P)/$(basename "$_file")"
+    _file="${_file#"$(pwd -P)"/}"
+  fi
 fi
 
 # Protect enforcement-critical files from direct agent writes.

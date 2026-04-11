@@ -11,7 +11,7 @@ Write the test first. Watch it fail. Write minimal code to pass. Then the others
 
 **Violating the letter of these rules is violating their spirit.**
 
-**TDD is enforced in ALL modes — Full Raid, Skirmish, and Scout. No exceptions.**
+**TDD is enforced. No exceptions.**
 
 ## The Iron Law
 
@@ -116,7 +116,7 @@ When claiming tests pass, both must pass:
 
 ## Adversarial Test Review
 
-After TDD cycle, challengers attack the TESTS directly — and build on each other's critiques:
+After TDD cycle, challengers attack the TESTS in their sequential turns — each building on prior challengers' findings via Dungeon pins:
 
 1. **Does this test prove the behavior, or just confirm the implementation?** If you renamed an internal method, would the test break? It shouldn't.
 2. **What input would make this test pass even with a broken implementation?** (e.g., a test that only checks the happy path passes for any implementation that doesn't crash)
@@ -124,9 +124,9 @@ After TDD cycle, challengers attack the TESTS directly — and build on each oth
 4. **Is it testing real code or mock behavior?** Mocks that don't match real behavior = false confidence.
 5. **Would this catch a regression?** If someone changes the implementation next month, does this test catch the break?
 
-**Challengers interact directly:**
-- `CHALLENGE: @Warrior, your test at line 15 only validates the happy path — here's an input that passes with a broken implementation: ...`
-- `BUILDING: @Archer, your edge case finding — the same gap exists in the error path test at line 32...`
+**Challengers pin findings to the Dungeon on their turns:**
+- `@archer [R1] CHALLENGE: @warrior's test at line 15 only validates the happy path — here's an input that passes with a broken implementation: ...`
+- `@rogue [R1] BUILDING: @archer's edge case finding — the same gap exists in the error path test at line 32...`
 - `CHALLENGE: @Rogue, you claimed the test is implementation-dependent but renaming the internal method doesn't break it — here's proof: ...`
 
 **Browser-specific attacks (when `browser.enabled`):**

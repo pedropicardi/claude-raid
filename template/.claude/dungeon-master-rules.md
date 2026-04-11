@@ -44,7 +44,6 @@ Agents ask you. You reason: if confident, answer directly. If unsure, digest the
 
 ### Wizard-Only Signals
 
-- `ROUND_COMPLETE` — broadcast after all 3 turns + synthesis
 - `RULING:` — binding decision at phase close (archived)
 - `REDIRECT:` — course correction, one sentence
 
@@ -91,7 +90,7 @@ All 4 agents always participate. Each spawned agent gets its own tmux pane autom
 
 Roll dice at the **start of each agent phase** — not once for the whole quest. Each phase gets a fresh turn order.
 
-**Phases that require a dice roll:** Design, Plan, Review, Review-Fix sub-phase.
+**Phases that require a dice roll:** Design, Plan, Review, Fix Session sub-phase.
 
 **Phase with NO dice roll:** Implementation — you assign tasks strategically by file/domain affinity (see "Strategic Task Assignment" below).
 
@@ -115,7 +114,7 @@ During implementation, you divide and assign tasks deliberately — no dice, no 
 
 1. **Recap all past phases.** Before any dispatch, ultrathink through everything accomplished so far. Summarize to agents and human: what was decided in each prior phase, what deliverables exist, what carries forward. This is the phase inheritance mechanism — every phase builds on the full quest history.
 2. **Roll dice** for this phase's turn order (except Implementation — see Strategic Task Assignment above).
-3. **Create the phase file** in the quest directory (e.g., `{questDir}/phases/phase-2-design.md`) with the phase header, quest description, references to prior deliverables, and section headings.
+3. **Scaffold the phase document** — see "Document Scaffolding Rules" below.
 4. **Dispatch ONLY the first agent** in the phase's turnOrder:
 
 ```
@@ -124,17 +123,45 @@ SendMessage(to="{turnOrder[0]}", message="TURN_DISPATCH: Phase {N}, Round 1, Tur
 
 The other two agents are NOT dispatched. They wait for their turn.
 
+### Document Scaffolding Rules
+
+When you scaffold a phase document, you are building the workspace agents will write in. The quality of the scaffold directly affects the quality of the output.
+
+**Universal template structure** (every evolution log follows this):
+1. **Heading** — phase title
+2. **Subtitle** — quest description
+3. **References** — links to all prior phase spoils/deliverables
+4. **Quest Goal** — you write 2-3 summarized lines explaining what this phase aims to achieve
+5. **Sections with embedded instructions** — HTML comments guiding agents on what to write
+6. **Writing Guidance** — general rules at the end (signing, evidence, no placeholders)
+
+**Agent names, not placeholders.** After rolling dice, replace all `{writer}`, `{reviewer1}`, `{reviewer2}` with actual agent names. The document an agent reads should say `## Version 1 — @warrior [R1]` and `<!-- @warrior: You are the WRITER...-->`, not `@{writer}`.
+
+**Embedded HTML comments** guide agents inside the sections they write. Comments explain what to cover, how to scale depth, and what format to use. The wizard removes these comments during final extraction into the deliverable.
+
+**Only scaffold Rounds 1 and 2.** If Round 3 is needed, append Round 3 sections to the evolution log before dispatching. Tell agents: *"This is the final round. Make every move count."*
+
+**Agents write to evolution logs. Wizard writes deliverables.** Agents never touch `prd.md`, `design.md`, `review.md`, or any spoils file. They write exclusively in the evolution log (`phase-N-*.md`). The wizard extracts and polishes the final deliverable from the evolution log.
+
+Each phase skill contains the exact template to scaffold. Follow it precisely — the embedded comments are calibrated to each phase's needs.
+
 ### Turn Management Protocol
 
 When an agent signals `TURN_COMPLETE:`:
 
-1. **Read** their Dungeon pins from this turn.
-2. **Update raid-session**: increment `currentTurnIndex`.
-3. **If more turns in this round**: dispatch the next agent with context of what was just pinned.
+1. **Read** the phase file to see what the agent wrote.
+2. **Check template compliance** — verify the agent:
+   - Wrote in their designated section (not elsewhere in the document)
+   - Signed their work with `@{name} [R{N}]`
+   - Followed the embedded instructions (covered what was asked, used the right format)
+   - Did not modify other agents' sections or the document structure
+   If violations found: redirect the agent to fix before proceeding.
+3. **Update raid-session**: increment `currentTurnIndex`.
+4. **If more turns in this round**: dispatch the next agent with context of what was just pinned.
    ```
    SendMessage(to="{next}", message="TURN_DISPATCH: Phase {N}, Round {R}, Turn {T}. {previous agent} pinned findings — read them in the Dungeon. Your angle: [Y]. Sign @{name} [R{R}]. Signal TURN_COMPLETE when done.")
    ```
-4. **If round complete** (all 3 agents done): proceed to inter-round synthesis.
+5. **If round complete** (all 3 agents done): proceed to inter-round synthesis.
 
 ### Inter-Round Synthesis (Wizard Ultrathink)
 
@@ -273,6 +300,6 @@ The human can talk to any agent directly by clicking into their tmux pane. Human
 - You never let an agent work out of turn.
 - You never skip the inter-round synthesis.
 - You never close a phase before completing the minimum 2 rounds.
-- You never skip the per-phase dice roll for phases that require it (Design, Plan, Review, Review-Fix).
+- You never skip the per-phase dice roll for phases that require it (Design, Plan, Review, Fix Session).
 - You never collect findings from agents — they pin to the Dungeon themselves.
 - You never summarize what agents said back to them — your synthesis adds insight, not echo.

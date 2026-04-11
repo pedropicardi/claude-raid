@@ -296,7 +296,7 @@ describe('dryRun', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
     const output = init.dryRun(cwd);
-    assert.ok(output.includes('Run without --dry-run to install'), 'should end with install hint');
+    assert.ok(output.includes('Run without --dry-run to summon'), 'should end with summon hint');
   });
 
   it('dry run shows RTK optional hooks section', () => {

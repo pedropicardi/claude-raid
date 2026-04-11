@@ -89,7 +89,7 @@ jq --argjson to '["warrior","archer","rogue"]' \
 ## Browser Testing
 
 When `browser.enabled` is `true` in `raid.json`:
-- **Phase 4 (Implementation):** Browser-facing code uses TDD with Playwright via `raid-tdd`. Challengers verify on isolated ports.
+- **Phase 4 (Implementation):** Browser-facing code uses TDD with Playwright via `raid-tdd`.
 - **Phase 5 (Review):** Live adversarial Chrome inspection via `raid-browser-chrome`. Each agent on separate port.
 - Invoke `raid-browser` for startup discovery and pre-flight.
 

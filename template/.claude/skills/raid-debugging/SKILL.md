@@ -1,6 +1,6 @@
 ---
 name: raid-debugging
-description: "Use when encountering any bug, test failure, or unexpected behavior. Agents investigate competing hypotheses in parallel. No fixes without root cause. No subagents."
+description: "Use when encountering any bug, test failure, or unexpected behavior. Agents investigate competing hypotheses in sequential turns. No fixes without root cause. No subagents."
 ---
 
 # Raid Debugging — Adversarial Root Cause Analysis
@@ -18,12 +18,6 @@ NO FIXES WITHOUT ROOT CAUSE INVESTIGATION FIRST
 ```
 
 If you haven't completed Phase 1, you cannot propose fixes.
-
-## Mode Behavior
-
-- **Full Raid**: 3 agents investigate competing hypotheses in parallel.
-- **Skirmish**: 2 agents with different hypotheses.
-- **Scout**: 1 agent investigates + Wizard challenges the hypothesis.
 
 ## Process Flow
 

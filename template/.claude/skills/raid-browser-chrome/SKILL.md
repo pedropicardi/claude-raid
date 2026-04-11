@@ -8,7 +8,7 @@ description: "Use when live Chrome browser inspection is needed during Phase 5 r
 Challengers open a real Chrome browser and do adversarial exploratory testing. Each challenger gets their own isolated app instance. Find what automated tests missed.
 
 <HARD-GATE>
-Do NOT start inspection without invoking `raid-browser` pre-flight first. Do NOT skip minimum coverage gates. Do NOT share browser instances between agents. Every finding MUST include evidence (GIF, screenshot, console/network output). No subagents.
+Do NOT start inspection without invoking `raid-browser` pre-flight first. Do NOT skip minimum coverage gates. Do NOT share browser instances between agents. Every finding MUST include evidence (GIF, screenshot, console/network output).
 </HARD-GATE>
 
 ## Session Lifecycle Per Challenger

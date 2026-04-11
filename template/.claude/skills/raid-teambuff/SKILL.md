@@ -21,14 +21,6 @@ The output is a structured report with binding rulings that the human approves.
 
 **Only the human.** No agent, not even the Wizard, can call a teambuff. The human says "teambuff" or invokes `/raid-teambuff` and it happens immediately.
 
-## Mode Behavior
-
-| Aspect | Full Raid | Skirmish | Scout |
-|--------|-----------|----------|-------|
-| Participants | Wizard + Warrior + Archer + Rogue | Wizard + 2 active agents | Wizard self-reflects alone |
-| Cross-criticism | All-vs-all, no one exempt | Between active agents + Wizard | N/A |
-| Rulings | Full synthesis from all reflections | Condensed synthesis | Wizard notes only |
-
 ## Process Flow
 
 ```dot
@@ -36,8 +28,8 @@ digraph teambuff {
   "Human triggers teambuff" -> "Wizard: HALT. Round table called.";
   "Wizard: HALT. Round table called." -> "Create teambuff-{NN}.md";
   "Create teambuff-{NN}.md" -> "Dispatch all agents: reflect";
-  "Dispatch all agents: reflect" -> "Agents write reflections (parallel)";
-  "Agents write reflections (parallel)" -> "Agents read each other's sections";
+  "Dispatch all agents: reflect" -> "Agents write reflections (sequential turns)";
+  "Agents write reflections (sequential turns)" -> "Agents read each other's sections";
   "Agents read each other's sections" -> "Agents write criticisms";
   "Agents write criticisms" -> "Wizard writes own reflection + criticism";
   "Wizard writes own reflection + criticism" -> "Wizard reads everything";
@@ -223,28 +215,18 @@ After any teambuff has occurred, the Wizard adds this to every round start:
 3. If current dispatch would violate a ruling, adjust before dispatching
 4. If an agent's work violates a ruling, flag it immediately
 
-## Skirmish Mode
-
-Same process, fewer agents. Only the active 2 agents + Wizard participate. Cross-criticism happens between whoever is present.
-
-## Scout Mode
-
-Wizard reflects alone. No dispatch, no cross-criticism. Wizard writes:
-- Own reflection (same structured sections)
-- Self-criticism
-- Proposed rulings (presented to human for approval)
 
 ## Known Dysfunction Patterns
 
 These are real patterns observed in production quests. When reflecting, look for these specifically — they are the most common sources of token waste and team friction.
 
-### 1. Ghost Rounds — Working After ROUND_COMPLETE
+### 1. Ghost Turns — Working After TURN_COMPLETE
 
-An agent signals `ROUND_COMPLETE:` but keeps working — cross-verifying, building on findings, challenging teammates. This burns tokens on work the Wizard didn't dispatch and creates confusion about what's "official" output vs unsanctioned noise.
+An agent signals `TURN_COMPLETE:` but keeps working — exploring tangents, building on findings, investigating further. This burns tokens on work the Wizard didn't dispatch and creates confusion about what's "official" output vs unsanctioned noise.
 
-**What to look for:** Did any agent produce work after their `ROUND_COMPLETE:` signal? Did agents treat ROUND_COMPLETE as "my initial research is done, now I'll cross-verify" instead of a full stop?
+**What to look for:** Did any agent produce work after their `TURN_COMPLETE:` signal? Did agents treat TURN_COMPLETE as "my initial research is done, now I'll keep going" instead of a full stop?
 
-**The fix:** `ROUND_COMPLETE:` means stop. Period. No "while I wait" tasks. The Wizard controls when the next round begins.
+**The fix:** `TURN_COMPLETE:` means stop. Period. No "while I wait" tasks. The Wizard controls when the next turn begins.
 
 ### 2. Wizard Presenting While Agents Are Active
 
