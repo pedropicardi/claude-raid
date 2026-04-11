@@ -1,15 +1,12 @@
 ---
-name: raid-init
-description: "Use when starting a new Raid session or resuming an existing quest. Loaded first by the Wizard before any phase begins."
----
+
+## name: raid-init description: "Use when starting a new Raid session or resuming an existing quest. Loaded first by the Wizard before any phase begins."
 
 # Raid Init — Quest Selection & Session Setup
 
 The first skill loaded when the Wizard starts. Guides the greeting, quest selection, and session bootstrap.
 
-<HARD-GATE>
-Do NOT skip the greeting. Do NOT skip quest selection. Do NOT begin any phase without the human choosing a quest type and confirming the mode.
-</HARD-GATE>
+&lt;HARD-GATE&gt; Do NOT skip the greeting. Do NOT skip quest selection. Do NOT begin any phase without the human choosing a quest type and confirming the mode. &lt;/HARD-GATE&gt;
 
 ## Process Flow
 
@@ -71,6 +68,7 @@ F) Bard Bonfire — (Coming soon)
 ```
 
 If the human selects B, D, E, or F:
+
 > "That quest type is still being forged by the arcane smiths. Choose another path for now."
 
 Loop back to the menu.
@@ -86,29 +84,29 @@ Loop back to the menu.
 
 ### 4b. Task Description
 
-Ask the human to describe the task/feature they want to build. Listen carefully. Read 3 times internally.
+Ask the human to describe the task/feature they want to build. Listen carefully. Read 3 times internally.\
 
-### 4c. Spawn Team & Setup
+### 4c. Clarification questions
+
+You MUST ask from 3 to 10 clarification questions to the human in order to correctly envision the quest goal and prerequesites. Ask until you are totall confident.
+
+### 4d. Spawn Team & Setup
 
 The Canonical Quest always runs with the full party (Wizard + Warrior + Archer + Rogue). 4 agents, no reduced configurations.
 
 1. Update `.claude/raid-session` (created by the session-start hook) via **Bash with jq** — the write gate blocks Write/Edit on this file, so always use Bash:
+
    ```bash
    jq --arg qt "canonical" --arg qid "{questId}" --arg qdir ".claude/dungeon/{questId}" \
      '.questType=$qt | .questId=$qid | .questDir=$qdir' \
      .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
    ```
 2. Create quest directory if not already created by hook:
+
    ```
    mkdir -p {questDir}
    ```
-3. Spawn the full team:
-   ```
-   TeamCreate(team_name="raid-full-{questId}")
-   Agent(subagent_type="warrior", team_name="raid-...", name="warrior")
-   Agent(subagent_type="archer", team_name="raid-...", name="archer")
-   Agent(subagent_type="rogue", team_name="raid-...", name="rogue")
-   ```
+3. **Do NOT pre-spawn agents.** Agents are dispatched per-turn via `Agent()` with model cycling (Opus for writers, Sonnet for reviewers). See "Model Cycling Protocol" in dungeon-master-rules.md.
 
 ## Step 5: Begin First Phase
 
@@ -116,6 +114,7 @@ The Canonical Quest always runs with the full party (Wizard + Warrior + Archer +
 - If PRD skipped → Load `raid-canonical-design` skill, begin Phase 2
 
 **Announce the quest to the party and the human:**
+
 > "The quest begins: **{task description}**. 4 brave souls answer the call. The dice will roll at each phase to determine turn order."
 
 Dice rolls happen **per phase**, not at quest start. The first dice roll happens when Phase 2 (Design) opens — or whenever the first agent phase begins. Phase 1 (PRD) is wizard+human only, so no dice needed there.
@@ -123,7 +122,7 @@ Dice rolls happen **per phase**, not at quest start. The first dice roll happens
 ## Red Flags
 
 | Thought | Reality |
-|---------|---------|
+| --- | --- |
 | "Skip the greeting, get to work" | The greeting sets the tone. It takes 5 seconds. Do it. |
 | "Let me ask which mode to use" | Canonical Quest = full party, always. Don't ask. |
 | "Let me start exploring the codebase" | You are the Wizard. You don't explore. You dispatch. |

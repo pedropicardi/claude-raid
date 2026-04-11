@@ -76,7 +76,10 @@ Archive of completed quests at `.claude/vault/{quest-slug}/`. When a quest ends,
 Random shuffle of `["warrior", "archer", "rogue"]` to determine the turn order for a phase. Rolled by the Wizard at the start of each agent phase (Design, Plan, Review, Fix Session). The Implementation phase has no dice roll — the Wizard assigns tasks strategically.
 
 ### Turn
-One agent's work period within a round. The Wizard dispatches a turn with `TURN_DISPATCH:`, the agent works, then signals `TURN_COMPLETE:`. Only one agent works at a time.
+One agent's work period within a round. The Wizard dispatches a turn via `Agent()` with `TURN_DISPATCH:`, the agent works, then signals `TURN_COMPLETE:`. Only one agent works at a time. Agents are spawned fresh per-turn — all context lives in the Dungeon files.
+
+### Model Cycling
+Writers are dispatched with `model: "opus"` (Opus 4.6) for deeper reasoning on initial document creation. Reviewers use the default agent model (Sonnet 4.6) — reviewing and challenging requires breadth, not the extra depth of Opus. The Wizard sets the model override per-turn based on the dice roll: turnOrder[0] = Opus, turnOrder[1-2] = Sonnet.
 
 ### Round
 A complete cycle of 3 sequential turns (one per party member) plus a Wizard synthesis. Minimum 2 rounds per phase, maximum 3.

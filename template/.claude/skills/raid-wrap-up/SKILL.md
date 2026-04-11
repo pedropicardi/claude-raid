@@ -146,15 +146,11 @@ Which option?
 
 ## Step 6: Dismiss the Party
 
-Send shutdown to all teammates with RPG flavor:
+Announce the quest's end with RPG flavor:
 
 > "The quest is done, brave engineers. The bards will sing of **{quest-name}**. Sheathe your tools — until the next adventure."
 
-```
-SendMessage(to="warrior", message={"type": "shutdown_request"})
-SendMessage(to="archer", message={"type": "shutdown_request"})
-SendMessage(to="rogue", message={"type": "shutdown_request"})
-```
+No shutdown messages needed — agents are spawned per-turn and have already completed.
 
 ## Step 7: Archive to Vault
 

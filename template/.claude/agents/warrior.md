@@ -21,9 +21,9 @@ description: >
   assistant: "I'll run the tests under stress conditions, construct scenarios that trigger every error path, and verify the circuit breaker interaction doesn't leave state inconsistent."
   <commentary>During implementation, Warrior verifies that code holds under pressure — not just happy paths, but every failure mode the implementation should handle.</commentary>
   </example>
-model: claude-opus-4-6
+model: claude-sonnet-4-6
 tools: SendMessage, TaskCreate, TaskUpdate, Read, Grep, Glob, Bash, Write, Edit
-effort: medium
+effort: max
 color: red
 memory: project
 skills:

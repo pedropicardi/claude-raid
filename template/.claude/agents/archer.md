@@ -21,9 +21,9 @@ description: >
   assistant: "I'll compare the new code against established conventions, trace every interface for contract compliance, and flag where naming or structure diverges from the rest of the codebase."
   <commentary>During review, Archer validates that the implementation maintains systemic coherence — no naming drift, no broken contracts, no implicit dependencies introduced.</commentary>
   </example>
-model: claude-opus-4-6
+model: claude-sonnet-4-6
 tools: SendMessage, TaskCreate, TaskUpdate, Read, Grep, Glob, Bash, Write, Edit
-effort: medium
+effort: max
 color: green
 memory: project
 skills:
