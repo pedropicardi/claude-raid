@@ -39,10 +39,10 @@ describe('doctor (via setup)', () => {
     assert.ok(card.includes('claude-raid start'), 'referenceCard should have entry command');
   });
 
-  it('checks include all seven IDs', () => {
+  it('checks include all eight IDs', () => {
     const home = makeTempDir();
     const result = runChecks({ homedir: home, exec: () => null });
     const ids = result.checks.map(c => c.id);
-    assert.deepStrictEqual(ids, ['platform', 'node', 'claude', 'jq', 'teammate-mode', 'split-pane', 'playwright']);
+    assert.deepStrictEqual(ids, ['platform', 'node', 'claude', 'jq', 'teammate-mode', 'split-pane', 'playwright', 'rtk']);
   });
 });

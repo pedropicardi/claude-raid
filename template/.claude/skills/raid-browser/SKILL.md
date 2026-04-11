@@ -167,12 +167,10 @@ If cleanup fails:
 
 Read `portRange` from `raid.json` (e.g., `[3001, 3005]`).
 
-| Mode | Agents | Port Assignment |
+| Phase | Agents | Port Assignment |
 |---|---|---|
-| Full Raid (Phase 3) | 1 implementer | portRange[0] |
-| Full Raid (Phase 4) | 3 challengers | portRange[0], portRange[0]+1, portRange[0]+2 |
-| Skirmish | 2 agents | portRange[0], portRange[0]+1 |
-| Scout | 1 agent | portRange[0] |
+| Implementation (per task) | 1 implementer | portRange[0] |
+| Review | 3 reviewers (sequential turns) | portRange[0], portRange[0]+1, portRange[0]+2 |
 
 ## When Startup Recipe Fails
 

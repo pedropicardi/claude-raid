@@ -32,7 +32,7 @@ function copyRecursive(src, dest, skipped) {
   }
 }
 
-function install(cwd) {
+function install(cwd, opts = {}) {
   const claudeDir = path.join(cwd, '.claude');
   const result = { skipped: [], alreadyInstalled: false, detected: null };
 
@@ -131,6 +131,15 @@ function install(cwd) {
         startup: null,
       };
     }
+    if (opts.rtkEnabled) {
+      raidConfig.rtk = {
+        enabled: true,
+        bypass: {
+          phases: [],
+          commands: [],
+        },
+      };
+    }
     fs.writeFileSync(raidConfigPath, JSON.stringify(raidConfig, null, 2) + '\n');
   }
 
@@ -161,14 +170,14 @@ function install(cwd) {
   return result;
 }
 
-async function run() {
+async function run(opts = {}) {
   const cwd = process.cwd();
   const { bold, dim } = colors;
 
   console.log('\n' + banner());
   console.log(header('Summoning the Party...') + '\n');
 
-  const result = install(cwd);
+  const result = install(cwd, opts);
 
   if (result.alreadyInstalled) {
     console.log('  The party is already here. Use ' + bold('claude-raid update') + ' to reforge.');
@@ -222,7 +231,20 @@ async function run() {
   }
 
   // Setup wizard
-  await runSetup();
+  const setupResult = await runSetup(opts);
+
+  // Apply RTK config if enabled interactively
+  if (setupResult.actions.includes('rtk-enabled')) {
+    const raidConfigPath = path.join(cwd, '.claude', 'raid.json');
+    if (fs.existsSync(raidConfigPath)) {
+      const config = JSON.parse(fs.readFileSync(raidConfigPath, 'utf8'));
+      if (!config.rtk) {
+        config.rtk = { enabled: true, bypass: { phases: [], commands: [] } };
+        fs.writeFileSync(raidConfigPath, JSON.stringify(config, null, 2) + '\n');
+        mergeSettings(cwd);
+      }
+    }
+  }
 
   // Reference card
   const { referenceCard } = require('./ui');
@@ -273,6 +295,15 @@ function dryRun(cwd) {
   }
   lines.push('');
 
+  // Hooks — Optional
+  if (HOOKS.optional && HOOKS.optional.length > 0) {
+    lines.push(header('Hooks \u2014 Optional') + '\n');
+    for (const h of HOOKS.optional) {
+      lines.push('  ' + colors.bold(h.name.padEnd(28)) + h.desc + tag('hooks/' + h.name));
+    }
+    lines.push('');
+  }
+
   // Skills
   lines.push(header('Skills') + '\n');
   for (const [folder, desc] of Object.entries(SKILLS)) {
@@ -301,7 +332,7 @@ function dryRun(cwd) {
   }
   lines.push('');
 
-  lines.push('  Run without --dry-run to install.');
+  lines.push('  Run without --dry-run to summon.');
 
   return lines.join('\n');
 }

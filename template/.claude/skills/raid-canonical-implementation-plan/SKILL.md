@@ -5,156 +5,131 @@ description: "Use when Phase 3 (Plan) begins in a Canonical Quest, after the des
 
 # Raid Implementation Plan — Phase 3
 
-Break the design into bite-sized, battle-tested tasks through agent-driven adversarial decomposition.
+Break the design into bite-sized, battle-tested tasks through the writer/reviewer/defend-concede protocol.
 
 <HARD-GATE>
-Do NOT start implementation until the plan is approved by the Wizard and committed to git. All assigned agents participate in plan creation AND review. No subagents.
+Do NOT start implementation until the plan is approved by the human and committed to git.
 </HARD-GATE>
-
-## Mode Behavior
-
-- **Full Raid**: All 3 agents decompose independently, then fight over the plan directly. Full plan doc.
-- **Skirmish**: 2 agents. Plan is combined with the design doc into one lightweight document.
-- **Scout**: Skip this skill. Wizard creates inline tasks directly.
 
 ## Process Flow
 
 ```dot
 digraph plan {
-  "Wizard reads design doc + Phase 2 design doc" -> "Wizard opens Dungeon + dispatches";
-  "Wizard opens Dungeon + dispatches" -> "Agents decompose independently";
-  "Agents decompose independently" -> "Agents compare and fight directly";
-  "Agents compare and fight directly" -> "Agents test compliance collaboratively";
-  "Agents test compliance collaboratively" -> "Agents pin agreed tasks to Dungeon";
-  "Agents pin agreed tasks to Dungeon" -> "All requirements covered?" [shape=diamond];
-  "All requirements covered?" -> "Agents identify and fix gaps" [label="no"];
-  "Agents identify and fix gaps" -> "Agents test compliance collaboratively";
-  "All requirements covered?" -> "Wizard closes: synthesizes plan from Dungeon" [label="yes"];
-  "Wizard closes: synthesizes plan from Dungeon" -> "Write plan doc";
-  "Write plan doc" -> "Adversarial plan review (agents attack directly)";
-  "Adversarial plan review (agents attack directly)" -> "Self-review (6-point checklist)";
-  "Self-review (6-point checklist)" -> "Wizard ruling + commit";
-  "Wizard ruling + commit" -> "Archive Dungeon + invoke raid-canonical-implementation" [shape=doublecircle];
+  "Wizard reads design.md + phase-2-design.md" -> "Phase recap (PRD + Design)";
+  "Phase recap (PRD + Design)" -> "Roll dice for phase turn order";
+  "Roll dice for phase turn order" -> "Create phase-3-plan.md evolution log";
+  "Create phase-3-plan.md evolution log" -> "ROUND 1: Agent 1 WRITES all tasks";
+  "ROUND 1: Agent 1 WRITES all tasks" -> "Agent 2 REVIEWS for design compliance";
+  "Agent 2 REVIEWS for design compliance" -> "Agent 3 REVIEWS, extends findings";
+  "Agent 3 REVIEWS, extends findings" -> "Wizard evaluates Round 1";
+  "Wizard evaluates Round 1" -> "ROUND 2: Agent 1 DEFEND/CONCEDE, writes V2";
+  "ROUND 2: Agent 1 DEFEND/CONCEDE, writes V2" -> "Agents 2+3 review V2";
+  "Agents 2+3 review V2" -> "Wizard evaluates — Round 3 needed?" [shape=diamond];
+  "Wizard evaluates — Round 3 needed?" -> "ROUND 3 (FINAL): same cycle" [label="critical gaps"];
+  "Wizard evaluates — Round 3 needed?" -> "Extract final plan + task files" [label="solid"];
+  "ROUND 3 (FINAL): same cycle" -> "Extract final plan + task files";
+  "Extract final plan + task files" -> "Present to human" -> "Approved?" [shape=diamond];
+  "Approved?" -> "Ask why, explain to agents, more rounds" [label="no"];
+  "Ask why, explain to agents, more rounds" -> "ROUND 2: Agent 1 DEFEND/CONCEDE, writes V2";
+  "Approved?" -> "Commit + report with file links" [label="yes"];
+  "Commit + report with file links" -> "Load raid-canonical-implementation" [shape=doublecircle];
 }
 ```
 
 ## Wizard Checklist
 
-1. **Read the approved design doc** — every requirement, every constraint
-2. **Read the Phase 2 design doc** — carry forward verified knowledge from `{questDir}/design.md` (the deliverable) and `{questDir}/phase-2-design.md` (the scoreboard)
-3. **Open the Dungeon** — create `{questDir}/phase-3-plan.md` with Phase 3 header
-4. **Dispatch decomposition** — all agents decompose independently with different angles, then interact directly (round-based)
-5. **Observe the fight** — agents test each other's plans, argue ordering, coverage, naming. Intervene only on triggers.
-6. **Close the phase** — when Dungeon has complete, verified task list
-7. **Synthesize** — write plan doc from Dungeon evidence. Create individual task files: `{questDir}/phase-3-plan-task-NN.md`
-8. **Adversarial plan review** — agents attack the written plan directly
-9. **Self-review** — 6-point checklist (see below)
-10. **Wizard ruling** — final plan approval
-11. **Commit** — `docs(quest-{slug}): phase 3 plan — {N} tasks, {summary}`
-12. **Transition** — invoke `raid-canonical-implementation` and begin Phase 4
+1. **Read the approved design** — `{questDir}/spoils/design.md` (deliverable) and `{questDir}/phases/phase-2-design.md` (evolution log). Every requirement, every constraint.
+2. **Phase recap** — summarize PRD + Design findings. Present what carries forward to agents and human.
+3. **Roll dice** — randomly shuffle `["warrior", "archer", "rogue"]` for this phase's turn order. Update raid-session via Bash using the jq command from protocol "Dice Roll Reference". Announce: *"The dice have spoken. Turn order for this phase: {agent1} → {agent2} → {agent3}."*
+4. **Create evolution log** — `{questDir}/phases/phase-3-plan.md`
+5. **Run rounds** — see Round Protocol below
+6. **Extract final** — write individual task files `{questDir}/spoils/tasks/phase-3-plan-task-NN.md` from the evolution log
+7. **Self-review** — 6-point checklist (see below)
+8. **Present to human** — if not approved, ask why, explain feedback to agents, run more rounds
+9. **Commit** — `docs(quest-{slug}): phase 3 plan — {N} tasks`
+10. **Report** — link task files and `phases/phase-3-plan.md` to the human
+11. **Transition** — load `raid-canonical-implementation`
 
-## Opening the Dungeon
+## Dispatch Templates
 
-Create `{questDir}/phase-3-plan.md`:
+Dispatch carries only dynamic context. Detailed instructions are embedded in the scaffolded phase file.
 
-```markdown
-# Phase 3: Implementation Plan
-## Quest: Decompose <design topic> into implementation tasks
-## Mode: <Full Raid | Skirmish>
+**Writer (Round 1, Turn 1):**
+```
+TURN_DISPATCH: Phase 3 Plan, Round 1, Turn 1.
+Quest: {description}
+Phase recap: {summary of PRD + Design findings}
+Your role: WRITER. Your section: "Version 1 — @{name} [R1]"
 
-### Discoveries
-
-### Active Battles
-
-### Resolved
-
-### Shared Knowledge
-
-### Escalations
+FIRST: Read the FULL document at {questDir}/phases/phase-3-plan.md before writing anything.
+  Understand the structure, read the embedded instructions in your section, and read the
+  Writing Guidance at the bottom. Then read {questDir}/spoils/design.md + codebase.
+THEN: Write in your designated section following the embedded instructions.
 ```
 
-## File Structure Mapping
+**Reviewer (Round 1, Turns 2-3):**
+```
+TURN_DISPATCH: Phase 3 Plan, Round 1, Turn {T}.
+Quest: {description}
+{prior agent} wrote the task decomposition.
+Your role: REVIEWER. Your section: "@{name} [R1] Review"
 
-Before defining tasks, map ALL files to be created or modified:
-
-```markdown
-## File Map
-
-| File | Action | Responsibility |
-|------|--------|---------------|
-| `src/auth/handler.ts` | Create | Token validation and refresh |
-| `src/auth/types.ts` | Create | Auth types and interfaces |
-| `tests/auth/handler.test.ts` | Create | Unit tests for handler |
-| `src/middleware.ts` | Modify (L45-60) | Add auth middleware hook |
+FIRST: Read the FULL document at {questDir}/phases/phase-3-plan.md before writing anything.
+  Read the tasks, read the embedded instructions in your review section.
+  Cross-check against {questDir}/spoils/design.md for compliance.
+THEN: Write your review in your designated section following the embedded instructions.
 ```
 
-- Each file should have one clear responsibility
-- Files that change together should live together
-- Follow existing codebase patterns — don't restructure unless it serves the current goal
-- This map informs the task decomposition: each task should produce self-contained changes
+**Writer (Round 2+, Defend/Concede):**
+```
+TURN_DISPATCH: Phase 3 Plan, Round {N}, Turn 1.
+Quest: {description}
+Round {N-1} reviews are in. 
+Your role: WRITER. Sections: "Defend/Concede" then "Version {N}"
 
-## Plan Document Header
-
-Every plan MUST start with:
-
-```markdown
-# [Feature Name] Implementation Plan
-
-**Goal:** [One sentence describing what this builds]
-**Architecture:** [2-3 sentences about approach]
-**Tech Stack:** [Key technologies/libraries]
+FIRST: Read the FULL document at {questDir}/phases/phase-3-plan.md.
+  Read every finding. Read the embedded instructions in your sections.
+THEN: Respond to each finding, then write Version {N}.
 ```
 
-## Dispatch for Decomposition
+## Evolution Log Template
 
-**DISPATCH:**
+Scaffold `{questDir}/phases/phase-3-plan.md`. Replace `{writer}`, `{reviewer1}`, `{reviewer2}` with actual agent names from the dice roll:
 
-> **@Warrior**: Decompose into tasks. Focus on structural ordering — what MUST be built first? Hard dependencies? Critical path? Include tests for every task. Challenge @Archer and @Rogue's decompositions directly. Pin agreed tasks to Dungeon.
->
-> **@Archer**: Decompose into tasks. Focus on completeness and consistency — does every requirement have a task? Are interfaces well-defined across tasks? Are naming patterns and file structure consistent with the codebase? Challenge @Warrior and @Rogue directly. Pin agreed tasks to Dungeon.
->
-> **@Rogue**: Decompose into tasks. Focus on hidden complexity — which tasks are deceptively hard? Where will the implementer guess wrong? Which tests miss the failure path? Challenge @Warrior and @Archer directly. Pin agreed tasks to Dungeon.
->
-> **All**: Read the Phase 1 archived Dungeon for design knowledge. Interact directly. Build on each other's decompositions. Pin agreed tasks with `DUNGEON:`. Escalate to me with `WIZARD:` only when genuinely stuck.
+```markdown
+# Phase 3: Plan — Evolution Log
 
-## Collaborative Compliance Testing (Agent-Driven)
+## Quest: [quest description]
+## Quest Type: Canonical Quest
+## Turn Order: @{agent1} → @{agent2} → @{agent3}
 
-After independent decomposition, agents fight directly over the plan:
+## References
+- PRD: `{questDir}/spoils/prd.md` (if exists)
+- Design: `{questDir}/spoils/design.md`
+- Design Evolution: `{questDir}/phases/phase-2-design.md`
 
-1. **Compare decompositions** — address each other by name, argue where they agree (high confidence) and disagree (needs resolution)
-2. **Test compliance with design** — every requirement verified against the plan. Line by line. No gaps. Agents cross-check each other.
-3. **Test naming consistency** — agents challenge each other's naming choices against codebase patterns
-4. **Test file system consistency** — file paths follow project structure, module organization clean
-5. **Test coverage** — agents challenge whether tests cover failure paths, not just happy paths
-6. **Test ordering** — agents argue dependency order, build-won't-break guarantees
-7. **Learn from disagreements** — resolutions often reveal a better approach. Pin lessons to Dungeon.
+## Quest Goal
+<!-- Wizard writes 2-3 lines: what this plan must produce,
+     how many requirements from the design need task coverage,
+     and any dependency constraints discovered during design -->
 
-**Agents do this DIRECTLY with each other. The Wizard observes and intervenes only on triggers.**
+---
 
-## Task Granularity
+## File Map — @{writer} [R1]
 
-**Each step is one action (2-5 minutes):**
-- "Write the failing test" — step
-- "Run it to verify it fails" — step
-- "Implement minimal code to pass" — step
-- "Run tests to verify pass" — step
-- "Commit" — step
+<!-- @{writer}: Map ALL files before writing tasks. Each task should produce
+     self-contained changes to a subset of these files.
+     | File | Action | Purpose |
+     |------|--------|---------|
+     Files that change together belong in the same task. -->
 
-### Browser Test Tasks (when `browser.enabled` in raid.json)
+## Version 1 — @{writer} [R1]
 
-When a task involves browser-facing code, the plan must include browser test steps alongside unit tests:
-- "Write failing Playwright test (`tests/e2e/<feature>.spec.ts`)" — step
-- "Run `{execCommand} playwright test` to verify it fails" — step
-- "Implement the feature" — step
-- "Run Playwright test to verify it passes" — step
-- "Run full suite (unit + browser) to verify no regressions" — step
+<!-- @{writer}: WRITER. Decompose design.md into numbered tasks.
+     Every requirement maps to a task. Dependency order — each buildable independently.
+     Task granularity: one TDD cycle (2-5 min). Use this structure per task: -->
 
-Not every task needs a browser test. Include them for user-facing flows, UI interactions, client-side routing, and visual state changes. State reasoning — challengers will attack this decision.
-
-## Task Structure
-
-````markdown
-### Task N: [Component Name]
+### Task 1: [Component Name]
 
 **Files:**
 - Create: `exact/path/to/file.ext`
@@ -162,55 +137,131 @@ Not every task needs a browser test. Include them for user-facing flows, UI inte
 - Test: `tests/exact/path/to/test.ext`
 
 **Acceptance Criteria:**
+<!-- Each criterion must be verifiable by running a test or checking a concrete output.
+     Bad: "handles errors properly"
+     Good: "returns 401 with {error: 'token_expired'} when JWT is past expiry"
+     Good: "throws ValidationError when input.name exceeds 255 characters" -->
 - [ ] [Specific, verifiable criterion]
 - [ ] All tests pass
 - [ ] No regressions
-- [ ] Naming follows established patterns
 
 **Steps:**
-- [ ] Step 1: Write the failing test
-- [ ] Step 2: Run test, verify it fails for the right reason
-- [ ] Step 3: Write minimal implementation
-- [ ] Step 4: Run test, verify it passes + full suite passes
-- [ ] Step 5: Commit with descriptive message
-````
+- [ ] Write the failing test
+- [ ] Run test, verify it fails for the right reason
+- [ ] Write minimal implementation to pass
+- [ ] Run test + full suite, verify all pass
+- [ ] Commit: `feat(scope): descriptive message`
+
+**Implementation Notes:**
+<!-- Left empty. Agent fills this AFTER implementing the task in Phase 4.
+     When filling: state what was built, key decisions made during implementation,
+     and any deviations from the plan with reasoning. -->
+
+### Task 2: [Component Name]
+<!-- Continue numbering. Same structure for every task. -->
+
+---
+
+## Review — Round 1
+
+### @{reviewer1} [R1] Review
+
+<!-- @{reviewer1}: REVIEWER. Check @{writer}'s tasks against design.md:
+     COVERAGE (every requirement → task), ORDERING (buildable independently),
+     GRANULARITY (one TDD cycle each), CRITERIA (verifiable), FILES (conventions),
+     TESTS (failure paths), NAMING (consistent), NO PLACEHOLDERS (TBD/TODO).
+     For each finding: WHAT, WHY, WHAT should change. -->
+
+### @{reviewer2} [R1] Review
+
+<!-- @{reviewer2}: REVIEWER. Read tasks + @{reviewer1}'s review.
+     Find what was missed. Challenge with evidence. Don't repeat — add new value. -->
+
+### Wizard [R1] Synthesis
+
+---
+
+## Defend/Concede — @{writer} [R2]
+
+<!-- @{writer}: Read EVERY finding from @{reviewer1} and @{reviewer2}.
+     Respond to EACH finding explicitly:
+
+     DEFEND: [finding reference] — [counter-evidence]
+     CONCEDE: [finding reference] — [what you'll change in V2]
+
+     No silent ignoring. Every finding gets a response. -->
+
+## Version 2 — @{writer} [R2]
+
+<!-- @{writer}: Revised task list incorporating all conceded findings.
+     Mark what changed from V1 (added tasks, reordered, revised criteria). -->
+
+[Same task structure as Version 1]
+
+---
+
+## Review — Round 2
+
+### @{reviewer1} [R2] Review
+<!-- @{reviewer1}: Focus on V2 changes. Were findings addressed? New issues? -->
+
+### @{reviewer2} [R2] Review
+<!-- @{reviewer2}: Same focus. Challenge defenses. Confirm concessions incorporated. -->
+
+### Wizard [R2] Synthesis
+
+---
+
+## Final Extraction Notes — Wizard
+<!-- How many tasks extracted. Dependency graph summary.
+     What changed between V1 and final. -->
+
+---
+
+## Writing Guidance
+- Sign all work: `@{name} [R{N}]`
+- Evidence-based: reference design.md section numbers, file paths, concrete examples
+- No placeholders: no TBD, TODO, "implement later", "similar to Task N", "handle edge cases"
+- Each task must be independently buildable and committable
+- Acceptance criteria must be verifiable by running a test or checking concrete output
+- Reviewers: respond to EVERY finding — no silent ignoring
+```
+
+**Round 3:** If needed, wizard appends Round 3 sections before dispatching. Do NOT pre-scaffold.
+
+### Browser Test Tasks (when `browser.enabled` in raid.json)
+
+When a task involves browser-facing code, the plan must include Playwright test steps alongside unit tests. Not every task needs browser tests — include them for user-facing flows, UI interactions, client-side routing, and visual state changes.
 
 ## No Placeholders — Ever
 
 These are plan failures. Never write:
 - "TBD", "TODO", "implement later", "fill in details"
 - "Add appropriate error handling" (specify WHAT error handling)
-- "Write tests for the above" (without actual test code)
-- "Similar to Task N" (repeat the code — the implementer may read tasks out of order)
+- "Similar to Task N" (repeat — the implementer may read tasks out of order)
 - "Handle edge cases" (specify WHICH edge cases)
-- Steps that describe what to do without showing how
 - References to undefined types, functions, or methods
-
-**Violating the letter of the "no placeholders" rule is violating its spirit.**
 
 ## Self-Review (6-Point Checklist)
 
 After writing the complete plan:
 
-1. **Spec coverage:** Skim each requirement in the design doc. Point to the task that implements it. List any gaps.
-2. **Placeholder scan:** Search for TBD, TODO, vague descriptions, missing code. Fix them.
+1. **Spec coverage:** Skim each requirement in `spoils/design.md`. Point to the task that implements it. List any gaps.
+2. **Placeholder scan:** Search for TBD, TODO, vague descriptions. Fix them.
 3. **Type/name consistency:** Do types, method signatures, property names match across ALL tasks?
 4. **File structure consistency:** Do all file paths follow the project's conventions?
-5. **Test quality:** Does every task have tests? Do tests cover failure paths? When `browser.enabled`: do browser-facing tasks include Playwright tests?
+5. **Test quality:** Does every task have tests? Do tests cover failure paths?
 6. **Ordering:** Can each task be built and committed independently without breaking the build?
-
-Fix issues inline. If a spec requirement has no task, add the task.
 
 ## Red Flags
 
 | Thought | Reality |
 |---------|---------|
-| "The plan is obvious from the design" | Plans expose complexity that specs hide. Decompose anyway. |
-| "We can figure out the details during implementation" | Details in implementation = placeholders in the plan. |
-| "I'll wait for the Wizard to synthesize" | You own the phase. Debate with teammates directly. |
+| "The plan is obvious from the design" | Plans expose complexity that specs hide. |
+| "We can figure out details during implementation" | Details in implementation = placeholders in the plan. |
 | "These tasks are similar enough to batch" | Each task must be independently buildable and testable. |
 | "Tests can be added later" | TDD means tests are in the plan. No test = no task. |
-| "The naming will be consistent enough" | Check it explicitly. Naming drift is the #1 source of bugs. |
+| "Let me silently ignore that finding" | Every finding must get DEFEND: or CONCEDE:. |
 
 ---
 
@@ -218,12 +269,16 @@ Fix issues inline. If a spec requirement has no task, add the task.
 
 When the plan is approved and committed:
 
-1. Update `.claude/raid-session` phase via Bash (write gate blocks Write/Edit on this file):
+1. Update raid-session phase via Bash:
    ```bash
    jq '.phase="implementation"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
    ```
-2. **Commit**: `docs(quest-{slug}): phase 3 plan — {N} tasks, {summary}`
-3. **Send phase report to human**: task count, dependency graph, estimated scope
-4. **Load the `raid-canonical-implementation` skill now and begin Phase 4.**
+2. **Commit:** `docs(quest-{slug}): phase 3 plan — {N} tasks`
+3. **Report:** Link task files and `phases/phase-3-plan.md` file paths to the human.
+4. **Load `raid-canonical-implementation` and begin Phase 4.**
 
-Do not wait. Do not ask. The next action after committing the plan doc is loading the next skill.
+## Phase Spoils
+
+**Two outputs:**
+- `{questDir}/phases/phase-3-plan.md` — Full evolution timeline (all versions, reviews, defend/concede)
+- `{questDir}/spoils/tasks/phase-3-plan-task-NN.md` — Individual task files with files, acceptance criteria, TDD steps

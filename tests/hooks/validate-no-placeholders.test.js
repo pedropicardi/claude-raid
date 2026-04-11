@@ -107,6 +107,31 @@ describe('validate-no-placeholders.sh', () => {
     assert.strictEqual(result.status, 0);
   });
 
+  it('blocks placeholders in dungeon phase files with absolute paths', () => {
+    const tmp = setupEnv({
+      filePath: '.claude/dungeon/test-quest/phases/phase-2-design.md',
+      fileContent: 'DUNGEON: TBD — need to figure out the adapter pattern.',
+    });
+    dirs.push(tmp);
+    // Claude passes absolute paths to hooks
+    const absPath = path.join(tmp, '.claude/dungeon/test-quest/phases/phase-2-design.md');
+    const result = runHook(tmp, absPath);
+    assert.strictEqual(result.status, 2, `Expected block (exit 2) for placeholder in dungeon file, got exit ${result.status}`);
+    assert.ok(result.stderr.includes('tbd'), `Expected stderr to mention tbd, got: ${result.stderr}`);
+  });
+
+  it('blocks placeholders in spoils files with absolute paths', () => {
+    const tmp = setupEnv({
+      filePath: '.claude/dungeon/test-quest/spoils/design.md',
+      fileContent: 'The implementation should handle edge cases for all inputs.',
+    });
+    dirs.push(tmp);
+    const absPath = path.join(tmp, '.claude/dungeon/test-quest/spoils/design.md');
+    const result = runHook(tmp, absPath);
+    assert.strictEqual(result.status, 2, `Expected block (exit 2) for placeholder in spoils file, got exit ${result.status}`);
+    assert.ok(result.stderr.includes('handle edge cases'), `Expected stderr to mention 'handle edge cases', got: ${result.stderr}`);
+  });
+
   it('respects custom paths from raid.json', () => {
     const tmp = setupEnv({
       config: { paths: { specs: 'custom/specs', plans: 'custom/plans' } },

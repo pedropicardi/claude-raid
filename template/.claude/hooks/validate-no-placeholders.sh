@@ -13,10 +13,21 @@ if [ -z "$RAID_FILE_PATH" ]; then
   exit 0
 fi
 
+# Normalize absolute paths to relative
+_file="${RAID_FILE_PATH}"
+if [[ "$_file" == /* ]]; then
+  _file="${_file#"$PWD"/}"
+  # Handle symlink mismatch (e.g., macOS /var -> /private/var) by resolving input path
+  if [[ "$_file" == /* ]] && [ -e "$_file" ]; then
+    _file="$(cd "$(dirname "$_file")" && pwd -P)/$(basename "$_file")"
+    _file="${_file#"$(pwd -P)"/}"
+  fi
+fi
+
 # Only check files in specs or plans directories
 IS_RAID_DOC=false
-case "$RAID_FILE_PATH" in
-  "$RAID_SPECS_PATH"/*|"$RAID_PLANS_PATH"/*|.claude/dungeon/*/phase-*.md) IS_RAID_DOC=true ;;
+case "$_file" in
+  "$RAID_SPECS_PATH"/*|"$RAID_PLANS_PATH"/*|.claude/dungeon/*/phases/phase-*.md|.claude/dungeon/*/spoils/*.md|.claude/dungeon/*/spoils/tasks/*.md|.claude/dungeon/*/phase-*.md) IS_RAID_DOC=true ;;
 esac
 
 if [ "$IS_RAID_DOC" = false ]; then

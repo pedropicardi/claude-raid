@@ -234,4 +234,102 @@ describe('mergeSettings', () => {
     );
     assert.ok(customSurvived, 'Non-raid hooks must survive merge');
   });
+
+  it('appends RTK hook when rtk.enabled is true in raid.json', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'raid.json'), JSON.stringify({
+      rtk: { enabled: true, bypass: { phases: [], commands: [] } },
+    }));
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
+    const rtkHook = settings.hooks.PreToolUse.find(e =>
+      e.hooks && e.hooks.some(h => h.command && h.command.includes('#claude-raid-rtk'))
+    );
+    assert.ok(rtkHook, 'RTK hook should be present in PreToolUse');
+    assert.ok(rtkHook.hooks[0].command.includes('rtk-bridge.sh'));
+  });
+
+  it('does not add RTK hook when rtk.enabled is false', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'raid.json'), JSON.stringify({
+      rtk: { enabled: false },
+    }));
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
+    const rtkHook = (settings.hooks.PreToolUse || []).find(e =>
+      e.hooks && e.hooks.some(h => h.command && h.command.includes('#claude-raid-rtk'))
+    );
+    assert.strictEqual(rtkHook, undefined, 'RTK hook should not be present');
+  });
+
+  it('places RTK hook after core Raid PreToolUse hooks', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'raid.json'), JSON.stringify({
+      rtk: { enabled: true, bypass: { phases: [], commands: [] } },
+    }));
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
+    const preToolUse = settings.hooks.PreToolUse;
+    const rtkIndex = preToolUse.findIndex(e =>
+      e.hooks && e.hooks.some(h => h.command && h.command.includes('#claude-raid-rtk'))
+    );
+    const lastCoreIndex = preToolUse.reduce((max, e, i) => {
+      if (e.hooks && e.hooks.some(h => h.command && h.command.includes('#claude-raid') && !h.command.includes('#claude-raid-rtk'))) {
+        return i;
+      }
+      return max;
+    }, -1);
+    assert.ok(rtkIndex > lastCoreIndex, `RTK hook (index ${rtkIndex}) must come after last core hook (index ${lastCoreIndex})`);
+  });
+
+  it('strips RTK hook when rtk.enabled is toggled off', () => {
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    // First merge with RTK enabled
+    fs.writeFileSync(path.join(claudeDir, 'raid.json'), JSON.stringify({
+      rtk: { enabled: true, bypass: { phases: [], commands: [] } },
+    }));
+    mergeSettings(cwd);
+    // Toggle off
+    fs.writeFileSync(path.join(claudeDir, 'raid.json'), JSON.stringify({
+      rtk: { enabled: false },
+    }));
+    mergeSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
+    const rtkHook = (settings.hooks.PreToolUse || []).find(e =>
+      e.hooks && e.hooks.some(h => h.command && h.command.includes('#claude-raid-rtk'))
+    );
+    assert.strictEqual(rtkHook, undefined, 'RTK hook should be removed after toggle-off');
+  });
+
+  it('removeRaidSettings strips both raid and rtk hooks', () => {
+    const { removeRaidSettings } = require('../../src/merge-settings');
+    mergeSettings = require('../../src/merge-settings').mergeSettings;
+    const cwd = makeTempDir();
+    const claudeDir = path.join(cwd, '.claude');
+    fs.mkdirSync(claudeDir, { recursive: true });
+    fs.writeFileSync(path.join(claudeDir, 'raid.json'), JSON.stringify({
+      rtk: { enabled: true, bypass: { phases: [], commands: [] } },
+    }));
+    mergeSettings(cwd);
+    // Delete backup to force surgical removal
+    const backupPath = path.join(claudeDir, 'settings.json.pre-raid-backup');
+    if (fs.existsSync(backupPath)) fs.unlinkSync(backupPath);
+    removeRaidSettings(cwd);
+    const settings = JSON.parse(fs.readFileSync(path.join(claudeDir, 'settings.json'), 'utf8'));
+    const json = JSON.stringify(settings);
+    assert.ok(!json.includes('#claude-raid-rtk'), 'RTK hooks should be removed');
+    assert.ok(!json.includes('#claude-raid'), 'Core raid hooks should be removed');
+  });
 });

@@ -217,6 +217,28 @@ function checkJq(exec) {
   };
 }
 
+function checkRtk(exec) {
+  const found = exec('command -v rtk');
+  if (!found) {
+    return {
+      id: 'rtk',
+      ok: false,
+      label: 'RTK',
+      detail: 'not installed (optional — reduces context usage by 60-90%)',
+      hint: 'Install: curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh',
+    };
+  }
+  const raw = exec('rtk --version');
+  const ver = parseVersion(raw);
+  const tag = ver ? `v${ver.major}.${ver.minor}.${ver.patch}` : (raw || 'unknown').trim();
+  return {
+    id: 'rtk',
+    ok: true,
+    label: 'RTK',
+    detail: `${tag} — token compression available`,
+  };
+}
+
 function checkPlatform(platform) {
   if (platform === 'win32') {
     return {
@@ -321,6 +343,7 @@ function runChecks(opts = {}) {
     checkTeammateMode(homedir),
     checkSplitPane(exec),
     checkPlaywright(exec, cwd),
+    checkRtk(exec),
   ];
 
   return {
@@ -389,6 +412,15 @@ async function runSetup(opts = {}) {
   }
 
   stdout.write('\n  ' + formatCheckLine(splitPane).join('\n  ') + '\n');
+
+  // RTK prompt — only if RTK is on PATH and not already configured via --rtk
+  const rtkCheck = checks.find(c => c.id === 'rtk');
+  if (rtkCheck && rtkCheck.ok && !opts.rtkEnabled) {
+    const rtkConfirm = await ask('\n  RTK detected — enable token compression? [Y/n] ', stdin, stdout);
+    if (rtkConfirm.toLowerCase() !== 'n') {
+      actions.push('rtk-enabled');
+    }
+  }
 
   // Recalculate allOk (required checks only: node + claude)
 

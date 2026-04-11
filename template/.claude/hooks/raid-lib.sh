@@ -13,7 +13,13 @@ RAID_TASK=""
 RAID_QUEST_TYPE=""
 RAID_QUEST_ID=""
 RAID_QUEST_DIR=""
+RAID_STARTED_AT=""
+RAID_PHASE_ITERATION=""
 RAID_BLACK_CARDS=""
+RAID_CURRENT_ROUND=""
+RAID_MAX_ROUNDS=""
+RAID_TURN_ORDER=""
+RAID_CURRENT_TURN_INDEX=""
 
 if [ -f ".claude/raid-session" ]; then
   _session_json=$(jq -r '{
@@ -25,7 +31,13 @@ if [ -f ".claude/raid-session" ]; then
     questType: (.questType // ""),
     questId: (.questId // ""),
     questDir: (.questDir // ""),
-    blackCards: (.blackCards // [])
+    startedAt: (.startedAt // ""),
+    phaseIteration: (.phaseIteration // 1),
+    blackCards: (.blackCards // []),
+    currentRound: (.currentRound // 0),
+    maxRounds: (.maxRounds // 3),
+    turnOrder: (.turnOrder // []),
+    currentTurnIndex: (.currentTurnIndex // 0)
   }' ".claude/raid-session" 2>/dev/null)
 
   _jq_rc=$?
@@ -39,7 +51,13 @@ if [ -f ".claude/raid-session" ]; then
     RAID_QUEST_TYPE=$(echo "$_session_json" | jq -r '.questType')
     RAID_QUEST_ID=$(echo "$_session_json" | jq -r '.questId')
     RAID_QUEST_DIR=$(echo "$_session_json" | jq -r '.questDir')
+    RAID_STARTED_AT=$(echo "$_session_json" | jq -r '.startedAt')
+    RAID_PHASE_ITERATION=$(echo "$_session_json" | jq -r '.phaseIteration')
     RAID_BLACK_CARDS=$(echo "$_session_json" | jq -c '.blackCards')
+    RAID_CURRENT_ROUND=$(echo "$_session_json" | jq -r '.currentRound')
+    RAID_MAX_ROUNDS=$(echo "$_session_json" | jq -r '.maxRounds')
+    RAID_TURN_ORDER=$(echo "$_session_json" | jq -c '.turnOrder')
+    RAID_CURRENT_TURN_INDEX=$(echo "$_session_json" | jq -r '.currentTurnIndex')
   else
     RAID_ACTIVE=false
     # Only warn if file has content (empty file is a transient state during phase transitions)
@@ -61,6 +79,9 @@ RAID_BROWSER_PORT_START=""
 RAID_BROWSER_PORT_END=""
 RAID_BROWSER_EXEC_CMD=""
 RAID_BROWSER_PW_CONFIG=""
+RAID_RTK_ENABLED=false
+RAID_RTK_BYPASS_PHASES=""
+RAID_RTK_BYPASS_COMMANDS=""
 RAID_VAULT_ENABLED=true
 RAID_VAULT_PATH=".claude/vault"
 RAID_AGENT_EFFORT="medium"
@@ -94,7 +115,10 @@ if [ -f ".claude/raid.json" ]; then
     lifecycleCompletionGate: (if .raid.lifecycle.completionGate == null then true else .raid.lifecycle.completionGate end),
     lifecyclePhaseConfirm: (if .raid.lifecycle.phaseTransitionConfirm == null then true else .raid.lifecycle.phaseTransitionConfirm end),
     lifecycleCompactBackup: (if .raid.lifecycle.compactBackup == null then true else .raid.lifecycle.compactBackup end),
-    lifecycleTestWindow: (.raid.lifecycle.testWindowMinutes // 10)
+    lifecycleTestWindow: (.raid.lifecycle.testWindowMinutes // 10),
+    rtkEnabled: (.rtk.enabled // false),
+    rtkBypassPhases: (.rtk.bypass.phases // []),
+    rtkBypassCommands: (.rtk.bypass.commands // [])
   }' ".claude/raid.json" 2>/dev/null)
 
   if [ $? -eq 0 ] && [ -n "$_config_json" ]; then
@@ -119,17 +143,22 @@ if [ -f ".claude/raid.json" ]; then
     RAID_LIFECYCLE_PHASE_CONFIRM=$(echo "$_config_json" | jq -r '.lifecyclePhaseConfirm')
     RAID_LIFECYCLE_COMPACT_BACKUP=$(echo "$_config_json" | jq -r '.lifecycleCompactBackup')
     RAID_LIFECYCLE_TEST_WINDOW=$(echo "$_config_json" | jq -r '.lifecycleTestWindow')
+    RAID_RTK_ENABLED=$(echo "$_config_json" | jq -r '.rtkEnabled')
+    RAID_RTK_BYPASS_PHASES=$(echo "$_config_json" | jq -c '.rtkBypassPhases')
+    RAID_RTK_BYPASS_COMMANDS=$(echo "$_config_json" | jq -c '.rtkBypassCommands')
   fi
 fi
 
 export RAID_ACTIVE RAID_PHASE RAID_MODE RAID_CURRENT_AGENT RAID_IMPLEMENTER RAID_TASK
-export RAID_QUEST_TYPE RAID_QUEST_ID RAID_QUEST_DIR RAID_BLACK_CARDS
+export RAID_QUEST_TYPE RAID_QUEST_ID RAID_QUEST_DIR RAID_STARTED_AT RAID_PHASE_ITERATION
+export RAID_BLACK_CARDS RAID_CURRENT_ROUND RAID_MAX_ROUNDS RAID_TURN_ORDER RAID_CURRENT_TURN_INDEX
 export RAID_TEST_CMD RAID_NAMING RAID_MAX_DEPTH RAID_COMMIT_MIN_LENGTH RAID_SPECS_PATH RAID_PLANS_PATH
 export RAID_BROWSER_ENABLED RAID_BROWSER_PORT_START RAID_BROWSER_PORT_END RAID_BROWSER_EXEC_CMD RAID_BROWSER_PW_CONFIG
 export RAID_VAULT_ENABLED RAID_VAULT_PATH RAID_AGENT_EFFORT
 export RAID_LIFECYCLE_SESSION RAID_LIFECYCLE_NUDGE RAID_LIFECYCLE_TASK_VALIDATION
 export RAID_LIFECYCLE_COMPLETION_GATE RAID_LIFECYCLE_PHASE_CONFIRM RAID_LIFECYCLE_COMPACT_BACKUP
 export RAID_LIFECYCLE_TEST_WINDOW
+export RAID_RTK_ENABLED RAID_RTK_BYPASS_PHASES RAID_RTK_BYPASS_COMMANDS
 
 # --- Utility functions ---
 
@@ -145,9 +174,14 @@ raid_read_input() {
 # Returns 0 if file is production code (not test, doc, config, or .claude).
 raid_is_production_file() {
   local file="$1"
-  # Normalize absolute paths to relative (Claude passes absolute paths)
+  # Normalize absolute paths to relative
   if [[ "$file" == /* ]]; then
     file="${file#"$PWD"/}"
+    # Handle symlink mismatch (e.g., macOS /var -> /private/var) by resolving input path
+    if [[ "$file" == /* ]] && [ -e "$file" ]; then
+      file="$(cd "$(dirname "$file")" && pwd -P)/$(basename "$file")"
+      file="${file#"$(pwd -P)"/}"
+    fi
   fi
   case "$file" in
     tests/*|test/*|*.test.*|*.spec.*|*_test.*|*_spec.*) return 1 ;;
@@ -198,6 +232,13 @@ raid_quest_dir() {
     echo ".claude/dungeon/$RAID_QUEST_ID"
   else
     echo ".claude/dungeon"
+  fi
+}
+
+# Get the agent whose turn it currently is.
+raid_current_turn_agent() {
+  if [ -n "$RAID_TURN_ORDER" ] && [ "$RAID_TURN_ORDER" != "[]" ]; then
+    echo "$RAID_TURN_ORDER" | jq -r ".[$RAID_CURRENT_TURN_INDEX] // empty"
   fi
 }
 

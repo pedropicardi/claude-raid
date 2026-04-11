@@ -227,4 +227,32 @@ describe('validate-write-gate.sh', () => {
     const result = runHook(tmp, '.claude/dungeon/test-quest/phase-2-design.md');
     assert.strictEqual(result.status, 0);
   });
+
+  it('allows writes to quest dungeon phases/ subdirectory', () => {
+    const tmp = setupEnv({ session: { phase: 'design', mode: 'full' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/dungeon/test-quest/phases/phase-2-design.md');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('allows writes to quest dungeon spoils/ subdirectory', () => {
+    const tmp = setupEnv({ session: { phase: 'design', mode: 'full' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/dungeon/test-quest/spoils/design.md');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('allows writes to quest dungeon spoils/tasks/ subdirectory', () => {
+    const tmp = setupEnv({ session: { phase: 'plan', mode: 'full' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/dungeon/test-quest/spoils/tasks/phase-3-plan-task-01.md');
+    assert.strictEqual(result.status, 0);
+  });
+
+  it('allows writes to quest dungeon backups/ subdirectory', () => {
+    const tmp = setupEnv({ session: { phase: 'design', mode: 'full' } });
+    dirs.push(tmp);
+    const result = runHook(tmp, '.claude/dungeon/test-quest/backups/phase-2-design-backup.md');
+    assert.strictEqual(result.status, 0);
+  });
 });

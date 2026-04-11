@@ -45,10 +45,15 @@ if [ "$RAID_NAMING" != "none" ]; then
   esac
 fi
 
-# Check 3: Directory depth (normalize absolute paths to relative first)
+# Check 3: Directory depth (normalize absolute paths to relative)
 _depth_path="$RAID_FILE_PATH"
 if [[ "$_depth_path" == /* ]]; then
   _depth_path="${_depth_path#"$PWD"/}"
+  # Handle symlink mismatch (e.g., macOS /var -> /private/var) by resolving input path
+  if [[ "$_depth_path" == /* ]] && [ -e "$_depth_path" ]; then
+    _depth_path="$(cd "$(dirname "$_depth_path")" && pwd -P)/$(basename "$_depth_path")"
+    _depth_path="${_depth_path#"$(pwd -P)"/}"
+  fi
 fi
 DEPTH=$(echo "$_depth_path" | awk -F'/' '{print NF}')
 if [ "$DEPTH" -gt "$RAID_MAX_DEPTH" ]; then

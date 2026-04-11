@@ -143,6 +143,7 @@ function referenceCard() {
     '',
     '  Config:  ' + colors.bold('.claude/raid.json') + '       ' + colors.dim('project settings'),
     '  Rules:   ' + colors.bold('.claude/party-rules.md') + '  ' + colors.dim('editable party rules'),
+    '  RTK:     ' + colors.bold('.claude/raid.json \u2192 rtk') + '  ' + colors.dim('opt-in token compression'),
   ]);
 
   const nextStep = box('Next Step', [

@@ -324,6 +324,56 @@ describe('setup', () => {
     assert.strictEqual(pw.ok, false);
     assert.ok(pw.hint);
   });
+
+  it('rtk check passes when rtk is installed', () => {
+    const home = makeTempDir();
+    const result = runChecks({
+      homedir: home,
+      exec: (cmd) => {
+        if (cmd === 'command -v rtk') return '/usr/local/bin/rtk';
+        if (cmd === 'rtk --version') return '0.15.2';
+        return null;
+      },
+    });
+    const rtk = result.checks.find(c => c.id === 'rtk');
+    assert.ok(rtk, 'rtk check should exist');
+    assert.ok(rtk.ok);
+    assert.ok(rtk.detail.includes('0.15.2'));
+  });
+
+  it('rtk check reports not installed when missing', () => {
+    const home = makeTempDir();
+    const result = runChecks({
+      homedir: home,
+      exec: (cmd) => {
+        if (cmd === 'command -v rtk') return null;
+        return null;
+      },
+    });
+    const rtk = result.checks.find(c => c.id === 'rtk');
+    assert.ok(rtk, 'rtk check should exist');
+    assert.strictEqual(rtk.ok, false);
+    assert.ok(rtk.detail.includes('not installed'));
+    assert.ok(rtk.hint);
+  });
+
+  it('missing rtk does not fail allOk', () => {
+    const home = makeTempDir();
+    fs.mkdirSync(home, { recursive: true });
+    fs.writeFileSync(path.join(home, '.claude.json'), JSON.stringify({ teammateMode: 'tmux' }));
+    const result = runChecks({
+      homedir: home,
+      exec: (cmd) => {
+        if (cmd === 'claude --version') return '2.1.32';
+        if (cmd === 'command -v jq') return '/usr/bin/jq';
+        if (cmd === 'command -v tmux') return '/usr/bin/tmux';
+        if (cmd === 'command -v rtk') return null;
+        return null;
+      },
+      nodeVersion: 'v20.11.0',
+    });
+    assert.ok(result.allOk, 'allOk should be true even with rtk missing');
+  });
 });
 
 // --- helpers for runSetup tests ---

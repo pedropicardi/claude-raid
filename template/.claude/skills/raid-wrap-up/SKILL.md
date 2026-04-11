@@ -11,12 +11,6 @@ The quest ends. The bard sings the tale. The treasure is committed. The party re
 Do NOT write new code. This phase is about reporting, cleanup, PR creation, and archival. Agents are dismissed, not dispatched.
 </HARD-GATE>
 
-## Mode Behavior
-
-- **Full Raid**: Wizard writes full storyboard from all phase files. Full PR with narrative.
-- **Skirmish**: Wizard writes condensed storyboard. Standard PR.
-- **Scout**: Wizard writes brief summary. Quick PR.
-
 ## Process Flow
 
 ```dot
@@ -60,38 +54,45 @@ Create `{questDir}/phase-6-wrap-up.md` and write a phase-by-phase narrative:
 
 ```markdown
 # Phase 6: Wrap Up — Quest Storyboard
-## Quest: <quest name>
-## Mode: <mode>
+
+## Quest: [quest name]
+
+## References
+- PRD: `{questDir}/spoils/prd.md` (if exists)
+- Design: `{questDir}/spoils/design.md`
+- Design Evolution: `{questDir}/phases/phase-2-design.md`
+- Plan: `{questDir}/phases/phase-3-plan.md`
+- Tasks: `{questDir}/spoils/tasks/phase-3-plan-task-*.md`
+- Implementation: `{questDir}/phases/phase-4-implementation.md`
+- Review: `{questDir}/spoils/review.md` (if exists)
+- Review Evolution: `{questDir}/phases/phase-5-review.md` (if exists)
+
+---
 
 ### Phase 1: PRD — Forging the Scroll
-(if prd.md exists)
-- What requirements were established
-- Key decisions from research
+<!-- If prd.md exists. Summarize: what requirements were established,
+     key decisions, any surprising findings from exploration. 2-5 bullets. -->
 
 ### Phase 2: Design — Charting the Map
-- Architecture chosen and why
-- Key trade-offs resolved
-- Alternatives considered and rejected
+<!-- Who wrote the initial design (dice result). Key defend/concede moments.
+     Architecture chosen and main alternatives rejected.
+     Drift check result if PRD existed. 3-6 bullets. -->
 
-### Phase 3: Implementation Plan — Marshaling the Forces
-- Number of tasks, dependency structure
-- Risk areas identified
+### Phase 3: Plan — Marshaling the Forces
+<!-- Total task count, dependency structure highlights.
+     Key findings from plan review that changed the decomposition. 2-4 bullets. -->
 
 ### Phase 4: Implementation — Into the Fray
-- What was built
-- Challenges overcome
-- Test coverage highlights
+<!-- How tasks were divided (which agent, which domain).
+     Notable challenges overcome. Test count / coverage highlights. 3-5 bullets. -->
 
 ### Phase 5: Review — Inspecting the Treasure
-(if phase-5-review.md exists)
-- Findings pinned and resolved
-- Black cards (if any)
-- Fixes applied
+<!-- If review ran. Findings count by severity.
+     Key fixes applied. Black cards if any. 2-5 bullets. -->
 
-### Summary
-- Total phases completed
-- Key achievements
-- Known limitations
+### Quest Summary
+<!-- Total phases completed. Key achievements (what was built).
+     Known limitations (deferred items, accepted constraints). -->
 ```
 
 Read all prior phase files from the quest directory to build this narrative.

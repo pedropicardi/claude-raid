@@ -203,6 +203,25 @@ describe('init', () => {
     assert.ok(result.counts.skills > 0, 'should have copied skills');
   });
 
+  it('writes rtk section to raid.json when rtkEnabled option is true', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    init.install(cwd, { rtkEnabled: true });
+    const config = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8'));
+    assert.ok(config.rtk, 'raid.json should have rtk section');
+    assert.strictEqual(config.rtk.enabled, true);
+    assert.deepStrictEqual(config.rtk.bypass.phases, []);
+    assert.deepStrictEqual(config.rtk.bypass.commands, []);
+  });
+
+  it('does not write rtk section to raid.json without rtkEnabled option', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    init.install(cwd);
+    const config = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid.json'), 'utf8'));
+    assert.strictEqual(config.rtk, undefined, 'raid.json should not have rtk section');
+  });
+
   it('does not duplicate .gitignore entries when comment contains entry substring', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
@@ -277,6 +296,13 @@ describe('dryRun', () => {
     init = require('../../src/init');
     const cwd = makeTempDir();
     const output = init.dryRun(cwd);
-    assert.ok(output.includes('Run without --dry-run to install'), 'should end with install hint');
+    assert.ok(output.includes('Run without --dry-run to summon'), 'should end with summon hint');
+  });
+
+  it('dry run shows RTK optional hooks section', () => {
+    init = require('../../src/init');
+    const cwd = makeTempDir();
+    const output = init.dryRun(cwd);
+    assert.ok(output.includes('rtk-bridge.sh'), 'dry run should mention rtk-bridge.sh');
   });
 });

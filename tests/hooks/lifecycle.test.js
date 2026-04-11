@@ -162,6 +162,17 @@ describe('raid-session-start.sh', () => {
     assert.ok(!result.stdout.includes('additionalContext'));
   });
 
+  it('creates phases, spoils, and spoils/tasks subdirectories in quest dir', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    runHook('raid-session-start.sh', { source: 'startup', agent_type: 'wizard', session_id: 'test-123' }, cwd);
+    const session = JSON.parse(fs.readFileSync(path.join(cwd, '.claude', 'raid-session'), 'utf8'));
+    const questDir = path.join(cwd, session.questDir);
+    assert.ok(fs.existsSync(path.join(questDir, 'phases')), 'phases/ should exist');
+    assert.ok(fs.existsSync(path.join(questDir, 'spoils')), 'spoils/ should exist');
+    assert.ok(fs.existsSync(path.join(questDir, 'spoils', 'tasks')), 'spoils/tasks/ should exist');
+  });
+
   it('exits 0 silently when lifecycle disabled', () => {
     const cwd = setup();
     writeRaidConfig(cwd, { lifecycle: { autoSessionManagement: false } });
@@ -236,14 +247,14 @@ describe('raid-pre-compact.sh', () => {
     const cwd = setup();
     writeRaidConfig(cwd);
     const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
-    fs.mkdirSync(questDir, { recursive: true });
+    fs.mkdirSync(path.join(questDir, 'phases'), { recursive: true });
     writeSession(cwd, { questDir: '.claude/dungeon/test-quest', questId: 'test-quest' });
-    fs.writeFileSync(path.join(questDir, 'phase-1-prd.md'), '# PRD');
-    fs.writeFileSync(path.join(questDir, 'phase-2-design.md'), '# Design');
+    fs.writeFileSync(path.join(questDir, 'phases', 'phase-2-design.md'), '# Design');
+    fs.writeFileSync(path.join(questDir, 'phases', 'phase-3-plan.md'), '# Plan');
     const result = runHook('raid-pre-compact.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
-    assert.ok(fs.existsSync(path.join(questDir, 'phase-1-prd-backup.md')));
-    assert.ok(fs.existsSync(path.join(questDir, 'phase-2-design-backup.md')));
+    assert.ok(fs.existsSync(path.join(questDir, 'backups', 'phase-2-design-backup.md')));
+    assert.ok(fs.existsSync(path.join(questDir, 'backups', 'phase-3-plan-backup.md')));
     assert.ok(result.stdout.includes('additionalContext'));
   });
 
@@ -257,6 +268,32 @@ describe('raid-pre-compact.sh', () => {
     assert.strictEqual(result.exitCode, 0);
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon-backup.md')));
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1-backup.md')));
+  });
+
+  it('does not cascade backups of backups', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
+    fs.mkdirSync(path.join(questDir, 'phases'), { recursive: true });
+    fs.mkdirSync(path.join(questDir, 'backups'), { recursive: true });
+    writeSession(cwd, { questDir: '.claude/dungeon/test-quest', questId: 'test-quest' });
+    fs.writeFileSync(path.join(questDir, 'phases', 'phase-2-design.md'), '# Design');
+    fs.writeFileSync(path.join(questDir, 'backups', 'phase-2-design-backup.md'), '# Design backup');
+    runHook('raid-pre-compact.sh', {}, cwd);
+    assert.ok(!fs.existsSync(path.join(questDir, 'backups', 'phase-2-design-backup-backup.md')),
+      'should not create cascading backups');
+    assert.ok(fs.existsSync(path.join(questDir, 'backups', 'phase-2-design-backup.md')));
+  });
+
+  it('does not cascade legacy flat dungeon backups', () => {
+    const cwd = setup();
+    writeRaidConfig(cwd);
+    writeSession(cwd);
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1.md'), '# Phase 1');
+    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1-backup.md'), '# Phase 1 backup');
+    runHook('raid-pre-compact.sh', {}, cwd);
+    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1-backup-backup.md')),
+      'should not create cascading legacy backups');
   });
 
   it('does nothing when no Dungeon files exist', () => {
@@ -301,13 +338,29 @@ describe('raid-session-end.sh', () => {
   it('copies quest dungeon to vault draft', () => {
     const cwd = setupWithGit();
     const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
-    fs.mkdirSync(questDir, { recursive: true });
-    fs.writeFileSync(path.join(questDir, 'phase-2-design.md'), '# Design');
+    const phasesDir = path.join(questDir, 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-2-design.md'), '# Design');
     const result = runHook('raid-session-end.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
     const draftDungeon = path.join(cwd, '.claude', 'vault', '.draft', 'dungeon');
     assert.ok(fs.existsSync(draftDungeon), 'dungeon dir should be copied to draft');
-    assert.ok(fs.existsSync(path.join(draftDungeon, 'phase-2-design.md')));
+    assert.ok(fs.existsSync(path.join(draftDungeon, 'phases', 'phase-2-design.md')));
+  });
+
+  it('extracts pinned findings from phase files into quest.md', () => {
+    const cwd = setupWithGit();
+    const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
+    const phasesDir = path.join(questDir, 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-2-design.md'), 'DUNGEON: Use adapter pattern verified by @warrior and @archer\nUNRESOLVED: API needs rate limiting\nBLACKCARD: Auth model insufficient — session tokens stored in plaintext violates compliance\n');
+    const result = runHook('raid-session-end.sh', {}, cwd);
+    assert.strictEqual(result.exitCode, 0);
+    const questFile = path.join(cwd, '.claude', 'vault', '.draft', 'quest.md');
+    const content = fs.readFileSync(questFile, 'utf8');
+    assert.ok(content.includes('DUNGEON: Use adapter pattern'), 'should extract DUNGEON findings');
+    assert.ok(content.includes('UNRESOLVED: API needs rate limiting'), 'should extract UNRESOLVED entries');
+    assert.ok(content.includes('BLACKCARD: Auth model insufficient'), 'should extract BLACKCARD entries');
   });
 
   it('copies spec file to draft when specs exist', () => {
@@ -325,8 +378,9 @@ describe('raid-session-end.sh', () => {
   it('cleans up session artifacts', () => {
     const cwd = setupWithGit();
     const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
-    fs.mkdirSync(questDir, { recursive: true });
-    fs.writeFileSync(path.join(questDir, 'phase-2-design.md'), '# Design');
+    const phasesDir = path.join(questDir, 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-2-design.md'), '# Design');
     fs.writeFileSync(path.join(cwd, '.claude', 'raid-last-test-run'), '12345');
     const result = runHook('raid-session-end.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);

@@ -1,41 +1,37 @@
 ---
-name: raid-canonical-prd 
-description: "Use when Phase 1 (PRD) begins in a Canonical Quest. The human chose to forge a PRD rather than skip to Design."
+name: raid-canonical-prd
+description: "Use when Phase 1 (PRD) begins in a Canonical Quest. The human chose to forge a PRD rather than skip to Design. Wizard and human only — no agents dispatched."
 ---
 
 # Raid PRD — Phase 1 (Optional)
 
-Forge the Product Requirements Document through agent-driven research and human-mediated discovery.
+Forge the Product Requirements Document through collaborative discovery between the Wizard and the human. This phase is a dialogue — the Wizard asks questions, explores the codebase, and writes the PRD. No agents are dispatched.
 
 <HARD-GATE>
-Do NOT write any code. Do NOT modify any project files. Only markdown files in the quest dungeon directory are allowed. Agents communicate via SendMessage — do not spawn subagents.
+Do NOT write any code. Do NOT modify any project files. Only markdown files in the quest dungeon directory are allowed. Do NOT dispatch any agents — this phase is Wizard + Human only.
 </HARD-GATE>
-
-## Mode Behavior
-
-- **Full Raid**: All 3 agents explore from different research angles, battle-test findings. Full PRD.
-- **Skirmish**: 2 agents research and cross-test. Lighter PRD.
-- **Scout**: Wizard drafts PRD alone from human input. Minimal research.
 
 ## Process Flow
 
 ```dot
 digraph prd {
-  "Wizard updates phase to prd" -> "Create phase-1-prd.md with boilerplate";
-  "Create phase-1-prd.md with boilerplate" -> "Wizard digests human's task description";
-  "Wizard digests human's task description" -> "Dispatch party with research angles";
-  "Dispatch party with research angles" -> "Agents research independently (parallel)";
-  "Agents research independently (parallel)" -> "Agents flag ROUND_COMPLETE:";
-  "Agents flag ROUND_COMPLETE:" -> "Wizard dispatches cross-testing";
-  "Wizard dispatches cross-testing" -> "Agents battle-test findings";
-  "Agents battle-test findings" -> "Surviving findings pinned to dungeon";
-  "Surviving findings pinned to dungeon" -> "More research needed?" [shape=diamond];
-  "More research needed?" -> "Agents research independently (parallel)" [label="yes"];
-  "More research needed?" -> "Wizard wraps up PRD" [label="no"];
-  "Wizard wraps up PRD" -> "Send phase report to human";
-  "Send phase report to human" -> "Commit + transition to Design" [shape=doublecircle];
+  "Update raid-session phase to prd" -> "Explore codebase for context";
+  "Explore codebase for context" -> "Ask human clarifying questions (one at a time)";
+  "Ask human clarifying questions (one at a time)" -> "All questions answered?" [shape=diamond];
+  "All questions answered?" -> "Ask human clarifying questions (one at a time)" [label="no, more gaps"];
+  "All questions answered?" -> "Write prd.md in quest dir" [label="yes"];
+  "Write prd.md in quest dir" -> "Present PRD to human";
+  "Present PRD to human" -> "Approved?" [shape=diamond];
+  "Approved?" -> "Ask why not approved, understand feedback" [label="no"];
+  "Ask why not approved, understand feedback" -> "Revise prd.md" -> "Present PRD to human";
+  "Approved?" -> "Commit + report with file link" [label="yes"];
+  "Commit + report with file link" -> "Load raid-canonical-design" [shape=doublecircle];
 }
 ```
+
+## Why This Phase Matters
+
+The Wizard is the master of requirements — a visionary who thinks in future-proof solutions and business rules. This phase is where the Wizard builds the complete picture: understanding every constraint, every assumption, every edge case before the party enters the arena. The deeper the Wizard's understanding here, the sharper the direction for every subsequent phase.
 
 ## Wizard Checklist
 
@@ -43,98 +39,106 @@ digraph prd {
    ```bash
    jq '.phase="prd"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
    ```
-2. **Create phase file** — `{questDir}/phase-1-prd.md` with boilerplate sections
-3. **Digest the human's request** — understand intent, identify gaps, map the problem space
-4. **Dispatch party with research angles** via SendMessage:
-   - **@Warrior**: Explore the technical stack. What infrastructure exists? What APIs are available? What technical constraints apply? What precedents exist in the codebase?
-   - **@Archer**: Explore the patterns. How does this fit existing architecture? What conventions apply? What similar features exist? What naming and structure patterns should we follow?
-   - **@Rogue**: Explore the edge cases. What could go wrong? What assumptions are we making? What requirements are we missing? What will users actually do vs what we think they'll do?
-5. **Round 1: Research** — agents research in parallel. Each investigates their angle independently. Pin findings. Signal `ROUND_COMPLETE:`. **Stop.** Agents do NOT self-initiate cross-testing. Go silent and observe.
-6. **Mediate questions** — agents ask Wizard, Wizard reasons, Wizard asks human only if unsure
-7. **Round 2: Cross-testing** — when ALL agents have flagged `ROUND_COMPLETE:`, dispatch explicit cross-verification assignments. Each agent challenges specific findings from the others. Agents signal `ROUND_COMPLETE:` when done. **Stop.**
-8. **Repeat if needed** — if more research is needed, dispatch a new research round with refined angles
-9. **Close phase** — broadcast `HOLD`, wrap up PRD, send report, commit
 
-## Phase File (Dungeon Scoreboard)
+2. **Explore the codebase** — read files, grep for patterns, understand the architecture, dependencies, conventions, and existing solutions. You need this context to ask the right questions and write a thorough PRD.
 
-Create `{questDir}/phase-1-prd.md` — this is the **dungeon scoreboard**, not the deliverable. It tracks discoveries, battles, and shared knowledge from agent research. Every line in Discoveries/Active Battles must use a recognized prefix (`DUNGEON:`, `UNRESOLVED:`, `BLACKCARD:`, `RESOLVED:`, `TASK:`). Freeform content is only allowed in Resolved, Shared Knowledge, and Escalations sections.
+3. **Ask the human clarifying questions — one at a time.** This is a dialogue, not an interview dump. Each question should build on the previous answer. Focus on:
+   - The real problem beneath the stated problem
+   - Who the users are and what they actually need
+   - Business rules and constraints
+   - Success criteria — how will we know this works?
+   - Non-goals — what are we explicitly NOT building?
+   - Edge cases the human may not have considered
+   - Dependencies on other systems or teams
 
-```markdown
-# Phase 1: PRD — Product Requirements Document
-## Quest: <task description>
-## Mode: <Full Raid | Skirmish | Scout>
+4. **Use all available tools to fill gaps** — MCP tools, web search, doc fetching, codebase analysis. The goal is to minimize questions to the human by answering what you can yourself.
 
-### Discoveries
+5. **Write `prd.md`** in the quest directory. This is the deliverable — not a scoreboard, not an evolution log. A complete, polished PRD.
 
-### Active Battles
+6. **Present the PRD to the human for approval.** Walk through the key sections. Ask: "Does this capture everything?"
 
-### Resolved
+7. **If not approved:** Ask why — repeatedly if needed — until you fully understand what's wrong or missing. Revise and re-present. Repeat until the human approves.
 
-### Shared Knowledge
+8. **Commit:** `docs(quest-{slug}): phase 1 PRD — {summary}`
 
-### Escalations
-```
+9. **Report to human** with a link to the `prd.md` file path so they can open it directly.
 
-## Phase Deliverable (PRD Document)
+10. **Transition:** Load `raid-canonical-design` skill, begin Phase 2.
 
-The actual PRD is a **separate file**: `{questDir}/prd.md`. This file is not validated by the dungeon hook and can contain freeform markdown. Write it when closing the phase — synthesize from the scoreboard findings.
+## PRD Document Template
+
+Write `{questDir}/spoils/prd.md`:
 
 ```markdown
-# <Feature Name> — Product Requirements Document
+# [Feature Name] — Product Requirements Document
+
+## Quest: [quest description]
+## Date: YYYY-MM-DD
+## Author: Wizard
+
+## Quest Goal
+<!-- Wizard writes 2-3 lines: what this PRD aims to capture and why -->
+
+---
 
 ### Problem Statement
+<!-- What problem exists today? Who is affected? What's the cost of not solving it?
+     Be specific — reference actual code, systems, or user pain points discovered
+     during codebase exploration. -->
 
-### Goals & Non-Goals
+### Goals
+<!-- What does success look like? Each goal should be measurable or verifiable.
+     Number them. -->
 
-#### Goals
-
-#### Non-Goals
+### Non-Goals
+<!-- What are we explicitly NOT building? This prevents scope creep.
+     Be specific about what's out of scope and why. -->
 
 ### User Stories
+<!-- Describe how users will interact with the feature. Write naturally —
+     not locked to a rigid format, but professional and clear.
+     Cover the primary flow, then edge cases and error scenarios.
+     Each story should be concrete enough that you could write a test for it. -->
 
 ### Functional Requirements
+<!-- Numbered list. Each requirement is specific, unambiguous, and testable.
+     Group by domain if the feature spans multiple areas.
+     Reference user stories where applicable. -->
 
 ### Non-Functional Requirements
+<!-- Performance, scalability, security, accessibility, compatibility.
+     Include concrete targets where possible (e.g., "responds within 200ms
+     at p95 under 1000 concurrent users"). Omit categories that don't apply
+     with "N/A — [reason]". -->
 
 ### Business Logic
+<!-- Rules, calculations, state machines, validation logic.
+     Be precise — this section drives implementation decisions.
+     Use examples: "When X happens and Y is true, then Z." -->
 
 ### Constraints & Assumptions
+<!-- Technical constraints (language, framework, infrastructure).
+     Business constraints (timeline, budget, compliance).
+     Assumptions that, if wrong, would change the approach. -->
 
 ### Success Criteria
+<!-- How do we verify this feature works? Define acceptance criteria
+     at the feature level. These become the basis for the review phase. -->
 
 ### Open Questions
+<!-- Questions that surfaced during exploration that the human needs to answer.
+     Each question includes context on why it matters and what decision it blocks. -->
+
+---
+
+## Writing Guidance
+- Every section filled. Write "N/A — [reason]" if truly not applicable.
+- Be specific over comprehensive — concrete examples beat abstract descriptions.
+- Reference actual code paths, files, and systems discovered during exploration.
+- Requirements must be testable — if you can't verify it, rewrite it.
 ```
 
-## Research Angles
-
-Agents should use all available tools to research:
-- **MCP tools** — query context servers, fetch documentation
-- **Web search** — find related patterns, prior art, library docs
-- **Doc fetching** — read official docs for relevant technologies
-- **Codebase analysis** — explore existing code, patterns, conventions
-- **Skill discovery** — find relevant skills that may help
-
-## Question Chain
-
-**Agents NEVER ask the human directly.** The flow is:
-
-1. Agent discovers a gap → sends `WIZARD:` with the question and context
-2. Wizard reasons: "Can I answer this from the PRD description, codebase, or prior knowledge?"
-3. If confident → answer the agent directly via SendMessage
-4. If unsure → digest the question into a clear, contextual question for the human
-5. Wizard asks the human one well-formulated question (not the raw agent question)
-6. Wizard receives answer → interprets, adds context → passes to party
-
-**Goal:** Minimize questions to human. Batch related questions. The party should figure out as much as possible themselves.
-
-## Closing the Phase
-
-When the PRD is complete (all sections filled, open questions resolved):
-
-1. **Wrap up the PRD document** — fill gaps, ensure coherence across sections
-2. **Send phase report to human**: "The PRD is forged. Here's what we established: [key points]"
-3. **Commit**: `docs(quest-{slug}): phase 1 PRD — {summary}`
-4. **Transition**: Load `raid-canonical-design` skill and begin Phase 2
+Fill every section. Write "N/A — [reason]" if a section truly does not apply.
 
 ## Red Flags
 
@@ -142,12 +146,11 @@ When the PRD is complete (all sections filled, open questions resolved):
 |---------|---------|
 | "The requirements are obvious, skip PRD" | If they were obvious, the human would have skipped this phase. |
 | "Let me start coding to test an idea" | PRD phase. No code. Research and write. |
-| "I'll ask the human every question" | Exhaust your own research first. Use MCP, docs, codebase. |
+| "Let me dispatch the agents for research" | PRD is Wizard + Human only. No agents. |
+| "I'll ask 10 questions at once" | One question at a time. Build on answers. |
 | "This PRD section doesn't apply" | Fill every section. Write "N/A — [reason]" if truly not applicable. |
-| "Let me ask the human directly" | Route through the Wizard. Always. |
+| "Good enough, let's move on" | Present to human. Only they decide when it's good enough. |
 
 ## Phase Spoils
 
-**Two outputs**:
-- `{questDir}/phase-1-prd.md` — Dungeon scoreboard with pinned discoveries, resolved battles, and shared knowledge from agent research
-- `{questDir}/prd.md` — Complete Product Requirements Document with all sections filled, synthesized from scoreboard findings
+**One output**: `{questDir}/spoils/prd.md` — Complete Product Requirements Document with all sections filled.

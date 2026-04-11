@@ -5,232 +5,376 @@ description: "Use when Phase 5 (Review) begins in a Canonical Quest, after imple
 
 # Raid Review — Phase 5 (Optional)
 
-Three reviewers, three angles, zero mercy. Pinning then fixing. Black cards for the unfixable.
+Two sub-phases: **Review** (find issues, build fix plan) then **Fix Session** (execute fixes). The review digests all prior deliverables — PRD, Design, Plan, Implementation — and verifies the implementation is correct, complete, and coherent.
 
 <HARD-GATE>
-This phase is OPTIONAL — the Wizard asks the human before entering. All assigned agents review the ENTIRE implementation independently, then attack each other's findings. Use `raid-verification` before any completion claims. No subagents.
+This phase is OPTIONAL — the Wizard asks the human before entering. All agents review the ENTIRE implementation. Use `raid-verification` before any completion claims.
 </HARD-GATE>
-
-## Mode Behavior
-
-- **Full Raid**: 3 independent reviews, then agents fight directly over findings. All severity levels enforced.
-- **Skirmish**: 1 agent reviews + Wizard. Cross-testing between reviewer and Wizard.
-- **Scout**: Wizard reviews alone. Checks against requirements and runs tests.
 
 ## Process Flow
 
 ```dot
 digraph review {
-  "Wizard reads design doc, plan, Phase 4 implementation log" -> "Wizard opens review board";
-  "Wizard opens Dungeon + dispatches" -> "Agents review independently";
-  "Agents review independently" -> "Agents fight over findings directly";
-  "Agents fight over findings directly" -> "Agents challenge missing findings";
-  "Agents challenge missing findings" -> "Agents pin severity-classified issues to Dungeon";
-  "Agents pin severity-classified issues to Dungeon" -> "Wizard closes: categorizes surviving issues";
-  "Wizard closes: categorizes surviving issues" -> "Critical or Important?" [shape=diamond];
-  "Critical or Important?" -> "Assign fixes" [label="yes"];
-  "Assign fixes" -> "Fix + verify + challengers re-attack";
-  "Fix + verify + challengers re-attack" -> "Wizard closes: categorizes surviving issues";
-  "Critical or Important?" -> "Wizard final ruling" [label="no"];
-  "Wizard final ruling" -> "Commit + invoke raid-wrap-up" [shape=doublecircle];
+  "Wizard reads all prior deliverables" -> "Phase recap (PRD + Design + Plan + Implementation)";
+  "Phase recap (PRD + Design + Plan + Implementation)" -> "SUB-PHASE A: REVIEW";
+
+  subgraph cluster_review {
+    label="Sub-phase A: Review";
+    "Roll dice for review turn order" -> "ROUND 1: Agent 1 reviews, pins findings";
+    "ROUND 1: Agent 1 reviews, pins findings" -> "Agent 2 adversary-tests findings + adds own";
+    "Agent 2 adversary-tests findings + adds own" -> "Agent 3 reviews + adds own";
+    "Agent 3 reviews + adds own" -> "Wizard evaluates Round 1";
+    "Wizard evaluates Round 1" -> "ROUND 2: Agent 1 converges findings, proposes fix plan";
+    "ROUND 2: Agent 1 converges findings, proposes fix plan" -> "Agents 2+3 attack fix plan";
+    "Agents 2+3 attack fix plan" -> "Wizard evaluates — Round 3?" [shape=diamond];
+    "Wizard evaluates — Round 3?" -> "ROUND 3 (FINAL)" [label="critical gaps"];
+    "Wizard evaluates — Round 3?" -> "Extract review.md fix plan" [label="solid"];
+    "ROUND 3 (FINAL)" -> "Extract review.md fix plan";
+  }
+
+  "SUB-PHASE A: REVIEW" -> "Roll dice for review turn order";
+  "Extract review.md fix plan" -> "Human approves fix plan?" [shape=diamond];
+  "Human approves fix plan?" -> "Ask why, revise" [label="no"];
+  "Ask why, revise" -> "Extract review.md fix plan";
+  "Human approves fix plan?" -> "Fixes needed?" [shape=diamond];
+  "Fixes needed?" -> "SUB-PHASE B: FIX SESSION" [label="yes"];
+  "Fixes needed?" -> "Commit + load wrap-up" [label="no fixes", shape=doublecircle];
+
+  subgraph cluster_fix {
+    label="Sub-phase B: Fix Session";
+    "Fresh dice roll for fix order" -> "Agent 1 makes fixes from review.md, reports";
+    "Agent 1 makes fixes from review.md, reports" -> "Agent 2 reviews fixes, reports";
+    "Agent 2 reviews fixes, reports" -> "Agent 3 reviews fixes, reports";
+    "Agent 3 reviews fixes, reports" -> "Wizard evaluates fixes";
+    "Wizard evaluates fixes" -> "More fix rounds?" [shape=diamond];
+    "More fix rounds?" -> "Next fix round" [label="yes"];
+    "More fix rounds?" -> "Wizard extracts results" [label="done"];
+  }
+
+  "SUB-PHASE B: FIX SESSION" -> "Fresh dice roll for fix order";
+  "Wizard extracts results" -> "Present to human";
+  "Present to human" -> "Commit + load wrap-up" [shape=doublecircle];
 }
 ```
 
-## Wizard Checklist
+## Sub-phase A: Review
 
-1. **Prepare** — gather git range, design doc, plan doc, read `{questDir}/phase-4-implementation.md`
-2. **Open the review board** — create `{questDir}/phase-5-review.md`
-3. **Dispatch** — all agents review independently, then interact directly
-4. **Observe the fight** — agents challenge findings and missing findings directly
-5. **Close** — categorize surviving issues by severity from Dungeon
-6. **Browser inspection** — dispatch agents to inspect in Chrome (if `browser.enabled`)
-7. **Observe browser fights** — agents cross-verify findings on separate instances
-8. **Rule on fixes** — Critical and Important must be fixed (code AND browser)
-9. **Verify fixes** — targeted re-attack after fixes (use `raid-verification`)
-10. **Final ruling** — approved or rejected
-11. **Commit** — `fix(quest-{slug}): phase 5 review — {N} findings resolved`
-12. **Transition** — invoke `raid-wrap-up`
+### Wizard Checklist (Review)
 
-## Opening the Dungeon
+1. **Prepare** — gather all prior deliverables: PRD, design.md, task files, phase-4-implementation.md, git diff range
+2. **Phase recap** — summarize all prior phases. Present to agents and human.
+3. **Roll dice** — randomly shuffle `["warrior", "archer", "rogue"]` for the review turn order. Update raid-session via Bash using the jq command from protocol "Dice Roll Reference". Announce: *"The dice have spoken. Review turn order: {agent1} → {agent2} → {agent3}."*
+4. **Create evolution log** — `{questDir}/phases/phase-5-review.md`
+5. **Run rounds** — see Round Protocol below
+6. **Extract fix plan** — polish into `{questDir}/spoils/review.md`
+7. **Present to human** for approval
 
-Create `{questDir}/phase-5-review.md`:
+### Dispatch Templates (Review)
 
-```markdown
-# Phase 5: Review
-## Quest: Full adversarial review of <feature> implementation
-## Mode: <Full Raid | Skirmish>
+Dispatch carries only dynamic context. Detailed instructions (severity format, checklist, finding structure) are embedded in the scaffolded phase file.
 
-### Discoveries
+**Reviewer (Round 1):**
+```
+TURN_DISPATCH: Phase 5 Review, Round 1, Turn {T}.
+Quest: {description}
+Phase recap: {summary of all prior phases — what was built, key decisions}
+Your role: REVIEWER. Your section: "@{name} [R1]"
 
-### Active Battles
-
-### Resolved
-
-### Shared Knowledge
-
-### Escalations
+FIRST: Read the FULL document at {questDir}/phases/phase-5-review.md to understand the structure.
+  Read the embedded instructions in your section. Then read the code changes (git diff),
+  {questDir}/spoils/design.md, and task files.
+THEN: Write your review in your designated section following the embedded instructions.
 ```
 
-## Dispatch
+**Fix Plan Writer (Round 2, Turn 1):**
+```
+TURN_DISPATCH: Phase 5 Review, Round 2, Turn 1.
+Quest: {description}
+All Round 1 findings are in.
+Your role: converge findings into fix plan. Your section: "@{name} [R2] — Converged Fix Plan"
 
-**DISPATCH:**
+FIRST: Read the FULL document at {questDir}/phases/phase-5-review.md.
+  Read all Round 1 findings. Read the embedded instructions in your section.
+THEN: Write the converged fix plan following the embedded instructions.
+```
 
-> **@Warrior**: Review full implementation. Run every test. Check error handling at every boundary. Verify all requirements from design doc. Find the bugs that crash in production. Then fight @Archer and @Rogue over their findings.
->
-> **@Archer**: Review full implementation. Does it match the design doc exactly? Patterns consistent? Interfaces correct? Types sound? Naming conventions followed? File structure clean? Find the bugs that silently produce wrong results. Then fight @Warrior and @Rogue.
->
-> **@Rogue**: Review full implementation. Think like an attacker. What inputs break it? What timing causes races? What happens when dependencies fail? Find the bugs nobody else will find. Then fight @Warrior and @Archer.
->
-> **All**: Review independently first, then fight directly. Challenge each other's findings AND each other's blind spots. Pin severity-classified issues to Dungeon with `DUNGEON:`. Reference the Phase 3 Dungeon for context.
+**Fix Session dispatch:**
+```
+TURN_DISPATCH: Phase 5 Fix Session, Round 1, Turn {T}.
+Quest: {description}
+Fix plan: {questDir}/spoils/review.md
 
-## Review Checklist — Each Agent
+FIRST: Read the FULL document at {questDir}/phases/phase-5-review.md to find
+  the Fix Session section and your embedded instructions. Then read the fix plan.
+THEN: Execute your role following the embedded instructions.
+TDD enforced — load raid-tdd. Signal TURN_COMPLETE with status when done.
+```
 
-**Requirements:** Every design doc requirement implemented? No extras (YAGNI)? Nothing misinterpreted?
+### Evolution Log Template (Sub-phase A)
 
-**Code Quality:** Clean separation? Error handling at every boundary? DRY? Clear names?
+Scaffold `{questDir}/phases/phase-5-review.md`. Replace agent name placeholders with actual names from dice roll:
 
-**Testing:** Every function tested? Edge cases? Failure paths? All passing?
+```markdown
+# Phase 5: Review — Evolution Log
 
-**Architecture:** Design decisions implemented correctly? Interfaces match spec? No drift?
+## Quest: [quest description]
+## Quest Type: Canonical Quest
+## Turn Order (Review): @{agent1} → @{agent2} → @{agent3}
 
-**Naming & Structure:** Consistent naming? File system follows conventions? Modules clean?
+## References
+- PRD: `{questDir}/spoils/prd.md` (if exists)
+- Design: `{questDir}/spoils/design.md`
+- Tasks: `{questDir}/spoils/tasks/phase-3-plan-task-*.md`
+- Implementation: `{questDir}/phases/phase-4-implementation.md`
 
-**Production:** Performance OK? External calls have timeouts? No secrets in code?
+## Quest Goal
+<!-- Wizard writes 2-3 lines: what this review must verify,
+     total file count from implementation, key risk areas to focus on -->
 
-## Verification Protocol for Findings
+---
 
-Before acting on ANY finding (yours or a teammate's):
-1. **READ:** Complete the finding without reacting
-2. **VERIFY:** Check against codebase reality — read the actual code at the referenced location
-3. **EVALUATE:** Is this technically sound for THIS codebase? Does fixing it break something else?
-4. **RESPOND:** Technical evidence or reasoned pushback
+## Sub-phase A: Review
 
-## No Performative Agreement
+### @{agent1} [R1] — Full Implementation Review
 
-NEVER respond with "You're absolutely right!" or "Great point!" or "Good catch!"
-Instead: state the technical finding, show evidence, or push back.
-Actions speak. Fix and show — don't compliment.
+<!-- @{agent1}: FIRST REVIEWER. Read ACTUAL CODE — not reports.
+     For each finding: [Severity] `file:line` — what, why, proposed fix.
+     Example: [Critical] `src/auth/handler.ts:23` — missing validation. Fix: add zod schema.
+     Checklist: requirements, code quality, testing, architecture, naming, production. -->
 
-If a finding IS correct: `"Fixed. [Brief description of what changed]."` or just fix it silently.
+### @{agent2} [R1] — Adversarial Review
 
-## YAGNI Check on Findings
+<!-- @{agent2}: ADVERSARIAL REVIEWER. Verify @{agent1}'s findings against actual code.
+     Challenge severity if overblown. Add findings @{agent1} missed. Don't repeat.
+     Same format: [Severity] `file:line` — what, why, fix. -->
 
-Before implementing a "professional improvement" suggestion:
-- Grep codebase for actual usage of the component
-- If unused: suggest removing (YAGNI) — `"This endpoint isn't called. Remove it?"`
-- If used: implement properly
-- Don't gold-plate during review
+### @{agent3} [R1] — Final Review Pass
 
-## The Fight — Agents Challenge Each Other
+<!-- @{agent3}: FINAL REVIEWER. Read all prior findings. Challenge what you disagree with.
+     Find what BOTH reviewers missed. Same format: [Severity] `file:line` — what, why, fix. -->
 
-After independent reviews, agents fight DIRECTLY over findings AND missing findings:
+### Wizard [R1] Synthesis
+<!-- Wizard categorizes all surviving findings by severity.
+     Counts: N Critical, N Important, N Minor.
+     Direction for Round 2. -->
 
-- `CHALLENGE: @Archer, you gave the auth module a pass but didn't check the session rotation path — review it now.`
-- `BUILDING: @Warrior, your finding about the missing error handler — the impact is worse than you stated because...`
-- `CHALLENGE: @Rogue, your "Critical" severity on the naming inconsistency is overblown — here's why it's actually Minor...`
-- `DUNGEON: [Critical] handler.js:23 — missing input validation allows injection. Verified by @Warrior and @Rogue.`
+---
 
-**Agents classify severity when pinning to Dungeon:**
+### @{agent1} [R2] — Converged Fix Plan
 
-| Severity | Definition | Action |
-|----------|------------|--------|
-| **Critical** | Bugs, security holes, data loss, crashes | Must fix. No exceptions. |
-| **Important** | Missing features, poor error handling, test gaps, naming inconsistencies | Must fix. |
-| **Minor** | Style, docs, optimization | Note for future. |
+<!-- @{agent1}: Read EVERY finding from all reviewers (R1).
+     Your job is to produce a SINGLE converged fix plan.
 
-## Browser Inspection Phase (when `browser.enabled` in raid.json)
+     1. Group all findings by severity (Critical → Important → Minor)
+     2. Within each group, order by domain/file for efficient fixing
+     3. For each finding: confirm, mark as false positive (with evidence), or merge duplicates
+     4. Propose concrete fix for each confirmed finding
+     5. Note execution order (dependencies between fixes)
 
-After code review findings are pinned, the Wizard announces browser inspection.
+     Format per finding:
+     **[Critical-1]** `src/auth/handler.ts:23` — Missing input validation
+     - Found by: @{agent2} [R1], confirmed by @{agent3} [R1]
+     - Fix: Add zod schema validation in validateToken() before line 23
+     - Blocked by: none -->
 
-### Process
+### @{agent2} [R2] — Fix Plan Review
 
-1. **Wizard announces:** "Browser inspection phase — each reviewer boots their own instance"
-2. **Each reviewer BOOTs** their own app instance on separate ports (invoke `raid-browser`)
-3. **Each reviewer runs PRE-FLIGHT** — state test subject, check auth, discover routes
-4. **Each reviewer LOGINs** if auth is required (credentials from `.env.raid`)
-5. **Each reviewer inspects** from their angle (invoke `raid-browser-chrome`):
-   - Minimum gates first (console, network, page loads)
-   - Then angle-driven exploration (Warrior: stress, Archer: visual/precision, Rogue: security)
-   - Evidence captured for every finding (GIF, screenshot, console/network)
-6. **Cross-verification** — each reviewer reproduces others' findings on their own instance
-7. **Pin browser findings** to Dungeon alongside code review findings
-8. **Each reviewer CLEANUPs** their instance
-9. **Wizard rules** on ALL findings (code + browser) together
+<!-- @{agent2}: Review fix plan. Are fixes correct? Execution order right?
+     Challenge false positive designations. Flag dropped findings. -->
 
-### Browser findings follow the same severity rules:
+### @{agent3} [R2] — Fix Plan Review
 
-- **Critical** (crash, security, layout broken) — must fix
-- **Important** (broken feature, visual inconsistency, responsive breakage) — must fix
-- **Minor** (polish, console warnings) — note for future
+<!-- @{agent3}: Same focus. Challenge what @{agent2} missed.
+     Confirm or dispute false positive designations. -->
 
-**Browser bugs block merge the same way code bugs do.**
+### Wizard [R2] Synthesis
+<!-- Wizard evaluates the fix plan. If solid → extract to review.md.
+     If critical gaps → announce Round 3 as FINAL. -->
+
+---
+
+## Final Extraction Notes — Wizard
+<!-- What was incorporated into review.md.
+     False positives excluded and why.
+     Total findings: N confirmed, N false positives, N deferred. -->
+
+---
+
+## Writing Guidance
+- Sign all work: `@{name} [R{N}]`
+- Read ACTUAL CODE — not summaries, not reports, not commit messages
+- Every finding needs: severity, location, what, why, proposed fix
+- No performative agreement — no "Great catch!" Just evidence or pushback.
+- Reviewers: challenge severity classifications, not just content
+- Fix plan must be actionable — concrete fixes, not "improve error handling"
+```
+
+**Round 3:** If needed, wizard appends Round 3 sections before dispatching. Do NOT pre-scaffold.
+
+### Browser Inspection (when `browser.enabled`)
+
+After code review findings are pinned, agents inspect the live application:
+1. Each reviewer boots their own instance on separate ports (invoke `raid-browser`)
+2. Pre-flight: state test subject, check auth, discover routes
+3. Inspect from angle (invoke `raid-browser-chrome`): Warrior=stress, Archer=visual, Rogue=security
+4. Cross-verify others' findings on own instance
+5. Pin browser findings alongside code findings
+6. Cleanup instances
+
+Browser bugs block merge the same way code bugs do.
+
+## Sub-phase B: Fix Session
+
+Only entered if `review.md` contains fixes to make. This is different from the Implementation phase — the source is `review.md`, not numbered plan tasks.
+
+### Wizard Checklist (Fix Session)
+
+1. **Fresh dice roll** — a new turn order for the fix session. Update raid-session via Bash using the jq command from protocol "Dice Roll Reference". Announce: *"Fresh dice for the fix session: {agent1} → {agent2} → {agent3}."*
+2. **Dispatch fixes** — round-based, sequential
+
+### Fix Session Evolution Log (Appended Dynamically)
+
+When Sub-phase B begins, the wizard appends these sections to `phase-5-review.md` with fresh agent names from the new dice roll:
+
+```markdown
+---
+
+## Sub-phase B: Fix Session
+
+## Turn Order (Fix Session): @{agent1} → @{agent2} → @{agent3}
+<!-- Fresh dice roll — may be different order from review sub-phase -->
+
+### @{agent1} [R1] — Implementing Fixes
+
+<!-- @{agent1}: Work through review.md fix plan in order.
+     For each fix:
+     1. Implement the fix following TDD (write test → verify fail → fix → verify pass)
+     2. Report what was fixed and how
+
+     Format per fix:
+     **[Critical-1]** `src/auth/handler.ts:23` — FIXED
+     - Change: Added zod schema validation in validateToken()
+     - Test: `tests/auth/handler.test.ts` — added "rejects malformed tokens" test
+     - Commit: `fix(auth): add input validation to token handler`
+
+     Prioritize: blocking issues first, then simple fixes, then complex fixes. -->
+
+### @{agent2} [R1] — Fix Verification
+
+<!-- @{agent2}: Read the ACTUAL CODE changes for each fix above.
+     - Does each fix address the original finding?
+     - Does any fix introduce new issues?
+     - Run the full test suite — any regressions?
+     Report per fix: VERIFIED or ISSUE: [what's wrong] -->
+
+### @{agent3} [R1] — Fix Verification
+
+<!-- @{agent3}: Same focus. Verify fixes AND @{agent2}'s verification.
+     Final pass — anything missed? -->
+
+### Wizard [R1] Synthesis
+<!-- All fixes verified? If issues remain → another round.
+     If clean → extract results, present to human. -->
+```
+
+2-3 rounds until the Wizard is satisfied all fixes are sound.
+
+### Review Deliverable Template
+
+Wizard extracts into `{questDir}/spoils/review.md` — issue-centric, grouped by severity:
+
+```markdown
+# [Feature Name] — Review Report
+
+## Quest: [quest description]
+## Date: YYYY-MM-DD
+## Author: Wizard (extracted from phase-5-review.md)
+
+---
+
+## Summary
+<!-- Total findings, breakdown by severity, fix session outcome -->
+
+## Critical Issues
+
+### [Critical-1] `file:line` — Short description
+- **Found by:** @agent [R1], confirmed by @agent [R1]
+- **Description:** What is wrong and why it matters
+- **Fix:** What was done to resolve it
+- **Status:** Fixed | Deferred — [reason]
+- **Verification:** Test name or evidence that the fix works
+
+## Important Issues
+
+### [Important-1] `file:line` — Short description
+<!-- Same structure -->
+
+## Minor Issues (Noted for Future)
+
+### [Minor-1] `file:line` — Short description
+- **Found by:** @agent [R1]
+- **Description:** What and why
+- **Status:** Deferred — not blocking
+
+## False Positives
+
+### [FP-1] `file:line` — Short description
+- **Raised by:** @agent [R1]
+- **Dismissed by:** @agent [R2] — [evidence why it's not an issue]
+```
 
 ## Black Card System
 
-If any agent finds something that fundamentally breaks the architecture — a change so deep it invalidates the implementation — they play a `BLACKCARD:`:
+If any agent finds something that fundamentally breaks the architecture — unfixable within current design:
 
 ```
-BLACKCARD: [description of breaking concern]
-Evidence: [file paths, scenarios, why this is unfixable within current design]
-Impact: [what breaks, how deep the damage goes]
+BLACKCARD: [description]
+Evidence: [file paths, scenarios, why unfixable]
+Impact: [what breaks, how deep]
 ```
 
-**Black Card flow:**
-1. Agent plays `BLACKCARD:` → other agents independently verify
-2. If 2+ agents agree it's a black card → Wizard escalates to human
-3. Wizard presents to human with full context (digested, not raw):
-   - What the black card is
-   - Why it's unfixable in current design
-   - Options:
-     a) **Rollback** — Go back to PRD or Design phase (creates `phase-2-design-v2.md`)
-     b) **Accept** — Live with the limitation, document it, continue
-4. Human decides → Wizard acts accordingly
+**Flow:** Agent plays → 2+ agents verify → Wizard escalates to human → Options: (a) rollback to earlier phase, (b) accept limitation.
 
-**Black cards are RARE.** Most issues are Critical or Important, not black cards. A black card means "the foundation is wrong" — not "there's a bug."
+Black cards are RARE. Most issues are Critical or Important, not black cards.
 
-## Fix Implementation Order
+## No Performative Agreement
 
-When the Wizard assigns fixes during the Fixing subphase, prioritize in this order within each severity level:
-1. **Blocking issues** — crashes, security holes, data loss
-2. **Simple fixes** — typos, imports, naming inconsistencies
-3. **Complex fixes** — refactoring, logic changes, architectural adjustments
+NEVER respond with "Great catch!" or "You're absolutely right!" Instead: state the finding, show evidence, or push back. If a finding IS correct: fix it and move on.
 
-Test each fix individually. Verify no regressions before moving to the next fix.
+## Verification Protocol
 
-## Unclear Finding Protocol
-
-If ANY finding is unclear — unclear what the problem is, unclear how to reproduce, unclear what the fix should be — **STOP**. Clarify ALL unclear items before implementing ANY fixes. Partial understanding leads to wrong implementation.
-
-## Closing the Phase
-
-The Wizard closes when agents have exhausted their findings and the review board has all issues classified:
-
-**RULING: APPROVED FOR MERGE** — all Critical/Important fixed, tests pass, requirements met.
-
-**RULING: REJECTED** — specify what must change and which phase to return to.
+Before acting on ANY finding:
+1. **READ:** Complete the finding without reacting
+2. **VERIFY:** Check against actual code at the referenced location
+3. **EVALUATE:** Is this technically sound for THIS codebase?
+4. **RESPOND:** Technical evidence or reasoned pushback
 
 ## Red Flags
 
 | Thought | Reality |
 |---------|---------|
-| "The implementation looks fine, no issues" | Every review finds at least one issue. Look harder. |
-| "I'll report my findings to the Wizard" | Report to the other agents directly. Fight over them. |
-| "This is a Minor issue" (when it causes wrong behavior) | Wrong results = Important or Critical. |
+| "The implementation looks fine" | Every review finds at least one issue. Look harder. |
+| "This is Minor" (when it causes wrong behavior) | Wrong results = Important or Critical. |
 | "The tests pass, so it works" | Tests prove what they test. What DON'T they test? |
-| "Let's skip re-review of the fixes" | Fixes introduce new bugs. Always re-attack. |
+| "Let me silently ignore that finding" | Every finding gets addressed in the fix plan. |
+| "Fixes are simple, skip re-review" | Fixes introduce new bugs. Always re-verify. |
 
 ---
 
 ## Phase Transition
 
-When the RULING is APPROVED FOR MERGE:
+When the review is complete and all fixes verified:
 
-1. Update `.claude/raid-session` phase via Bash (write gate blocks Write/Edit on this file):
+1. Update raid-session phase via Bash:
    ```bash
    jq '.phase="wrap-up"' .claude/raid-session > .claude/raid-session.tmp && mv .claude/raid-session.tmp .claude/raid-session
    ```
-2. **Commit**: `fix(quest-{slug}): phase 5 review — {N} findings resolved`
-3. **Send phase report to human**: findings count, fixes applied, any black cards
-4. **Load the `raid-wrap-up` skill now and begin Phase 6.**
+2. **Commit:** `fix(quest-{slug}): phase 5 review — {N} findings resolved`
+3. **Report:** Link `review.md` and `phase-5-review.md` file paths to the human.
+4. **Load `raid-wrap-up` and begin Phase 6.**
 
-Do not wait. Do not ask. The next action after approving for merge is loading the next skill.
+## Phase Spoils
+
+**Two outputs:**
+- `{questDir}/phases/phase-5-review.md` — Full evolution (findings, challenges, fix plan debate, fix session)
+- `{questDir}/spoils/review.md` — Clean fix plan deliverable (what was found, what was fixed, what was deferred)

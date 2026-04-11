@@ -73,7 +73,8 @@ const COMMANDS = {
       console.log(require('../src/init').dryRun(process.cwd()));
       return;
     }
-    return require('../src/init').run();
+    const rtkFlag = process.argv.includes('--rtk');
+    return require('../src/init').run({ rtkEnabled: rtkFlag });
   },
   update: () => require('../src/update').run(),
   dismantle: () => require('../src/remove').run(),
@@ -85,7 +86,8 @@ const COMMANDS = {
       console.log(require('../src/init').dryRun(process.cwd()));
       return;
     }
-    return require('../src/init').run();
+    const rtkFlag = process.argv.includes('--rtk');
+    return require('../src/init').run({ rtkEnabled: rtkFlag });
   },
   remove: () => require('../src/remove').run(),
   doctor: () => require('../src/doctor').run(),
