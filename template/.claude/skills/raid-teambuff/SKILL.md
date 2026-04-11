@@ -8,7 +8,7 @@ description: "Use when the human calls an emergency team retrospective during a 
 The human pulled the brake. Everyone stops. Sit down. Reflect. Be honest.
 
 <HARD-GATE>
-This is an INSTANT freeze. The Wizard does NOT finish the current round, does NOT wait for agents to complete, does NOT ask "are you sure?". The moment the human says teambuff, everything stops. No subagents. Agents communicate via SendMessage.
+This is an INSTANT freeze. The Wizard does NOT finish the current round, does NOT wait for agents to complete, does NOT ask "are you sure?". The moment the human says teambuff, everything stops. Do not dispatch any more agents.
 </HARD-GATE>
 
 ## What This Is

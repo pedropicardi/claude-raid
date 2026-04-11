@@ -8,7 +8,7 @@ description: "Use at the start of any Canonical Quest. Reference for phase lifec
 The canonical workflow for full-cycle development. Every feature, refactor, or system built through the Raid follows this sequence.
 
 <HARD-GATE>
-Do NOT skip phases. Do NOT let a single agent work unchallenged. Do NOT proceed without a Wizard ruling. Agents communicate via SendMessage — do not spawn subagents.
+Do NOT skip phases. Do NOT let a single agent work unchallenged. Do NOT proceed without a Wizard ruling. Dispatch agents per-turn via Agent() with model cycling (Opus for writers, Sonnet for reviewers).
 </HARD-GATE>
 
 ## Session Lifecycle

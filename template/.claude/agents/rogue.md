@@ -21,9 +21,9 @@ description: >
   assistant: "I'll build attack narratives for each validation rule — unicode normalization bypasses, nested injection, truncation exploits — and verify whether the implementation survives each one."
   <commentary>During implementation, Rogue constructs the adversarial scenarios that prove code is robust — not just testing, but actively trying to break it with creative attack paths.</commentary>
   </example>
-model: claude-opus-4-6
+model: claude-sonnet-4-6
 tools: SendMessage, TaskCreate, TaskUpdate, Read, Grep, Glob, Bash, Write, Edit
-effort: medium
+effort: max
 color: orange
 memory: project
 skills:
