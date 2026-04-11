@@ -57,7 +57,7 @@ describe('E2E: init -> update -> remove lifecycle', () => {
     assert.strictEqual(settings.env.CUSTOM, 'value');
     assert.strictEqual(settings.env.CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS, '1');
     assert.ok(settings.permissions.allow.includes('WebFetch'));
-    assert.ok(settings.permissions.allow.includes('Write'));
+    assert.ok(settings.permissions.allow.includes('Write(*)'));
 
     // Verify backup exists
     assert.ok(fs.existsSync(path.join(cwd, '.claude', 'settings.json.pre-raid-backup')));

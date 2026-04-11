@@ -11,15 +11,14 @@ const RAID_PERMISSIONS = [
   'Read',
   'Glob',
   'Grep',
-  'Bash',
-  'Write',
-  'Edit',
-  'Write(.claude/**)',
-  'Edit(.claude/**)',
-  'Bash(mkdir -p */.claude/*)',
-  'Bash(mkdir -p .claude/*)',
-  'Bash(mv .claude/*)',
-  'Bash(jq * .claude/raid-session *)',
+  'Bash(*)',
+  'Write(*)',
+  'Edit(*)',
+  'Agent',
+  'SendMessage',
+  'TaskCreate',
+  'TaskUpdate',
+  'TeamCreate',
 ];
 
 const RAID_HOOK_MARKER = '#claude-raid';
