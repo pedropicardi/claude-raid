@@ -11,7 +11,7 @@ const RAID_PERMISSIONS = [
   'Read',
   'Glob',
   'Grep',
-  'Bash(*)',
+  'Bash',
   'Write(*)',
   'Edit(*)',
   'Agent',
