@@ -7,7 +7,16 @@ const RAID_ENV = {
   CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1',
 };
 
-const RAID_PERMISSIONS = ['Read', 'Glob', 'Grep', 'Bash', 'Write', 'Edit'];
+const RAID_PERMISSIONS = [
+  'Read',
+  'Glob',
+  'Grep',
+  'Bash',
+  'Write',
+  'Edit',
+  'Write(.claude/**)',
+  'Edit(.claude/**)',
+];
 
 const RAID_HOOK_MARKER = '#claude-raid';
 

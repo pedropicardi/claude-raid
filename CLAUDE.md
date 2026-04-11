@@ -164,7 +164,7 @@ Hooks use `#claude-raid` markers in command strings so `merge-settings.js` can i
 1. Reads existing `settings.json`
 2. Backs up to `settings.json.pre-raid-backup`
 3. Appends Raid hooks per trigger category, deduplicating by marker
-4. Adds Raid-specific env vars (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1'`) and permissions (Read, Glob, Grep, Bash, Write, Edit)
+4. Adds Raid-specific env vars (`CLAUDE_CODE_EXPERIMENTAL_AGENT_TEAMS: '1'`) and permissions (Read, Glob, Grep, Bash, Write, Edit, Write(.claude/**), Edit(.claude/**))
 
 RTK hooks use a separate `#claude-raid-rtk` marker and are only added when `raid.json` has `rtk.enabled === true`.
 
