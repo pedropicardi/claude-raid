@@ -385,18 +385,20 @@ describe('raid-session-end.sh', () => {
     const result = runHook('raid-session-end.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-session')), 'raid-session should be removed');
-    assert.ok(!fs.existsSync(questDir), 'quest directory should be removed');
+    assert.ok(fs.existsSync(questDir), 'quest directory should be preserved (not deleted by session-end)');
     assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-last-test-run')), 'raid-last-test-run should be removed');
   });
 
-  it('cleans up old flat dungeon files (backward compat)', () => {
+  it('preserves quest dungeon directory after session end', () => {
     const cwd = setupWithGit();
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon.md'), '# Dungeon');
-    fs.writeFileSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1.md'), '# Phase 1');
+    const questDir = path.join(cwd, '.claude', 'dungeon', 'test-quest');
+    const phasesDir = path.join(questDir, 'phases');
+    fs.mkdirSync(phasesDir, { recursive: true });
+    fs.writeFileSync(path.join(phasesDir, 'phase-2-design.md'), '# Design');
     const result = runHook('raid-session-end.sh', {}, cwd);
     assert.strictEqual(result.exitCode, 0);
-    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon.md')));
-    assert.ok(!fs.existsSync(path.join(cwd, '.claude', 'raid-dungeon-phase-1.md')));
+    assert.ok(fs.existsSync(questDir), 'quest dungeon should NOT be deleted by session-end');
+    assert.ok(fs.existsSync(path.join(phasesDir, 'phase-2-design.md')), 'phase files should be preserved');
   });
 
   it('outputs additionalContext with persist/forget instructions', () => {

@@ -15,6 +15,11 @@ if [ "$RAID_LIFECYCLE_SESSION" != "true" ]; then
   exit 0
 fi
 
+# Guard: only run if the session has a quest ID (not a stale or partial session)
+if [ -z "$RAID_QUEST_ID" ]; then
+  exit 0
+fi
+
 # Determine quest directory
 QUEST_DIR=$(raid_quest_dir)
 
@@ -102,16 +107,13 @@ if [ -d "$RAID_PLANS_PATH" ]; then
   fi
 fi
 
-# --- Cleanup session artifacts ---
+# --- Cleanup session file only ---
+# The quest dungeon is preserved (archived to vault draft above).
+# The Wizard handles full dungeon cleanup during Phase 6 (wrap-up).
+# Never delete the quest directory here — a non-Wizard session ending
+# (heal, update, or a regular claude session) must not destroy quest work.
 rm -f .claude/raid-session
-rm -rf "$QUEST_DIR"
 rm -f .claude/raid-last-test-run
-
-# Backward compat: clean up old flat dungeon files if they exist
-rm -f .claude/raid-dungeon.md
-rm -f .claude/raid-dungeon-phase-*.md
-rm -f .claude/raid-dungeon-backup.md
-rm -f .claude/raid-dungeon-phase-*-backup.md
 
 # --- Output additionalContext ---
 cat <<ENDJSON
