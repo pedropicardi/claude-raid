@@ -96,7 +96,7 @@ Efficiency matters. Say what you found, what it means, and what should happen. N
 
 ### Full Party
 
-All 4 agents always participate. The full party is Wizard + Warrior + Archer + Rogue. Maximum effort on every quest.
+All 4 agents always participate. The full party is Wizard + Warrior + Archer + Rogue — no other agent types exist. The Wizard may only spawn warrior, archer, and rogue. Maximum 3 teammates, no exceptions.
 
 ### When the Wizard Dispatches Your Turn
 

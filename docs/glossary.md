@@ -19,7 +19,7 @@ Party member. Lens: **pattern consistency and systemic coherence**. Traces rippl
 Party member. Lens: **assumption destruction and adversarial robustness**. Thinks like a failing system, malicious input, or race condition. Constructs concrete attack scenarios. Color: orange.
 
 ### Party
-The three non-Wizard agents: Warrior, Archer, and Rogue. The Canonical Quest always runs with the full party (4 agents total). The party never operates in reduced configurations.
+The three non-Wizard agents: Warrior, Archer, and Rogue. These are the only agent types the Wizard may spawn — maximum 3 teammates, no helpers, no specialists, no extras. The Canonical Quest always runs with the full party (4 agents total). The party composition is fixed and never operates in reduced or expanded configurations.
 
 ---
 
